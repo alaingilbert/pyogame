@@ -20,7 +20,7 @@ True
 ###### Send fleet example
 
 ```py
->>> from ogame.constants import Ships, Speed, Missions, Buildings, Research
+>>> from ogame.constants import Ships, Speed, Missions, Buildings, Research, Defense
 >>> ships = [(Ships['SmallCargo'], 10), (Ships['LargeCargo'], 50), (Ships['Cruiser'], 40)]
 >>> speed = Speed['100%']
 >>> where = {'galaxy': 9, 'system': 9, 'position': 9}
