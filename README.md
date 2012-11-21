@@ -67,17 +67,17 @@ True
 
 ### is_under_attack():bool
 
-### get_planet_ids():array.<int>
+### get_planet_ids():array.\<int\>
 
 ### get_planet_by_name(name:string):int
 
 ### build(planet_id:int, arg:*)
 
-### send_fleet(planet_id:int, ships:array.<tuple>, speed:int, where:obj, mission:int, resources:obj)
+### send_fleet(planet_id:int, ships:array.\<tuple\>, speed:int, where:obj, mission:int, resources:obj)
 
 ### cancel_fleet(fleet_id:string)
 
-### get_fleet_ids():array.<string>
+### get_fleet_ids():array.\<string\>
 
 
 
