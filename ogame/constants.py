@@ -79,8 +79,3 @@ Missions = {'Attack': 1,
             'RecycleDebrisField': 8,
             'Destroy': 9,
             'Expedition': 15}
-
-
-SERVERS = {'andromeda': 'uni101.ogame.fr',
-           'gemini': 'uni107.ogame.fr',
-          }
