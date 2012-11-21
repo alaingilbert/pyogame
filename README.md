@@ -1,6 +1,4 @@
-# OGame
-
-
+![](http://images2.wikia.nocookie.net/__cb20101218084357/ogame/images/c/c9/Logo.png)
 
 ## Installation
 
@@ -22,7 +20,7 @@ True
 ###### Send fleet example
 
 ```py
->>> from ogame.constants import Ships, Speed, Missions, Buildings, Research
+>>> from ogame.constants import Ships, Speed, Missions, Buildings, Research, Defense
 >>> ships = [(Ships['SmallCargo'], 10), (Ships['LargeCargo'], 50), (Ships['Cruiser'], 40)]
 >>> speed = Speed['100%']
 >>> where = {'galaxy': 9, 'system': 9, 'position': 9}
@@ -36,6 +34,7 @@ True
 ```py
 >>> ogame.build(PLANET_ID, (Ships['SmallCargo'], 10))
 >>> ogame.build(PLANET_ID, (Defense['RocketLauncher'], 100))
+>>> ogame.build(PLANET_ID, [(Defense['RocketLauncher'], 100), (Defense['LightLaser'], 500)])
 >>> ogame.build(PLANET_ID, Buildings['MetalMine'])
 >>> ogame.build(PLANET_ID, Research['GravitonTechnology'])
 ```
@@ -44,7 +43,14 @@ True
 
 ```py
 >>> ogame.get_resources(PLANET_ID)
-{'metal': 10000, 'crystal': 20000, 'deuterium': 30000}
+{'metal': 3000, 'crystal': 2000, 'deuterium': 1000, 'energy': 686, 'darkmatter': 700}
+```
+
+###### Get cost informations example
+
+```py
+>>> ogame.get_cost(PLANET_ID, Defense['RocketLauncher'])
+{'metal': 2000, 'crystal': 0, 'deuterium': 0, 'time': 23}
 ```
 
 ## Methods
