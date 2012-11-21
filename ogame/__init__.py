@@ -70,7 +70,7 @@ class OGame(object):
         if defense_id not in constants.Defense.values():
             raise BAD_DEFENSE_ID
 
-        url = self.get_url('defense') + '&cp=%s' % planet_id
+        url = self.get_url('defense', planet_id)
 
         res = self.session.get(url).content
         soup = BeautifulSoup(res)
@@ -89,7 +89,7 @@ class OGame(object):
         if ship_id not in constants.Ships.values():
             raise BAD_SHIP_ID
 
-        url = self.get_url('shipyard') + '&cp=%s' % planet_id
+        url = self.get_url('shipyard', planet_id)
 
         res = self.session.get(url).content
         soup = BeautifulSoup(res)
@@ -108,7 +108,7 @@ class OGame(object):
         if building_id not in constants.Buildings.values():
             raise BAD_BUILDING_ID
 
-        url = self.get_url('resources') + '&cp=%s' % planet_id
+        url = self.get_url('resources', planet_id)
 
         res = self.session.get(url).content
         soup = BeautifulSoup(res)
@@ -125,7 +125,7 @@ class OGame(object):
         if technology_id not in constants.Research.values():
             raise BAD_RESEARCH_ID
 
-        url = self.get_url('research') + '&cp=%s' % planet_id
+        url = self.get_url('research', planet_id)
 
         payload = {'modus': 1,
                    'type': technology_id}
@@ -143,7 +143,7 @@ class OGame(object):
                 fields[name] = value
             return fields
 
-        url = self.get_url('fleet1') + '&cp=%s' % planet_id
+        url = self.get_url('fleet1', planet_id)
 
         res = self.session.get(url).content
         payload= {}
@@ -169,11 +169,14 @@ class OGame(object):
         self.session.post(self.get_url('movement'), data=payload).content
 
 
-    def get_url(self, name):
+    def get_url(self, name, planet_id=None):
         if name == 'login':
             return 'http://%s/game/reg/login2.php' % self.server_url
         else:
-            return 'http://%s/game/index.php?page=%s' % (self.server_url, name)
+            url = 'http://%s/game/index.php?page=%s' % (self.server_url, name)
+            if planet_id:
+                url += '&cp=%s' % planet_id
+            return url
 
 
     def get_servers(self, domain):
