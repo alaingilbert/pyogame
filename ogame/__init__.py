@@ -43,6 +43,11 @@ class OGame(object):
         return json.loads(res)
 
 
+    def is_under_attack(self):
+        json = self.fetch_eventbox()
+        return not json.get('hostile', 0) == 0
+
+
     def get_planet_ids(self):
         """Get the ids of your planets."""
         res = self.session.get(self.get_url('overview')).content
