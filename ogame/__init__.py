@@ -45,7 +45,15 @@ class OGame(object):
 
     def get_resources(self, planet_id):
         """Returns the planet resources stats."""
-        pass
+        resources = self.fetch_resources(planet_id)
+        metal = resources['metal']['resources']['actual']
+        crystal = resources['crystal']['resources']['actual']
+        deuterium = resources['deuterium']['resources']['actual']
+        energy = resources['energy']['resources']['actual']
+        darkmatter = resources['darkmatter']['resources']['actual']
+        result = {'metal': metal, 'crystal': crystal, 'deuterium': deuterium,
+                  'energy': energy, 'darkmatter': darkmatter}
+        return result
 
 
     def is_under_attack(self):
