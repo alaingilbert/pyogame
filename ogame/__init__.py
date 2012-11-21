@@ -9,10 +9,11 @@ import json
 class OGame(object):
     def __init__(self, universe, username, password, domain='ogame.org'):
         self.session = requests.session()
-        self.servers = self.get_servers(domain)
+
+        servers = self.get_servers(domain)
+        self.server_url = self.get_universe_url(universe, servers)
         self.username = username
         self.password = password
-        self.server_url = self.get_universe_url(universe)
         self.login()
 
 
@@ -246,9 +247,9 @@ class OGame(object):
         return servers
 
 
-    def get_universe_url(self, universe):
+    def get_universe_url(self, universe, servers):
         """Get a universe name and return the server url."""
         universe = universe.lower()
-        if universe not in self.servers:
+        if universe not in servers:
             raise BAD_UNIVERSE_NAME
-        return self.servers[universe]
+        return servers[universe]
