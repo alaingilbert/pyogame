@@ -71,4 +71,4 @@ Ogame.errors
 
 ## Author
 
-Alain Gilbert (@alain_gilbert)
+Alain Gilbert ([@alain_gilbert](http://twitter.com/alain_gilbert))
