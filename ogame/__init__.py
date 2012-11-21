@@ -32,13 +32,13 @@ class OGame(object):
         self.session.get(self.get_url('logout'))
 
 
-    def get_missions(self):
+    def fetch_eventbox(self):
         res = self.session.get(self.get_url('fetchEventbox')).content
         return json.loads(res)
 
 
-    def get_resources(self, planet_id):
-        url = self.get_url('fetchResources') + '&cp=%s' % planet_id
+    def fetch_resources(self, planet_id):
+        url = self.get_url('fetchResources', planet_id)
         res = self.session.get(url).content
         return json.loads(res)
 
