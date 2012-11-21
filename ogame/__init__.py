@@ -207,7 +207,8 @@ class OGame(object):
                         'deuterium': resources.get('deuterium'),
                         'metal': resources.get('metal'),
                         'mission': mission})
-        self.session.post(self.get_url('movement'), data=payload).content
+        res = self.session.post(self.get_url('movement'), data=payload).content
+        # TODO: Should return the fleet ID.
 
 
     def get_url(self, name, planet_id=None):
