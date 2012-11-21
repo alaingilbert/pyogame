@@ -34,6 +34,7 @@ True
 ```py
 >>> ogame.build(PLANET_ID, (Ships['SmallCargo'], 10))
 >>> ogame.build(PLANET_ID, (Defense['RocketLauncher'], 100))
+>>> ogame.build(PLANET_ID, [(Defense['RocketLauncher'], 100), (Defense['LightLaser'], 500)])
 >>> ogame.build(PLANET_ID, Buildings['MetalMine'])
 >>> ogame.build(PLANET_ID, Research['GravitonTechnology'])
 ```
