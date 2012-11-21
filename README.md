@@ -40,6 +40,13 @@ True
 >>> ogame.build('xxxxxxxx', Research['GravitonTechnology'])
 ```
 
+###### Get resources example
+
+```py
+>>> ogame.get_resources('xxxxxxxx')
+{'metal': 10000, 'crystal': 20000, 'deuterium': 30000}
+```
+
 ## Methods
 
 ### login()
