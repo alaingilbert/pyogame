@@ -10,11 +10,25 @@
 
 ## Usage
 
+###### Verify attack example
+
 ```py
 >>> from ogame import OGame
 >>> ogame = OGame('Andromeda', USER, PASW)
 >>> ogame.is_under_attack()
 True
+```
+
+###### Send fleet example
+
+```py
+>>> from ogame.constants import *
+>>> ships = [(Ships['SmallCargo'], 10), (Ships['LargeCargo'], 50), (Ships['Cruiser'], 40)]
+>>> speed = Speed['100%']
+>>> where = {'galaxy': 9, 'system': 9, 'position': 9}
+>>> mission = Missions['Transport']
+>>> resources = {'metal': 10000, 'crystal': 20000, 'deuterium': 12000}
+>>> ogame.send_fleet('xxxxxxxx', ships, speed, where, mission, resources)
 ```
 
 
