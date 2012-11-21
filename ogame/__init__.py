@@ -224,11 +224,11 @@ class OGame(object):
         return fleet_ids
 
 
-    def get_url(self, name, planet_id=None):
-        if name == 'login':
+    def get_url(self, page, planet_id=None):
+        if page == 'login':
             return 'http://%s/game/reg/login2.php' % self.server_url
         else:
-            url = 'http://%s/game/index.php?page=%s' % (self.server_url, name)
+            url = 'http://%s/game/index.php?page=%s' % (self.server_url, page)
             if planet_id:
                 url += '&cp=%s' % planet_id
             return url
