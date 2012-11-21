@@ -71,37 +71,13 @@ True
 
 ### get_planet_by_name(name:string):int
 
-### build_defense(planet_id:int, defense_id:int, nbr:int)
-
-### build_ships(planet_id:int, ship_id:int, nbr:int)
-
-### build_building(planet_id:int, building_id:int)
-
-### build_technology(planet_id:int, technology_id:int)
+### build(planet_id:int, arg:*)
 
 ### send_fleet(planet_id:int, ships:array.<tuple>, speed:int, where:obj, mission:int, resources:obj)
 
-### get_url(name:string[, planet_id:int]):string
+### cancel_fleet(fleet_id:string)
 
-### get_servers(domain:string):obj
-
-### get_universe_url(universe:string):string
-
-
-
-## Exceptions
-
-Ogame.errors
-
-### BAD_USERNAME_PASSWORD
-
-### NOT_LOGGED
-
-### NOT_ENOUGH_RESOURCES
-
-### MISSING_TECH_DEPENDENCIES
-
-### BAD_UNIVERSE_NAME
+### get_fleet_ids():array.<string>
 
 
 
