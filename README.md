@@ -1,6 +1,4 @@
-# OGame
-
-
+![](http://images2.wikia.nocookie.net/__cb20101218084357/ogame/images/c/c9/Logo.png)
 
 ## Installation
 
