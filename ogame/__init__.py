@@ -211,6 +211,19 @@ class OGame(object):
         # TODO: Should return the fleet ID.
 
 
+    def cancel_fleet(self, fleet_id):
+        pass
+
+
+    def get_fleet_ids(self):
+        """Return the reversable fleet ids."""
+        res = self.session.get(self.get_url('movement')).content
+        soup = BeautifulSoup(res)
+        spans = soup.findAll('span', {'class': 'reversal'})
+        fleet_ids = [span.get('ref') for span in spans]
+        return fleet_ids
+
+
     def get_url(self, name, planet_id=None):
         if name == 'login':
             return 'http://%s/game/reg/login2.php' % self.server_url
