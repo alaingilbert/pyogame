@@ -22,28 +22,28 @@ True
 ###### Send fleet example
 
 ```py
->>> from ogame.constants import Ships, Speed, Missions
+>>> from ogame.constants import Ships, Speed, Missions, Buildings, Research
 >>> ships = [(Ships['SmallCargo'], 10), (Ships['LargeCargo'], 50), (Ships['Cruiser'], 40)]
 >>> speed = Speed['100%']
 >>> where = {'galaxy': 9, 'system': 9, 'position': 9}
 >>> mission = Missions['Transport']
 >>> resources = {'metal': 10000, 'crystal': 20000, 'deuterium': 12000}
->>> ogame.send_fleet('xxxxxxxx', ships, speed, where, mission, resources)
+>>> ogame.send_fleet(PLANET_ID, ships, speed, where, mission, resources)
 ```
 
 ###### Build things example
 
 ```py
->>> ogame.build('xxxxxxxx', (Ships['SmallCargo'], 10))
->>> ogame.build('xxxxxxxx', (Defense['RocketLauncher'], 100))
->>> ogame.build('xxxxxxxx', Buildings['MetalMine'])
->>> ogame.build('xxxxxxxx', Research['GravitonTechnology'])
+>>> ogame.build(PLANET_ID, (Ships['SmallCargo'], 10))
+>>> ogame.build(PLANET_ID, (Defense['RocketLauncher'], 100))
+>>> ogame.build(PLANET_ID, Buildings['MetalMine'])
+>>> ogame.build(PLANET_ID, Research['GravitonTechnology'])
 ```
 
 ###### Get resources example
 
 ```py
->>> ogame.get_resources('xxxxxxxx')
+>>> ogame.get_resources(PLANET_ID)
 {'metal': 10000, 'crystal': 20000, 'deuterium': 30000}
 ```
 
