@@ -136,7 +136,40 @@ class OGame(object):
 
 
     def send_fleet(self, planet_id, ships, speed, where, mission, resources):
-        pass
+        def get_hidden_fields(html):
+            soup = BeautifulSoup(html)
+            inputs = soup.findAll('input', {'type': 'hidden'})
+            fields = {}
+            for input in inputs:
+                name = input.get('name')
+                value = input.get('value')
+                fields[name] = value
+            return fields
+
+        url = self.get_url('fleet1') + '&cp=%s' % planet_id
+
+        res = self.session.get(url).content
+        payload= {}
+        payload.update(get_hidden_fields(res))
+        for name, value in ships:
+            payload['am%s' % name] = value
+        res = self.session.post(self.get_url('fleet2'), data=payload).content
+
+        payload= {}
+        payload.update(get_hidden_fields(res))
+        payload.update({'speed': speed,
+                        'galaxy': where.get('galaxy'),
+                        'system': where.get('system'),
+                        'position': where.get('position')})
+        res = self.session.post(self.get_url('fleet3'), data=payload).content
+
+        payload= {}
+        payload.update(get_hidden_fields(res))
+        payload.update({'crystal': resources.get('crystal'),
+                        'deuterium': resources.get('deuterium'),
+                        'metal': resources.get('metal'),
+                        'mission': mission})
+        self.session.post(self.get_url('movement'), data=payload).content
 
 
     def get_url(self, name):
