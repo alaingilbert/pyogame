@@ -212,7 +212,7 @@ class OGame(object):
 
 
     def cancel_fleet(self, fleet_id):
-        pass
+        self.session.get(self.get_url('movement') + '&return=%s' % fleet_id)
 
 
     def get_fleet_ids(self):
