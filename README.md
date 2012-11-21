@@ -46,6 +46,13 @@ True
 {'metal': 10000, 'crystal': 20000, 'deuterium': 30000}
 ```
 
+###### Get cost informations example
+
+```py
+>>> ogame.get_cost(PLANET_ID, Defense['RocketLauncher'])
+{'metal': 2000, 'crystal': 0, 'deuterium': 0, 'time': 23}
+```
+
 ## Methods
 
 ### login()
