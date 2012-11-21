@@ -10,12 +10,10 @@
 
 ## Usage
 
->>> import OGame
->>> ogame = OGame(USER, PASW)
->>> ogame.check_attack()
->>> ogame.build(OGame.CRYSTAL_MINE)
->>> ogame.build(OGame.SOLAR_SAT)
->>> ogame.
+```py
+>>> from ogame import OGame
+>>> ogame = OGame('Andromeda', USER, PASW)
+```
 
 
 
