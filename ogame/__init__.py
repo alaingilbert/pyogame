@@ -142,6 +142,29 @@ class OGame(object):
         self.session.post(url, data=payload)
 
 
+    def _build(self, planet_id, object_id, nbr=None):
+        if object_id in constants.Buildings.values():
+            self.build_building(planet_id, object_id)
+        elif object_id in constants.Research.values():
+            self.build_technology(planet_id, object_id)
+        elif object_id in constants.Ships.values():
+            self.build_ships(planet_id, object_id, nbr)
+        elif object_id in constants.Defense.values():
+            self.build_defense(planet_id, object_id, nbr)
+
+
+    def build(self, planet_id, arg):
+        if isinstance(arg, list):
+            for el in arg:
+                self.build(planet_id, el)
+        elif isinstance(arg, tuple):
+            elem_id, nbr = arg
+            self._build(planet_id, elem_id, nbr)
+        else:
+            elem_id = arg
+            self._build(planet_id, elem_id)
+
+
     def send_fleet(self, planet_id, ships, speed, where, mission, resources):
         def get_hidden_fields(html):
             soup = BeautifulSoup(html)
