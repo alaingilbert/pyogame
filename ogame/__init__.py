@@ -23,24 +23,24 @@ class OGame(object):
                    'uni': self.server_url,
                    'login': self.username,
                    'pass': self.password}
-        res = self.session.post(self.login_url, data=payload).content
+        res = self.session.post(self.get_url('login'), data=payload).content
         soup = BeautifulSoup(res)
         self.ogame_session = soup.find('meta', {'name': 'ogame-session'}) \
                                  .get('content')
 
 
     def logout(self):
-        self.session.get(self.logout_url)
+        self.session.get(self.get_url('logout'))
 
 
     def get_missions(self):
         headers = {'X-Requested-With': 'XMLHttpRequest'}
-        res = self.session.get(self.fetchEventbox_url, headers=headers).content
+        res = self.session.get(self.get_url('fetchEventbox'), headers=headers).content
         return json.loads(res)
 
 
     def get_resources(self, planet_id):
-        url = self.fetchResources_url + '&cp=%s' % planet_id
+        url = self.get_url('fetchResources') + '&cp=%s' % planet_id
         headers = {'X-Requested-With': 'XMLHttpRequest'}
         res = self.session.get(url, headers=headers).content
         return json.loads(res)
@@ -48,7 +48,7 @@ class OGame(object):
 
     def get_planet_ids(self):
         """Get the ids of your planets."""
-        res = self.session.get(self.overview_url).content
+        res = self.session.get(self.get_url('overview')).content
         soup = BeautifulSoup(res)
         planets = soup.findAll('div', {'class': 'smallplanet'})
         ids = [planet['id'].replace('planet-', '') for planet in planets]
@@ -57,7 +57,7 @@ class OGame(object):
 
     def get_planet_by_name(self, planet_name):
         """Returns the first planet id with the specified name."""
-        res = self.session.get(self.overview_url).content
+        res = self.session.get(self.get_url('overview')).content
         soup = BeautifulSoup(res)
         planets = soup.findAll('div', {'class': 'smallplanet'})
         for planet in planets:
@@ -73,7 +73,7 @@ class OGame(object):
         if defense_id not in constants.Defense.values():
             raise BAD_DEFENSE_ID
 
-        url = self.defense_url + '&cp=%s' % planet_id
+        url = self.get_url('defense') + '&cp=%s' % planet_id
 
         res = self.session.get(url).content
         soup = BeautifulSoup(res)
@@ -92,7 +92,7 @@ class OGame(object):
         if ship_id not in constants.Ships.values():
             raise BAD_SHIP_ID
 
-        url = self.shipyard_url + '&cp=%s' % planet_id
+        url = self.get_url('shipyard') + '&cp=%s' % planet_id
 
         res = self.session.get(url).content
         soup = BeautifulSoup(res)
@@ -111,7 +111,7 @@ class OGame(object):
         if building_id not in constants.Buildings.values():
             raise BAD_BUILDING_ID
 
-        url = self.resources_url + '&cp=%s' % planet_id
+        url = self.get_url('resources') + '&cp=%s' % planet_id
 
         res = self.session.get(url).content
         soup = BeautifulSoup(res)
@@ -128,7 +128,7 @@ class OGame(object):
         if technology_id not in constants.Research.values():
             raise BAD_RESEARCH_ID
 
-        url = self.research_url + '&cp=%s' % planet_id
+        url = self.get_url('research') + '&cp=%s' % planet_id
 
         payload = {'modus': 1,
                    'type': technology_id}
@@ -139,49 +139,11 @@ class OGame(object):
         pass
 
 
-    @property
-    def research_url(self):
-        return constants.url_research % self.server_url
-
-
-    @property
-    def resources_url(self):
-        return constants.url_resources % self.server_url
-
-
-    @property
-    def shipyard_url(self):
-        return constants.url_shipyard % self.server_url
-
-
-    @property
-    def defense_url(self):
-        return constants.url_defense % self.server_url
-
-
-    @property
-    def overview_url(self):
-        return constants.url_overview % self.server_url
-
-
-    @property
-    def fetchResources_url(self):
-        return constants.url_fetchResources % self.server_url
-
-
-    @property
-    def fetchEventbox_url(self):
-        return constants.url_fetchEventbox % self.server_url
-
-
-    @property
-    def logout_url(self):
-        return constants.url_logout % self.server_url
-
-
-    @property
-    def login_url(self):
-        return constants.url_login % self.server_url
+    def get_url(self, name):
+        if name == 'login':
+            return 'http://%s/game/reg/login2.php' % self.server_url
+        else:
+            return 'http://%s/game/index.php?page=%s' % (self.server_url, name)
 
 
     def get_servers(self, domain):

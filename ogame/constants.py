@@ -1,14 +1,3 @@
-url_login = 'http://%s/game/reg/login2.php'
-url_logout = 'http://%s/game/index.php?page=logout'
-url_fetchEventbox = 'http://%s/game/index.php?page=fetchEventbox'
-url_fetchResources = 'http://%s/game/index.php?page=fetchResources'
-url_overview = 'http://%s/game/index.php?page=overview'
-url_defense = 'http://%s/game/index.php?page=defense'
-url_shipyard = 'http://%s/game/index.php?page=shipyard'
-url_resources = 'http://%s/game/index.php?page=resources'
-url_research = 'http://%s/game/index.php?page=research'
-
-
 Buildings = {'MetalMine': 1,
              'CrystalMine': 2,
              'DeuteriumSynthesizer': 3,
