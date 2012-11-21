@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 
 import requests
 import json
-import time
 
 
 class OGame(object):
@@ -34,15 +33,13 @@ class OGame(object):
 
 
     def get_missions(self):
-        headers = {'X-Requested-With': 'XMLHttpRequest'}
-        res = self.session.get(self.get_url('fetchEventbox'), headers=headers).content
+        res = self.session.get(self.get_url('fetchEventbox')).content
         return json.loads(res)
 
 
     def get_resources(self, planet_id):
         url = self.get_url('fetchResources') + '&cp=%s' % planet_id
-        headers = {'X-Requested-With': 'XMLHttpRequest'}
-        res = self.session.get(url, headers=headers).content
+        res = self.session.get(url).content
         return json.loads(res)
 
 
