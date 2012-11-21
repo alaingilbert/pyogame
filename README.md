@@ -50,6 +50,8 @@ True
 
 ### fetch_resources():obj
 
+### get_resources(planet_id:int):obj
+
 ### is_under_attack():bool
 
 ### get_planet_ids():array.<int>

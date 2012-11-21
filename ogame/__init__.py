@@ -43,6 +43,11 @@ class OGame(object):
         return json.loads(res)
 
 
+    def get_resources(self, planet_id):
+        """Returns the planet resources stats."""
+        pass
+
+
     def is_under_attack(self):
         json = self.fetch_eventbox()
         return not json.get('hostile', 0) == 0
