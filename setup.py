@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='ogame',
-      version='0.3',
+      version='0.4',
       description='OGame wrapper.',
       author='Alain Gilbert',
       author_email='alain.gilbert.15@gmail.com',
