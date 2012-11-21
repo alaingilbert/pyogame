@@ -67,7 +67,7 @@ True
 
 ### is_under_attack():bool
 
-### get_planet_ids():array.\<int\>
+### get_planet_ids():array.\<string\>
 
 ### get_planet_by_name(name:string):int
 
