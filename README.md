@@ -31,7 +31,14 @@ True
 >>> ogame.send_fleet('xxxxxxxx', ships, speed, where, mission, resources)
 ```
 
+###### Build things example
 
+```py
+>>> ogame.build('xxxxxxxx', (Ships['SmallCargo'], 10))
+>>> ogame.build('xxxxxxxx', (Defense['RocketLauncher'], 100))
+>>> ogame.build('xxxxxxxx', Buildings['MetalMine'])
+>>> ogame.build('xxxxxxxx', Research['GravitonTechnology'])
+```
 
 ## Methods
 
