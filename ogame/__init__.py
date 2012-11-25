@@ -33,6 +33,13 @@ class OGame(object):
         self.session.get(self.get_url('logout'))
 
 
+    def is_logged(self):
+        res = self.session.get(self.get_url('overview')).content
+        soup = BeautifulSoup(res)
+        session = soup.find('meta', {'name': 'ogame-session'})
+        return session is not None
+
+
     def fetch_eventbox(self):
         res = self.session.get(self.get_url('fetchEventbox')).content
         return json.loads(res)

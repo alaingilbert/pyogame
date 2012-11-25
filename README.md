@@ -54,6 +54,8 @@ True
 
 ### logout()
 
+### is_logged():bool
+
 ### fetch_eventbox():obj
 
 ### fetch_resources():obj
