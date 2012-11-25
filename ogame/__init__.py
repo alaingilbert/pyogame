@@ -40,6 +40,11 @@ class OGame(object):
         return session is not None
 
 
+    def get_page_content(self, page='overview'):
+        """Return the html of a specific page."""
+        return self.session.get(self.get_url(page)).content
+
+
     def fetch_eventbox(self):
         res = self.session.get(self.get_url('fetchEventbox')).content
         return json.loads(res)

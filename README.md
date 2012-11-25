@@ -72,6 +72,8 @@ True
 
 ### is_logged():bool
 
+### get_page_content([page=overview:string]):string
+
 ### fetch_eventbox():obj
 
 ### fetch_resources():obj
