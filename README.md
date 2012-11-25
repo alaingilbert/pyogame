@@ -1,5 +1,21 @@
 ![](http://images2.wikia.nocookie.net/__cb20101218084357/ogame/images/c/c9/Logo.png)
 
+
+
+## Intro
+
+[ogame.org](http://ogame.org) is a strategy-game set in space.
+Thousands of players across the world compete at the same time.
+In order to play you only need a web browser.
+
+This library is meant to let you create scripts that will automate
+many tasks. For example, you could create a script that will protect
+your fleets when you're not in front of your computer.
+
+You could also create a completely automated player ! Enjoy !
+
+
+
 ## Installation
 
 `pip install ogame`
