@@ -6,6 +6,10 @@ class BAD_UNIVERSE_NAME(OGameException):
     pass
 
 
+class NOT_LOGGED(OGameException):
+    pass
+
+
 class BAD_DEFENSE_ID(OGameException):
     pass
 

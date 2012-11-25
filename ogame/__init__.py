@@ -1,5 +1,5 @@
 from ogame import constants
-from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID
+from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID, NOT_LOGGED
 from bs4 import BeautifulSoup
 
 import requests
@@ -47,13 +47,21 @@ class OGame(object):
 
     def fetch_eventbox(self):
         res = self.session.get(self.get_url('fetchEventbox')).content
-        return json.loads(res)
+        try:
+            obj = json.loads(res)
+        except ValueError, e:
+            raise NOT_LOGGED
+        return obj
 
 
     def fetch_resources(self, planet_id):
         url = self.get_url('fetchResources', planet_id)
         res = self.session.get(url).content
-        return json.loads(res)
+        try:
+            obj = json.loads(res)
+        except ValueError, e:
+            raise NOT_LOGGED
+        return obj
 
 
     def get_resources(self, planet_id):
