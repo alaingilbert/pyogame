@@ -77,6 +77,48 @@ class OGame(object):
         return result
 
 
+    def get_ships(self, planet_id):
+        def get_nbr(soup, name):
+            div = soup.find('div', {'class': name})
+            level = div.find('span', {'class': 'level'})
+            for tag in level.findAll(True):
+                tag.extract()
+            return int(level.text.strip())
+
+        res = self.session.get(self.get_url('shipyard')).content
+        soup = BeautifulSoup(res)
+
+        lightFighter = get_nbr(soup, 'military204')
+        heavyFighter = get_nbr(soup, 'military205')
+        cruiser = get_nbr(soup, 'military206')
+        battleship = get_nbr(soup, 'military207')
+        battlecruiser = get_nbr(soup, 'military215')
+        bomber = get_nbr(soup, 'military211')
+        destroyer = get_nbr(soup, 'military213')
+        deathstar = get_nbr(soup, 'military214')
+        smallCargo = get_nbr(soup, 'civil202')
+        largeCargo = get_nbr(soup, 'civil203')
+        colonyShip = get_nbr(soup, 'civil208')
+        recycler = get_nbr(soup, 'civil209')
+        espionageProbe = get_nbr(soup, 'civil210')
+        solarSatellite = get_nbr(soup, 'civil212')
+
+        return {'LightFighter': lightFighter,
+                'HeavyFighter': heavyFighter,
+                'Cruiser': cruiser,
+                'Battleship': battleship,
+                'Battlecruiser': battlecruiser,
+                'Bomber': bomber,
+                'Destroyer': destroyer,
+                'Deathstar': deathstar,
+                'SmallCargo': smallCargo,
+                'LargeCargo': largeCargo,
+                'ColonyShip': colonyShip,
+                'Recycler': recycler,
+                'EspionageProbe': espionageProbe,
+                'SolarSatellite': solarSatellite}
+
+
     def is_under_attack(self):
         json = self.fetch_eventbox()
         return not json.get('hostile', 0) == 0

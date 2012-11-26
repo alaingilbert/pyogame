@@ -80,6 +80,12 @@ True
 
 ### get_resources(planet_id:int):obj
 
+### get_ships(planet_id:int):obj
+
+```
+{'EspionageProbe': 0, 'Destroyer': 0, 'LightFighter': 0, 'ColonyShip': 0, 'Deathstar': 0, 'HeavyFighter': 0, 'LargeCargo': 0, 'Cruiser': 0, 'Recycler': 0, 'Battleship': 0, 'Battlecruiser': 0, 'Bomber': 0, 'SolarSatellite': 0, 'SmallCargo': 0}
+```
+
 ### is_under_attack():bool
 
 ### get_planet_ids():array.\<string\>
