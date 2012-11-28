@@ -102,6 +102,8 @@ True
 
 ### get_fleet_ids():array.\<string\>
 
+### get_server_time():obj
+
 
 
 ## Author
