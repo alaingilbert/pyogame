@@ -1,6 +1,7 @@
 from ogame import constants
 from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID, NOT_LOGGED
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 import requests
 import json
@@ -315,3 +316,13 @@ class OGame(object):
         if universe not in servers:
             raise BAD_UNIVERSE_NAME
         return servers[universe]
+
+
+    def get_server_time(self):
+        """Get the ogame server time."""
+        res = self.session.get(self.get_url('overview')).content
+        soup = BeautifulSoup(res)
+        date_str = soup.find('li', {'class': 'OGameClock'}).text
+        format = '%d.%m.%Y %H:%M:%S'
+        date = datetime.strptime(date_str, format)
+        return date
