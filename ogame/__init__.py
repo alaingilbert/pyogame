@@ -326,3 +326,12 @@ class OGame(object):
         format = '%d.%m.%Y %H:%M:%S'
         date = datetime.strptime(date_str, format)
         return date
+
+
+    def get_ogame_version(self):
+        """Get ogame version on your server."""
+        res = self.session.get(self.get_url('overview')).content
+        soup = BeautifulSoup(res)
+        footer = soup.find('div', {'id': 'siteFooter'})
+        version = footer.find('a').text.strip()
+        return version

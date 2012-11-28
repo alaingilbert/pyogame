@@ -104,6 +104,8 @@ True
 
 ### get_server_time():obj
 
+### get_ogame_version():string
+
 
 
 ## Author
