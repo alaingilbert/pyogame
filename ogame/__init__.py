@@ -288,6 +288,33 @@ class OGame(object):
         return fleet_ids
 
 
+    def get_attacks(self):
+        headers = {'X-Requested-With': 'XMLHttpRequest'}
+        res = self.session.get(self.get_url('eventList'), params={'ajax': 1}, headers=headers).content
+        soup = BeautifulSoup(res)
+        events = soup.findAll('tr', {'class': 'eventFleet'})
+        attacks = []
+        for ev in events:
+            attack = {}
+            coords_origin = ev.find('td', {'class': 'coordsOrigin'}).text.strip()
+            coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_origin)
+            galaxy, system, position = coords.groups()
+            attack.update({'origin': (galaxy, system, position)})
+
+            dest_coords = ev.find('td', {'class': 'destCoords'}).text.strip()
+            coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_origin)
+            galaxy, system, position = coords.groups()
+            attack.update({'destination': (galaxy, system, position)})
+
+            arrival_time = ev.find('td', {'class': 'arrivalTime'}).text.strip()
+            coords = re.search(r'(\d+):(\d+):(\d+)', arrival_time)
+            hour, minute, second = coords.groups()
+            attack.update({'arrival_time': (hour, minute, second)})
+
+            attacks.append(attack)
+        return attacks
+
+
     def get_url(self, page, planet_id=None):
         if page == 'login':
             return 'http://%s/game/reg/login2.php' % self.server_url
