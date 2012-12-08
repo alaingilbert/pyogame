@@ -1,8 +1,8 @@
 from ogame import constants
 from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID, NOT_LOGGED
 from bs4 import BeautifulSoup
-from datetime import datetime
 
+import datetime
 import requests
 import json
 
@@ -17,7 +17,6 @@ class OGame(object):
         self.password = password
         self.login()
 
-
     def login(self):
         """Get the ogame session token."""
         payload = {'kid': '',
@@ -29,10 +28,8 @@ class OGame(object):
         self.ogame_session = soup.find('meta', {'name': 'ogame-session'}) \
                                  .get('content')
 
-
     def logout(self):
         self.session.get(self.get_url('logout'))
-
 
     def is_logged(self):
         res = self.session.get(self.get_url('overview')).content
@@ -40,11 +37,9 @@ class OGame(object):
         session = soup.find('meta', {'name': 'ogame-session'})
         return session is not None
 
-
     def get_page_content(self, page='overview'):
         """Return the html of a specific page."""
         return self.session.get(self.get_url(page)).content
-
 
     def fetch_eventbox(self):
         res = self.session.get(self.get_url('fetchEventbox')).content
@@ -54,7 +49,6 @@ class OGame(object):
             raise NOT_LOGGED
         return obj
 
-
     def fetch_resources(self, planet_id):
         url = self.get_url('fetchResources', planet_id)
         res = self.session.get(url).content
@@ -63,7 +57,6 @@ class OGame(object):
         except ValueError, e:
             raise NOT_LOGGED
         return obj
-
 
     def get_resources(self, planet_id):
         """Returns the planet resources stats."""
@@ -76,7 +69,6 @@ class OGame(object):
         result = {'metal': metal, 'crystal': crystal, 'deuterium': deuterium,
                   'energy': energy, 'darkmatter': darkmatter}
         return result
-
 
     def get_ships(self, planet_id):
         def get_nbr(soup, name):
@@ -119,11 +111,9 @@ class OGame(object):
                 'EspionageProbe': espionageProbe,
                 'SolarSatellite': solarSatellite}
 
-
     def is_under_attack(self):
         json = self.fetch_eventbox()
         return not json.get('hostile', 0) == 0
-
 
     def get_planet_ids(self):
         """Get the ids of your planets."""
@@ -132,7 +122,6 @@ class OGame(object):
         planets = soup.findAll('div', {'class': 'smallplanet'})
         ids = [planet['id'].replace('planet-', '') for planet in planets]
         return ids
-
 
     def get_planet_by_name(self, planet_name):
         """Returns the first planet id with the specified name."""
@@ -145,7 +134,6 @@ class OGame(object):
                 id = planet['id'].replace('planet-', '')
                 return id
         return None
-
 
     def build_defense(self, planet_id, defense_id, nbr):
         """Build a defense unit."""
@@ -165,7 +153,6 @@ class OGame(object):
                    'type': defense_id}
         self.session.post(url, data=payload)
 
-
     def build_ships(self, planet_id, ship_id, nbr):
         """Build a ship unit."""
         if ship_id not in constants.Ships.values():
@@ -184,7 +171,6 @@ class OGame(object):
                    'type': ship_id}
         self.session.post(url, data=payload)
 
-
     def build_building(self, planet_id, building_id):
         """Build a ship unit."""
         if building_id not in constants.Buildings.values():
@@ -202,7 +188,6 @@ class OGame(object):
                    'type': building_id}
         self.session.post(url, data=payload)
 
-
     def build_technology(self, planet_id, technology_id):
         if technology_id not in constants.Research.values():
             raise BAD_RESEARCH_ID
@@ -212,7 +197,6 @@ class OGame(object):
         payload = {'modus': 1,
                    'type': technology_id}
         self.session.post(url, data=payload)
-
 
     def _build(self, planet_id, object_id, nbr=None):
         if object_id in constants.Buildings.values():
@@ -224,7 +208,6 @@ class OGame(object):
         elif object_id in constants.Defense.values():
             self.build_defense(planet_id, object_id, nbr)
 
-
     def build(self, planet_id, arg):
         if isinstance(arg, list):
             for el in arg:
@@ -235,7 +218,6 @@ class OGame(object):
         else:
             elem_id = arg
             self._build(planet_id, elem_id)
-
 
     def send_fleet(self, planet_id, ships, speed, where, mission, resources):
         def get_hidden_fields(html):
@@ -251,13 +233,13 @@ class OGame(object):
         url = self.get_url('fleet1', planet_id)
 
         res = self.session.get(url).content
-        payload= {}
+        payload = {}
         payload.update(get_hidden_fields(res))
         for name, value in ships:
             payload['am%s' % name] = value
         res = self.session.post(self.get_url('fleet2'), data=payload).content
 
-        payload= {}
+        payload = {}
         payload.update(get_hidden_fields(res))
         payload.update({'speed': speed,
                         'galaxy': where.get('galaxy'),
@@ -265,7 +247,7 @@ class OGame(object):
                         'position': where.get('position')})
         res = self.session.post(self.get_url('fleet3'), data=payload).content
 
-        payload= {}
+        payload = {}
         payload.update(get_hidden_fields(res))
         payload.update({'crystal': resources.get('crystal'),
                         'deuterium': resources.get('deuterium'),
@@ -274,10 +256,8 @@ class OGame(object):
         res = self.session.post(self.get_url('movement'), data=payload).content
         # TODO: Should return the fleet ID.
 
-
     def cancel_fleet(self, fleet_id):
         self.session.get(self.get_url('movement') + '&return=%s' % fleet_id)
-
 
     def get_fleet_ids(self):
         """Return the reversable fleet ids."""
@@ -287,16 +267,17 @@ class OGame(object):
         fleet_ids = [span.get('ref') for span in spans]
         return fleet_ids
 
-
     def get_attacks(self):
         headers = {'X-Requested-With': 'XMLHttpRequest'}
-        res = self.session.get(self.get_url('eventList'), params={'ajax': 1}, headers=headers).content
+        res = self.session.get(self.get_url('eventList'), params={'ajax': 1},
+                               headers=headers).content
         soup = BeautifulSoup(res)
         events = soup.findAll('tr', {'class': 'eventFleet'})
         attacks = []
         for ev in events:
             attack = {}
-            coords_origin = ev.find('td', {'class': 'coordsOrigin'}).text.strip()
+            coords_origin = ev.find('td', {'class': 'coordsOrigin'}) \
+                              .text.strip()
             coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_origin)
             galaxy, system, position = coords.groups()
             attack.update({'origin': (galaxy, system, position)})
@@ -309,11 +290,21 @@ class OGame(object):
             arrival_time = ev.find('td', {'class': 'arrivalTime'}).text.strip()
             coords = re.search(r'(\d+):(\d+):(\d+)', arrival_time)
             hour, minute, second = coords.groups()
-            attack.update({'arrival_time': (hour, minute, second)})
+            arrival_time = get_datetime_from_time(hour, minute, second)
+            attack.update({'arrival_time': arrival_time})
 
             attacks.append(attack)
         return attacks
 
+    def get_datetime_from_time(self, hour, minute, second):
+        now = datetime.datetime.now()
+        current_hour = now.hour
+        date = datetime.date.today()
+        if hour < current_hour:
+            date += datetime.timedelta(days=1)
+        time = datetime.time(hour, minute, second)
+        arrival_time = datetime.datetime.combine(date, time)
+        return arrival_time
 
     def get_url(self, page, planet_id=None):
         if page == 'login':
@@ -323,7 +314,6 @@ class OGame(object):
             if planet_id:
                 url += '&cp=%s' % planet_id
             return url
-
 
     def get_servers(self, domain):
         res = self.session.get('http://%s' % domain).content
@@ -336,7 +326,6 @@ class OGame(object):
             servers[name] = url
         return servers
 
-
     def get_universe_url(self, universe, servers):
         """Get a universe name and return the server url."""
         universe = universe.lower()
@@ -344,16 +333,14 @@ class OGame(object):
             raise BAD_UNIVERSE_NAME
         return servers[universe]
 
-
     def get_server_time(self):
         """Get the ogame server time."""
         res = self.session.get(self.get_url('overview')).content
         soup = BeautifulSoup(res)
         date_str = soup.find('li', {'class': 'OGameClock'}).text
         format = '%d.%m.%Y %H:%M:%S'
-        date = datetime.strptime(date_str, format)
+        date = datetime.datetime.strptime(date_str, format)
         return date
-
 
     def get_ogame_version(self):
         """Get ogame version on your server."""
