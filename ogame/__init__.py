@@ -12,6 +12,7 @@ class OGame(object):
         self.session = requests.session()
 
         servers = self.get_servers(domain)
+        self.domain = domain
         self.server_url = self.get_universe_url(universe, servers)
         self.username = username
         self.password = password
@@ -308,7 +309,7 @@ class OGame(object):
 
     def get_url(self, page, planet_id=None):
         if page == 'login':
-            return 'http://%s/game/reg/login2.php' % self.server_url
+            return 'http://%s/main/login' % self.domain
         else:
             url = 'http://%s/game/index.php?page=%s' % (self.server_url, page)
             if planet_id:
