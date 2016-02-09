@@ -309,9 +309,9 @@ class OGame(object):
 
     def get_url(self, page, planet_id=None):
         if page == 'login':
-            return 'http://%s/main/login' % self.domain
+            return 'https://%s/main/login' % self.domain
         else:
-            url = 'http://%s/game/index.php?page=%s' % (self.server_url, page)
+            url = 'https://%s/game/index.php?page=%s' % (self.server_url, page)
             if planet_id:
                 url += '&cp=%s' % planet_id
             return url
