@@ -8,7 +8,7 @@ import json
 
 
 class OGame(object):
-    def __init__(self, universe, username, password, domain='ogame.org'):
+    def __init__(self, universe, username, password, domain='en.ogame.gameforge.com'):
         self.session = requests.session()
 
         servers = self.get_servers(domain)
@@ -317,7 +317,7 @@ class OGame(object):
             return url
 
     def get_servers(self, domain):
-        res = self.session.get('http://%s' % domain).content
+        res = self.session.get('https://%s' % domain).content
         soup = BeautifulSoup(res)
         select = soup.find('select', {'id': 'serverLogin'})
         servers = {}
