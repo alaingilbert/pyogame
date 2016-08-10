@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import datetime
 import requests
 import json
+import math
 
 
 class OGame(object):
@@ -70,6 +71,18 @@ class OGame(object):
         result = {'metal': metal, 'crystal': crystal, 'deuterium': deuterium,
                   'energy': energy, 'darkmatter': darkmatter}
         return result
+
+    def metal_mine_production(self, level, universe_speed=1):
+        return int(math.floor(30 * level * 1.1 ** level) * universe_speed)
+
+    def crystal_mine_production(level, universe_speed=1):
+        return int(math.floor(20 * level * 1.1 ** level) * universe_speed)
+
+    def deuterium_synthesizer_production(level, max_temperature, universe_speed=1):
+        return int(math.floor(10 * level * 1.1 ** level) * (1.44 - 0.004 * max_temperature) * universe_speed)
+
+    def SolarPlantProduction(level):
+        return int(math.floor(20 * level * 1.1 ** level))
 
     def get_ships(self, planet_id):
         def get_nbr(soup, name):
