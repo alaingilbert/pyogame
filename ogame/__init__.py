@@ -189,6 +189,46 @@ class OGame(object):
                 'terraformer': terraformer,
                 'space_dock': space_dock}
         return res
+
+    def get_research(self):
+        res = self.session.get(self.get_url('research')).content
+        soup = BeautifulSoup(res)
+
+        energy_technology = self.get_nbr(soup, 'research113')
+        laser_technology = self.get_nbr(soup, 'research120')
+        ion_technology = self.get_nbr(soup, 'research121')
+        hyperspace_technology = self.get_nbr(soup, 'research114')
+        plasma_technology = self.get_nbr(soup, 'research122')
+        combustion_drive = self.get_nbr(soup, 'research115')
+        impulse_drive = self.get_nbr(soup, 'research117')
+        hyperspace_drive = self.get_nbr(soup, 'research118')
+        espionage_technology = self.get_nbr(soup, 'research106')
+        computer_technology = self.get_nbr(soup, 'research108')
+        astrophysics = self.get_nbr(soup, 'research124')
+        intergalactic_research_network = self.get_nbr(soup, 'research123')
+        graviton_technology = self.get_nbr(soup, 'research199')
+        weapons_technology = self.get_nbr(soup, 'research109')
+        shielding_technology = self.get_nbr(soup, 'research110')
+        armour_technology = self.get_nbr(soup, 'research111')
+
+        res = {'energy_technology': energy_technology,
+               'laser_technology': laser_technology,
+               'ion_technology': ion_technology,
+               'hyperspace_technology': hyperspace_technology,
+               'plasma_technology': plasma_technology,
+               'combustion_drive': combustion_drive,
+               'impulse_drive': impulse_drive,
+               'hyperspace_drive': hyperspace_drive,
+               'espionage_technology': espionage_technology,
+               'computer_technology': computer_technology,
+               'astrophysics': astrophysics,
+               'intergalactic_research_network': intergalactic_research_network,
+               'graviton_technology': graviton_technology,
+               'weapons_technology': weapons_technology,
+               'shielding_technology': shielding_technology,
+               'armour_technology': armour_technology}
+        return res
+
     def is_under_attack(self):
         json = self.fetch_eventbox()
         return not json.get('hostile', 0) == 0
