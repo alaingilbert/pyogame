@@ -127,31 +127,31 @@ class OGame(object):
         seconds = int(round(res))
         return seconds
 
-    def get_ships(self, planet_id):
-        def get_nbr(soup, name):
-            div = soup.find('div', {'class': name})
-            level = div.find('span', {'class': 'level'})
-            for tag in level.findAll(True):
-                tag.extract()
-            return int(level.text.strip())
+    def get_nbr(self, soup, name):
+        div = soup.find('div', {'class': name})
+        level = div.find('span', {'class': 'level'})
+        for tag in level.findAll(True):
+            tag.extract()
+        return int(level.text.strip())
 
+    def get_ships(self, planet_id):
         res = self.session.get(self.get_url('shipyard')).content
         soup = BeautifulSoup(res)
 
-        lightFighter = get_nbr(soup, 'military204')
-        heavyFighter = get_nbr(soup, 'military205')
-        cruiser = get_nbr(soup, 'military206')
-        battleship = get_nbr(soup, 'military207')
-        battlecruiser = get_nbr(soup, 'military215')
-        bomber = get_nbr(soup, 'military211')
-        destroyer = get_nbr(soup, 'military213')
-        deathstar = get_nbr(soup, 'military214')
-        smallCargo = get_nbr(soup, 'civil202')
-        largeCargo = get_nbr(soup, 'civil203')
-        colonyShip = get_nbr(soup, 'civil208')
-        recycler = get_nbr(soup, 'civil209')
-        espionageProbe = get_nbr(soup, 'civil210')
-        solarSatellite = get_nbr(soup, 'civil212')
+        lightFighter = self.get_nbr(soup, 'military204')
+        heavyFighter = self.get_nbr(soup, 'military205')
+        cruiser = self.get_nbr(soup, 'military206')
+        battleship = self.get_nbr(soup, 'military207')
+        battlecruiser = self.get_nbr(soup, 'military215')
+        bomber = self.get_nbr(soup, 'military211')
+        destroyer = self.get_nbr(soup, 'military213')
+        deathstar = self.get_nbr(soup, 'military214')
+        smallCargo = self.get_nbr(soup, 'civil202')
+        largeCargo = self.get_nbr(soup, 'civil203')
+        colonyShip = self.get_nbr(soup, 'civil208')
+        recycler = self.get_nbr(soup, 'civil209')
+        espionageProbe = self.get_nbr(soup, 'civil210')
+        solarSatellite = self.get_nbr(soup, 'civil212')
 
         return {'LightFighter': lightFighter,
                 'HeavyFighter': heavyFighter,
