@@ -122,6 +122,11 @@ class OGame(object):
         deuterium = int(180 * 1.8 ** (level-1))
         return (metal, crystal, deuterium)
 
+    def building_production_time(metal, crystal, level_robotics_factory, level_nanite_factory, level, universe_speed=1):
+        res = (metal + crystal) / (2500 * max(4-level/2, 1) * (1 + level_robotics_factory) * universe_speed * 2 ** level_nanite_factory) * 3600
+        seconds = int(round(res))
+        return seconds
+
     def get_ships(self, planet_id):
         def get_nbr(soup, name):
             div = soup.find('div', {'class': name})
