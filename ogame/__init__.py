@@ -51,7 +51,7 @@ class OGame(object):
         return obj
 
     def fetch_resources(self, planet_id):
-        url = self.get_url('fetchResources', planet_id)
+        url = self.get_url('fetchResources', {'cp': planet_id})
         res = self.session.get(url).content
         try:
             obj = json.loads(res)
@@ -141,7 +141,7 @@ class OGame(object):
         if defense_id not in constants.Defense.values():
             raise BAD_DEFENSE_ID
 
-        url = self.get_url('defense', planet_id)
+        url = self.get_url('defense', {'cp': planet_id})
 
         res = self.session.get(url).content
         soup = BeautifulSoup(res)
@@ -159,7 +159,7 @@ class OGame(object):
         if ship_id not in constants.Ships.values():
             raise BAD_SHIP_ID
 
-        url = self.get_url('shipyard', planet_id)
+        url = self.get_url('shipyard', {'cp': planet_id})
 
         res = self.session.get(url).content
         soup = BeautifulSoup(res)
@@ -177,7 +177,7 @@ class OGame(object):
         if building_id not in constants.Buildings.values():
             raise BAD_BUILDING_ID
 
-        url = self.get_url('resources', planet_id)
+        url = self.get_url('resources', {'cp': planet_id})
 
         res = self.session.get(url).content
         soup = BeautifulSoup(res)
@@ -193,7 +193,7 @@ class OGame(object):
         if technology_id not in constants.Research.values():
             raise BAD_RESEARCH_ID
 
-        url = self.get_url('research', planet_id)
+        url = self.get_url('research', {'cp': planet_id})
 
         payload = {'modus': 1,
                    'type': technology_id}
@@ -231,7 +231,7 @@ class OGame(object):
                 fields[name] = value
             return fields
 
-        url = self.get_url('fleet1', planet_id)
+        url = self.get_url('fleet1', {'cp': planet_id})
 
         res = self.session.get(url).content
         payload = {}
@@ -307,13 +307,16 @@ class OGame(object):
         arrival_time = datetime.datetime.combine(date, time)
         return arrival_time
 
-    def get_url(self, page, planet_id=None):
+    def get_url(self, page, params={}):
         if page == 'login':
             return 'https://%s/main/login' % self.domain
         else:
             url = 'https://%s/game/index.php?page=%s' % (self.server_url, page)
-            if planet_id:
-                url += '&cp=%s' % planet_id
+            if params:
+                arr = []
+                for key in params:
+                    arr.append("%s=%s" % (key, params[key]))
+                url += '&' + '&'.join(arr)
             return url
 
     def get_servers(self, domain):
