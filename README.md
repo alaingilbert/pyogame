@@ -58,7 +58,9 @@ True
 ###### Get resources example
 
 ```py
->>> ogame.get_resources(PLANET_ID)
+>>> ogame.get_planet_ids()
+[u'33672410']
+>>> ogame.get_resources(33672410)
 {'metal': 3000, 'crystal': 2000, 'deuterium': 1000, 'energy': 686, 'darkmatter': 700}
 ```
 
