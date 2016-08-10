@@ -96,6 +96,32 @@ class OGame(object):
     def SolarPlantProduction(level):
         return int(math.floor(20 * level * 1.1 ** level))
 
+    def metal_mine_cost(level):
+        metal = int(60 * 1.5 ** (level-1))
+        crystal = int(15 * 1.5 ** (level-1))
+        return (metal, crystal)
+
+    def crystal_mine_cost(level):
+        metal = int(48 * 1.6 ** (level-1))
+        crystal = int(24 * 1.6 ** (level-1))
+        return (metal, crystal)
+
+    def deuterium_synthesizer_cost(level):
+        metal = int(225 * 1.5 ** (level-1))
+        crystal = int(75 * 1.5 ** (level-1))
+        return (metal, crystal)
+
+    def solar_plant_cost(level):
+        metal = int(75 * 1.5 ** (level-1))
+        crystal = int(30 * 1.5 ** (level-1))
+        return (metal, crystal)
+
+    def fusion_reactor_cost(level):
+        metal = int(900 * 1.8 ** (level-1))
+        crystal = int(360 * 1.8 ** (level-1))
+        deuterium = int(180 * 1.8 ** (level-1))
+        return (metal, crystal, deuterium)
+
     def get_ships(self, planet_id):
         def get_nbr(soup, name):
             div = soup.find('div', {'class': name})
