@@ -168,6 +168,27 @@ class OGame(object):
                 'EspionageProbe': espionageProbe,
                 'SolarSatellite': solarSatellite}
 
+    def get_facilities(self):
+        res = self.session.get(self.get_url('station')).content
+        soup = BeautifulSoup(res)
+
+        robotics_factory = self.get_nbr(soup, 'station14')
+        shipyard = self.get_nbr(soup, 'station21')
+        research_lab = self.get_nbr(soup, 'station31')
+        alliance_depot = self.get_nbr(soup, 'station34')
+        missile_silo = self.get_nbr(soup, 'station44')
+        nanite_factory = self.get_nbr(soup, 'station15')
+        terraformer = self.get_nbr(soup, 'station33')
+        space_dock = self.get_nbr(soup, 'station36')
+        res = {'robotics_factory': robotics_factory,
+                'shipyard': shipyard,
+                'research_lab': research_lab,
+                'alliance_depot': alliance_depot,
+                'missile_silo': missile_silo,
+                'nanite_factory': nanite_factory,
+                'terraformer': terraformer,
+                'space_dock': space_dock}
+        return res
     def is_under_attack(self):
         json = self.fetch_eventbox()
         return not json.get('hostile', 0) == 0
