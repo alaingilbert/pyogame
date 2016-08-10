@@ -18,6 +18,7 @@ class OGame(object):
         self.username = username
         self.password = password
         self.login()
+        self.universe_speed = self.get_universe_speed()
 
     def login(self):
         """Get the ogame session token."""
@@ -71,6 +72,17 @@ class OGame(object):
         result = {'metal': metal, 'crystal': crystal, 'deuterium': deuterium,
                   'energy': energy, 'darkmatter': darkmatter}
         return result
+
+    def get_universe_speed(self):
+        res = self.session.get(self.get_url('techtree', {'tab': 2, 'techID': 1})).content
+        soup = BeautifulSoup(res)
+        tr = soup.find('tr', {'class': 'detailTableRow'})
+        spans = soup.findAll('span', {'class': 'undermark'})
+        level = int(spans[0].text.strip())
+        val = int(spans[1].text.strip())
+        metal_production = self.metal_mine_production(level, 1)
+        universe_speed = val / metal_production
+        return universe_speed
 
     def metal_mine_production(self, level, universe_speed=1):
         return int(math.floor(30 * level * 1.1 ** level) * universe_speed)
