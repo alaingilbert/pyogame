@@ -154,7 +154,6 @@ class OGame(object):
     def get_ships(self, planet_id):
         res = self.session.get(self.get_url('shipyard')).content
         soup = BeautifulSoup(res)
-
         res = {}
         res['light_fighter'] = self.get_nbr(soup, 'military204')
         res['heavy_fighter'] = self.get_nbr(soup, 'military205')
