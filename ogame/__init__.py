@@ -464,6 +464,28 @@ class OGame(object):
         date = datetime.datetime.strptime(date_str, format)
         return date
 
+    def get_planet_infos(self, planet_id):
+        res = self.session.get(self.get_url('overview', {'cp': planet_id})).content
+        soup = BeautifulSoup(res)
+        link = soup.find('div', {'id': 'planet-%s' % planet_id}).find('a')
+        infos_label = BeautifulSoup(link['title']).text
+        infos = re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)(\d+).C to (\d+).C', infos_label)
+        res = {}
+        res['id'] = planet_id
+        res['planet_name'] = infos.group(1)
+        res['coordinate'] = {}
+        res['coordinate']['galaxy'] = int(infos.group(2))
+        res['coordinate']['system'] = int(infos.group(3))
+        res['coordinate']['position'] = int(infos.group(4))
+        res['diameter'] = int(infos.group(5).replace('.', ''))
+        res['fields'] = {}
+        res['fields']['built'] = int(infos.group(6))
+        res['fields']['total'] = int(infos.group(7))
+        res['temperature'] = {}
+        res['temperature']['min'] = int(infos.group(8))
+        res['temperature']['max'] = int(infos.group(9))
+        return res
+
     def get_ogame_version(self):
         """Get ogame version on your server."""
         res = self.session.get(self.get_url('overview')).content
