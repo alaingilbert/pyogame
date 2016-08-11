@@ -135,6 +135,22 @@ class OGame(object):
             tag.extract()
         return int(level.text.strip())
 
+    def get_defence(self, planet_id):
+        res = self.session.get(self.get_url('defense')).content
+        soup = BeautifulSoup(res)
+        res = {}
+        res['rocket_launcher'] = self.get_nbr(soup, 'defense401')
+        res['light_laser'] = self.get_nbr(soup, 'defense402')
+        res['heavy_laser'] = self.get_nbr(soup, 'defense403')
+        res['gauss_cannon'] = self.get_nbr(soup, 'defense404')
+        res['ion_cannon'] = self.get_nbr(soup, 'defense405')
+        res['plasma_turret'] = self.get_nbr(soup, 'defense406')
+        res['small_shield_dome'] = self.get_nbr(soup, 'defense407')
+        res['large_shield_dome'] = self.get_nbr(soup, 'defense408')
+        res['anti_ballistic_missiles'] = self.get_nbr(soup, 'defense502')
+        res['interplanetary_missiles'] = self.get_nbr(soup, 'defense503')
+        return res
+
     def get_ships(self, planet_id):
         res = self.session.get(self.get_url('shipyard')).content
         soup = BeautifulSoup(res)
