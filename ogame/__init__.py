@@ -12,12 +12,12 @@ import re
 class OGame(object):
     def __init__(self, universe, username, password, domain='en.ogame.gameforge.com'):
         self.session = requests.session()
-
-        servers = self.get_servers(domain)
+        self.universe = universe
         self.domain = domain
-        self.server_url = self.get_universe_url(universe, servers)
         self.username = username
         self.password = password
+        servers = self.get_servers(domain)
+        self.server_url = self.get_universe_url(universe, servers)
         self.login()
         self.universe_speed = self.get_universe_speed()
 
