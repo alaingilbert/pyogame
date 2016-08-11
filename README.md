@@ -85,9 +85,9 @@ True
 ### get_ships(planet_id:int):obj
 
 ```
-{'EspionageProbe': 0, 'Destroyer': 0, 'LightFighter': 0, 'ColonyShip': 0, 'Deathstar': 0,
- 'HeavyFighter': 0, 'LargeCargo': 0, 'Cruiser': 0, 'Recycler': 0, 'Battleship': 0,
- 'Battlecruiser': 0, 'Bomber': 0, 'SolarSatellite': 0, 'SmallCargo': 0}
+{'espionage_probe': 0, 'destroyer': 0, 'light_fighter': 0, 'colony_ship': 0, 'deathstar': 0,
+ 'heavy_fighter': 0, 'large_cargo': 0, 'cruiser': 0, 'recycler': 0, 'battleship': 0,
+ 'battlecruiser': 0, 'bomber': 0, 'solar_satellite': 0, 'small_cargo': 0}
 ```
 
 ### is_under_attack():bool
