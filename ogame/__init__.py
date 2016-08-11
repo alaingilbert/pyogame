@@ -128,6 +128,21 @@ class OGame(object):
         seconds = int(round(res))
         return seconds
 
+    def get_user_infos(self):
+        html = self.session.get(self.get_url('overview')).content
+        res = {}
+        res['player_id'] = int(re.search(r'playerId="(\w+)"', html).group(1))
+        res['player_name'] = re.search(r'playerName="(\w+)"', html).group(1)
+        tmp = re.search(r'textContent\[7\]="([^"]+)"', html).group(1)
+        soup = BeautifulSoup(tmp)
+        tmp = soup.text
+        infos = re.search(r'([\d\\.]+) \(Place ([\d\.]+) of ([\d\.]+)\)', tmp)
+        res['points'] = int(infos.group(1).replace('.', ''))
+        res['rank'] = int(infos.group(2).replace('.', ''))
+        res['total'] = int(infos.group(3).replace('.', ''))
+        res['honour_points'] = int(re.search(r'textContent\[9\]="([^"]+)"', html).group(1).replace('.', ''))
+        return res
+
     def get_nbr(self, soup, name):
         div = soup.find('div', {'class': name})
         level = div.find('span', {'class': 'level'})
