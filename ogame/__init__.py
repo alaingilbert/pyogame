@@ -135,6 +135,21 @@ class OGame(object):
             tag.extract()
         return int(level.text.strip())
 
+    def get_resources_buildings(self, planet_id):
+        res = self.session.get(self.get_url('resources')).content
+        soup = BeautifulSoup(res)
+        res = {}
+        res['metal_mine'] = self.get_nbr(soup, 'supply1')
+        res['crystal_mine'] = self.get_nbr(soup, 'supply2')
+        res['deuterium_synthesizer'] = self.get_nbr(soup, 'supply3')
+        res['solar_plant'] = self.get_nbr(soup, 'supply4')
+        res['fusion_reactor'] = self.get_nbr(soup, 'supply12')
+        res['solar_satellite'] = self.get_nbr(soup, 'supply212')
+        res['metal_storage'] = self.get_nbr(soup, 'supply22')
+        res['crystal_storage'] = self.get_nbr(soup, 'supply23')
+        res['deuterium_tank'] = self.get_nbr(soup, 'supply24')
+        return res
+
     def get_defence(self, planet_id):
         res = self.session.get(self.get_url('defense')).content
         soup = BeautifulSoup(res)
