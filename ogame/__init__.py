@@ -28,7 +28,7 @@ class OGame(object):
                    'login': self.username,
                    'pass': self.password}
         res = self.session.post(self.get_url('login'), data=payload).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         self.ogame_session = soup.find('meta', {'name': 'ogame-session'}) \
                                  .get('content')
 
@@ -37,7 +37,7 @@ class OGame(object):
 
     def is_logged(self):
         res = self.session.get(self.get_url('overview')).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         session = soup.find('meta', {'name': 'ogame-session'})
         return session is not None
 
@@ -76,7 +76,7 @@ class OGame(object):
 
     def get_universe_speed(self):
         res = self.session.get(self.get_url('techtree', {'tab': 2, 'techID': 1})).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         tr = soup.find('tr', {'class': 'detailTableRow'})
         spans = soup.findAll('span', {'class': 'undermark'})
         level = int(spans[0].text.strip())
@@ -152,7 +152,7 @@ class OGame(object):
 
     def get_resources_buildings(self, planet_id):
         res = self.session.get(self.get_url('resources')).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         res = {}
         res['metal_mine'] = self.get_nbr(soup, 'supply1')
         res['crystal_mine'] = self.get_nbr(soup, 'supply2')
@@ -167,7 +167,7 @@ class OGame(object):
 
     def get_defense(self, planet_id):
         res = self.session.get(self.get_url('defense')).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         res = {}
         res['rocket_launcher'] = self.get_nbr(soup, 'defense401')
         res['light_laser'] = self.get_nbr(soup, 'defense402')
@@ -183,7 +183,7 @@ class OGame(object):
 
     def get_ships(self, planet_id):
         res = self.session.get(self.get_url('shipyard')).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         res = {}
         res['light_fighter'] = self.get_nbr(soup, 'military204')
         res['heavy_fighter'] = self.get_nbr(soup, 'military205')
@@ -203,7 +203,7 @@ class OGame(object):
 
     def get_facilities(self):
         res = self.session.get(self.get_url('station')).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         res = {}
         res['robotics_factory'] = self.get_nbr(soup, 'station14')
         res['shipyard'] = self.get_nbr(soup, 'station21')
@@ -217,7 +217,7 @@ class OGame(object):
 
     def get_research(self):
         res = self.session.get(self.get_url('research')).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         res = {}
         res['energy_technology'] = self.get_nbr(soup, 'research113')
         res['laser_technology'] = self.get_nbr(soup, 'research120')
@@ -244,7 +244,7 @@ class OGame(object):
     def get_planet_ids(self):
         """Get the ids of your planets."""
         res = self.session.get(self.get_url('overview')).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         planets = soup.findAll('div', {'class': 'smallplanet'})
         ids = [planet['id'].replace('planet-', '') for planet in planets]
         return ids
@@ -252,7 +252,7 @@ class OGame(object):
     def get_planet_by_name(self, planet_name):
         """Returns the first planet id with the specified name."""
         res = self.session.get(self.get_url('overview')).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         planets = soup.findAll('div', {'class': 'smallplanet'})
         for planet in planets:
             name = planet.find('span', {'class': 'planet-name'}).string
@@ -269,7 +269,7 @@ class OGame(object):
         url = self.get_url('defense', {'cp': planet_id})
 
         res = self.session.get(url).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         form = soup.find('form')
         token = form.find('input', {'name': 'token'}).get('value')
 
@@ -287,7 +287,7 @@ class OGame(object):
         url = self.get_url('shipyard', {'cp': planet_id})
 
         res = self.session.get(url).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         form = soup.find('form')
         token = form.find('input', {'name': 'token'}).get('value')
 
@@ -305,7 +305,7 @@ class OGame(object):
         url = self.get_url('resources', {'cp': planet_id})
 
         res = self.session.get(url).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         form = soup.find('form')
         token = form.find('input', {'name': 'token'}).get('value')
 
@@ -388,7 +388,7 @@ class OGame(object):
     def get_fleet_ids(self):
         """Return the reversable fleet ids."""
         res = self.session.get(self.get_url('movement')).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         spans = soup.findAll('span', {'class': 'reversal'})
         fleet_ids = [span.get('ref') for span in spans]
         return fleet_ids
@@ -397,7 +397,7 @@ class OGame(object):
         headers = {'X-Requested-With': 'XMLHttpRequest'}
         res = self.session.get(self.get_url('eventList'), params={'ajax': 1},
                                headers=headers).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         events = soup.findAll('tr', {'class': 'eventFleet'})
         attacks = []
         for ev in events:
@@ -446,7 +446,7 @@ class OGame(object):
 
     def get_servers(self, domain):
         res = self.session.get('https://%s' % domain).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         select = soup.find('select', {'id': 'serverLogin'})
         servers = {}
         for opt in select.findAll('option'):
@@ -465,7 +465,7 @@ class OGame(object):
     def get_server_time(self):
         """Get the ogame server time."""
         res = self.session.get(self.get_url('overview')).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         date_str = soup.find('li', {'class': 'OGameClock'}).text
         format = '%d.%m.%Y %H:%M:%S'
         date = datetime.datetime.strptime(date_str, format)
@@ -473,7 +473,7 @@ class OGame(object):
 
     def get_planet_infos(self, planet_id):
         res = self.session.get(self.get_url('overview', {'cp': planet_id})).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         link = soup.find('div', {'id': 'planet-%s' % planet_id}).find('a')
         infos_label = BeautifulSoup(link['title']).text
         infos = re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)(\d+).C to (\d+).C', infos_label)
@@ -496,7 +496,7 @@ class OGame(object):
     def get_ogame_version(self):
         """Get ogame version on your server."""
         res = self.session.get(self.get_url('overview')).content
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "lxml")
         footer = soup.find('div', {'id': 'siteFooter'})
         version = footer.find('a').text.strip()
         return version
