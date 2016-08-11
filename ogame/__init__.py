@@ -80,7 +80,7 @@ class OGame(object):
         tr = soup.find('tr', {'class': 'detailTableRow'})
         spans = soup.findAll('span', {'class': 'undermark'})
         level = int(spans[0].text.strip())
-        val = int(spans[1].text.strip())
+        val = int(spans[1].text.replace('.', '').strip())
         metal_production = self.metal_mine_production(level, 1)
         universe_speed = val / metal_production
         return universe_speed
