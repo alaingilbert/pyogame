@@ -155,95 +155,57 @@ class OGame(object):
         res = self.session.get(self.get_url('shipyard')).content
         soup = BeautifulSoup(res)
 
-        lightFighter = self.get_nbr(soup, 'military204')
-        heavyFighter = self.get_nbr(soup, 'military205')
-        cruiser = self.get_nbr(soup, 'military206')
-        battleship = self.get_nbr(soup, 'military207')
-        battlecruiser = self.get_nbr(soup, 'military215')
-        bomber = self.get_nbr(soup, 'military211')
-        destroyer = self.get_nbr(soup, 'military213')
-        deathstar = self.get_nbr(soup, 'military214')
-        smallCargo = self.get_nbr(soup, 'civil202')
-        largeCargo = self.get_nbr(soup, 'civil203')
-        colonyShip = self.get_nbr(soup, 'civil208')
-        recycler = self.get_nbr(soup, 'civil209')
-        espionageProbe = self.get_nbr(soup, 'civil210')
-        solarSatellite = self.get_nbr(soup, 'civil212')
-
-        return {'LightFighter': lightFighter,
-                'HeavyFighter': heavyFighter,
-                'Cruiser': cruiser,
-                'Battleship': battleship,
-                'Battlecruiser': battlecruiser,
-                'Bomber': bomber,
-                'Destroyer': destroyer,
-                'Deathstar': deathstar,
-                'SmallCargo': smallCargo,
-                'LargeCargo': largeCargo,
-                'ColonyShip': colonyShip,
-                'Recycler': recycler,
-                'EspionageProbe': espionageProbe,
-                'SolarSatellite': solarSatellite}
+        res = {}
+        res['light_fighter'] = self.get_nbr(soup, 'military204')
+        res['heavy_fighter'] = self.get_nbr(soup, 'military205')
+        res['cruiser'] = self.get_nbr(soup, 'military206')
+        res['battleship'] = self.get_nbr(soup, 'military207')
+        res['battlecruiser'] = self.get_nbr(soup, 'military215')
+        res['bomber'] = self.get_nbr(soup, 'military211')
+        res['destroyer'] = self.get_nbr(soup, 'military213')
+        res['deathstar'] = self.get_nbr(soup, 'military214')
+        res['small_cargo'] = self.get_nbr(soup, 'civil202')
+        res['large_cargo'] = self.get_nbr(soup, 'civil203')
+        res['colony_ship'] = self.get_nbr(soup, 'civil208')
+        res['recycler'] = self.get_nbr(soup, 'civil209')
+        res['espionage_probe'] = self.get_nbr(soup, 'civil210')
+        res['solar_satellite'] = self.get_nbr(soup, 'civil212')
+        return res
 
     def get_facilities(self):
         res = self.session.get(self.get_url('station')).content
         soup = BeautifulSoup(res)
-
-        robotics_factory = self.get_nbr(soup, 'station14')
-        shipyard = self.get_nbr(soup, 'station21')
-        research_lab = self.get_nbr(soup, 'station31')
-        alliance_depot = self.get_nbr(soup, 'station34')
-        missile_silo = self.get_nbr(soup, 'station44')
-        nanite_factory = self.get_nbr(soup, 'station15')
-        terraformer = self.get_nbr(soup, 'station33')
-        space_dock = self.get_nbr(soup, 'station36')
-        res = {'robotics_factory': robotics_factory,
-                'shipyard': shipyard,
-                'research_lab': research_lab,
-                'alliance_depot': alliance_depot,
-                'missile_silo': missile_silo,
-                'nanite_factory': nanite_factory,
-                'terraformer': terraformer,
-                'space_dock': space_dock}
+        res = {}
+        res['robotics_factory'] = self.get_nbr(soup, 'station14')
+        res['shipyard'] = self.get_nbr(soup, 'station21')
+        res['research_lab'] = self.get_nbr(soup, 'station31')
+        res['alliance_depot'] = self.get_nbr(soup, 'station34')
+        res['missile_silo'] = self.get_nbr(soup, 'station44')
+        res['nanite_factory'] = self.get_nbr(soup, 'station15')
+        res['terraformer'] = self.get_nbr(soup, 'station33')
+        res['space_dock'] = self.get_nbr(soup, 'station36')
         return res
 
     def get_research(self):
         res = self.session.get(self.get_url('research')).content
         soup = BeautifulSoup(res)
-
-        energy_technology = self.get_nbr(soup, 'research113')
-        laser_technology = self.get_nbr(soup, 'research120')
-        ion_technology = self.get_nbr(soup, 'research121')
-        hyperspace_technology = self.get_nbr(soup, 'research114')
-        plasma_technology = self.get_nbr(soup, 'research122')
-        combustion_drive = self.get_nbr(soup, 'research115')
-        impulse_drive = self.get_nbr(soup, 'research117')
-        hyperspace_drive = self.get_nbr(soup, 'research118')
-        espionage_technology = self.get_nbr(soup, 'research106')
-        computer_technology = self.get_nbr(soup, 'research108')
-        astrophysics = self.get_nbr(soup, 'research124')
-        intergalactic_research_network = self.get_nbr(soup, 'research123')
-        graviton_technology = self.get_nbr(soup, 'research199')
-        weapons_technology = self.get_nbr(soup, 'research109')
-        shielding_technology = self.get_nbr(soup, 'research110')
-        armour_technology = self.get_nbr(soup, 'research111')
-
-        res = {'energy_technology': energy_technology,
-               'laser_technology': laser_technology,
-               'ion_technology': ion_technology,
-               'hyperspace_technology': hyperspace_technology,
-               'plasma_technology': plasma_technology,
-               'combustion_drive': combustion_drive,
-               'impulse_drive': impulse_drive,
-               'hyperspace_drive': hyperspace_drive,
-               'espionage_technology': espionage_technology,
-               'computer_technology': computer_technology,
-               'astrophysics': astrophysics,
-               'intergalactic_research_network': intergalactic_research_network,
-               'graviton_technology': graviton_technology,
-               'weapons_technology': weapons_technology,
-               'shielding_technology': shielding_technology,
-               'armour_technology': armour_technology}
+        res = {}
+        res['energy_technology'] = self.get_nbr(soup, 'research113')
+        res['laser_technology'] = self.get_nbr(soup, 'research120')
+        res['ion_technology'] = self.get_nbr(soup, 'research121')
+        res['hyperspace_technology'] = self.get_nbr(soup, 'research114')
+        res['plasma_technology'] = self.get_nbr(soup, 'research122')
+        res['combustion_drive'] = self.get_nbr(soup, 'research115')
+        res['impulse_drive'] = self.get_nbr(soup, 'research117')
+        res['hyperspace_drive'] = self.get_nbr(soup, 'research118')
+        res['espionage_technology'] = self.get_nbr(soup, 'research106')
+        res['computer_technology'] = self.get_nbr(soup, 'research108')
+        res['astrophysics'] = self.get_nbr(soup, 'research124')
+        res['intergalactic_research_network'] = self.get_nbr(soup, 'research123')
+        res['graviton_technology'] = self.get_nbr(soup, 'research199')
+        res['weapons_technology'] = self.get_nbr(soup, 'research109')
+        res['shielding_technology'] = self.get_nbr(soup, 'research110')
+        res['armour_technology'] = self.get_nbr(soup, 'research111')
         return res
 
     def is_under_attack(self):
