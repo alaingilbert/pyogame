@@ -165,7 +165,7 @@ class OGame(object):
         res['deuterium_tank'] = self.get_nbr(soup, 'supply24')
         return res
 
-    def get_defence(self, planet_id):
+    def get_defense(self, planet_id):
         res = self.session.get(self.get_url('defense')).content
         soup = BeautifulSoup(res)
         res = {}
