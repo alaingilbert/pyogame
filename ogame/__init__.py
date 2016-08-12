@@ -128,6 +128,22 @@ class OGame(object):
         seconds = int(round(res))
         return seconds
 
+    def building_production_time2(metal, crystal, level_robotics_factory, level_nanite_factory, level, universe_speed=1):
+        """Nanite Factories, Lunar Bases, Sensor Phalanxes, and Jumpgates do not get the MAX() time reduction, so their formula is just"""
+        res = (metal + crystal) / (2500 * (1 + level_robotics_factory) * universe_speed * 2 ** level_nanite_factory) * 3600
+        seconds = int(round(res))
+        return seconds
+
+    def research_time(metal, crystal, research_lab_level):
+        res = (metal + crystal) / (1000 * (1 + research_lab_level))
+        seconds = int(round(res))
+        return seconds
+
+    def ships_defense_time(metal, crystal, shipyard_level, nanite_factory_level):
+        res = (metal + crystal) / (2500 * (1 + shipyard_level) * (2 ^ nanite_factory_level))
+        seconds = int(round(res))
+        return seconds
+
     def get_user_infos(self):
         html = self.session.get(self.get_url('overview')).content
         res = {}
