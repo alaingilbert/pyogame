@@ -113,3 +113,10 @@ True
 ## Author
 
 Alain Gilbert ([@alain_gilbert](http://twitter.com/alain_gilbert))
+
+
+## Deploy
+
+```
+python setup.py sdist upload -r pypi
+```
