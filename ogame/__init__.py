@@ -26,7 +26,8 @@ class OGame(object):
         payload = {'kid': '',
                    'uni': self.server_url,
                    'login': self.username,
-                   'pass': self.password}
+                   'pass': self.password,
+                   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:48.0) Gecko/20100101 Firefox/48.0'}                   
         res = self.session.post(self.get_url('login'), data=payload).content
         soup = BeautifulSoup(res, "lxml")
         self.ogame_session = soup.find('meta', {'name': 'ogame-session'}) \
@@ -152,7 +153,7 @@ class OGame(object):
         tmp = re.search(r'textContent\[7\]="([^"]+)"', html).group(1)
         soup = BeautifulSoup(tmp)
         tmp = soup.text
-        infos = re.search(r'([\d\\.]+) \(Place ([\d\.]+) of ([\d\.]+)\)', tmp)
+        infos = re.search(r'([\d\\.]+) \(Platz ([\d\.]+) von ([\d\.]+)\)', tmp)
         res['points'] = int(infos.group(1).replace('.', ''))
         res['rank'] = int(infos.group(2).replace('.', ''))
         res['total'] = int(infos.group(3).replace('.', ''))
