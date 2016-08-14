@@ -318,7 +318,7 @@ class OGame(object):
         self.session.post(url, data=payload)
 
     def build_building(self, planet_id, building_id):
-        """Build a ship unit."""
+        """Build a building."""
         if building_id not in constants.Buildings.values():
             raise BAD_BUILDING_ID
 
@@ -512,6 +512,14 @@ class OGame(object):
         res['temperature']['min'] = int(infos.group(8))
         res['temperature']['max'] = int(infos.group(9))
         return res
+
+    def min_index(self, alist):
+        return alist.index(min(alist))
+
+    def planet_get_next_best_mine(self, planet_id, metalMineOffset, crystalMineOffset):
+        planet_resources_buildings = self.get_resources_buildings(planet_id)
+        mines = [planet_resources_buildings['metal_mine']-metalMineOffset,planet_resources_buildings['crystal_mine']-crystalMineOffset,planet_resources_buildings['deuterium_synthesizer']]
+	return (self.min_index(mines) + 1)
 
     def get_ogame_version(self):
         """Get ogame version on your server."""
