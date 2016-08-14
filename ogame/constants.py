@@ -11,6 +11,16 @@ Buildings = {'MetalMine': 1,
              'SeabedDeuteriumDen': 27}
 
 
+Facilities = {'AllianceDepot': 34,
+              'RoboticsFactory': 14,
+              'Shipyard': 21,
+              'ResearchLab': 31,
+              'MissileSilo': 44,
+              'NaniteFactory': 15,
+              'Terraformer': 33,
+              'SpaceDock': 36}
+
+
 Defense = {'RocketLauncher': 401,
            'LightLaser': 402,
            'HeavyLaser': 403,
