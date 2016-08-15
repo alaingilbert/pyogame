@@ -10,19 +10,23 @@ import re
 
 
 class OGame(object):
-    def __init__(self, universe, username, password, domain='en.ogame.gameforge.com'):
+    def __init__(self, universe, username, password, domain='en.ogame.gameforge.com', auto_bootstrap=True):
         self.session = requests.session()
+        self.session.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'})
         self.universe = universe
         self.domain = domain
         self.username = username
         self.password = password
-        servers = self.get_servers(domain)
-        self.server_url = self.get_universe_url(universe, servers)
-        self.login()
-        self.universe_speed = self.get_universe_speed()
+        self.universe_speed = 1
+        self.server_url = ''
+        if auto_bootstrap:
+            self.login()
+            self.universe_speed = self.get_universe_speed()
 
     def login(self):
         """Get the ogame session token."""
+        if self.server_url == '':
+            self.server_url = self.get_universe_url(self.universe)
         payload = {'kid': '',
                    'uni': self.server_url,
                    'login': self.username,
@@ -452,6 +456,8 @@ class OGame(object):
         if page == 'login':
             return 'https://%s/main/login' % self.domain
         else:
+            if self.server_url == '':
+                self.server_url = self.get_universe_url(universe)
             url = 'https://%s/game/index.php?page=%s' % (self.server_url, page)
             if params:
                 arr = []
@@ -471,8 +477,9 @@ class OGame(object):
             servers[name] = url
         return servers
 
-    def get_universe_url(self, universe, servers):
+    def get_universe_url(self, universe):
         """Get a universe name and return the server url."""
+        servers = self.get_servers(self.domain)
         universe = universe.lower()
         if universe not in servers:
             raise BAD_UNIVERSE_NAME
