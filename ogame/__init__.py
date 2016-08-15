@@ -30,7 +30,8 @@ class OGame(object):
         payload = {'kid': '',
                    'uni': self.server_url,
                    'login': self.username,
-                   'pass': self.password}
+                   'pass': self.password,
+                   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:48.0) Gecko/20100101 Firefox/48.0'}                   
         res = self.session.post(self.get_url('login'), data=payload).content
         soup = BeautifulSoup(res, "lxml")
         self.ogame_session = soup.find('meta', {'name': 'ogame-session'}) \
@@ -156,7 +157,10 @@ class OGame(object):
         tmp = re.search(r'textContent\[7\]="([^"]+)"', html).group(1)
         soup = BeautifulSoup(tmp)
         tmp = soup.text
-        infos = re.search(r'([\d\\.]+) \(Place ([\d\.]+) of ([\d\.]+)\)', tmp)
+        if "de.ogame" in self.domain:
+            infos = re.search(r'([\d\\.]+) \(Platz ([\d\.]+) von ([\d\.]+)\)', tmp)
+        else:
+            infos = re.search(r'([\d\\.]+) \(Place ([\d\.]+) of ([\d\.]+)\)', tmp)      
         res['points'] = int(infos.group(1).replace('.', ''))
         res['rank'] = int(infos.group(2).replace('.', ''))
         res['total'] = int(infos.group(3).replace('.', ''))
@@ -318,7 +322,7 @@ class OGame(object):
         self.session.post(url, data=payload)
 
     def build_building(self, planet_id, building_id):
-        """Build a ship unit."""
+        """Build a building."""
         if building_id not in constants.Buildings.values():
             raise BAD_BUILDING_ID
 
@@ -515,6 +519,14 @@ class OGame(object):
         res['temperature']['min'] = int(infos.group(8))
         res['temperature']['max'] = int(infos.group(9))
         return res
+
+    def min_index(self, alist):
+        return alist.index(min(alist))
+
+    def planet_get_next_best_mine(self, planet_id, metalMineOffset, crystalMineOffset):
+        planet_resources_buildings = self.get_resources_buildings(planet_id)
+        mines = [planet_resources_buildings['metal_mine']-metalMineOffset,planet_resources_buildings['crystal_mine']-crystalMineOffset,planet_resources_buildings['deuterium_synthesizer']]
+	return (self.min_index(mines) + 1)
 
     def get_ogame_version(self):
         """Get ogame version on your server."""
