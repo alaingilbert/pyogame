@@ -499,7 +499,7 @@ class OGame(object):
         soup = BeautifulSoup(res, "lxml")
         link = soup.find('div', {'id': 'planet-%s' % planet_id}).find('a')
         infos_label = BeautifulSoup(link['title']).text
-        infos = re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)(\d+).C to (\d+).C', infos_label)
+        infos = re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)([-\d]+).+C to ([-\d]+).+C', infos_label)
         res = {}
         res['id'] = planet_id
         res['planet_name'] = infos.group(1)
