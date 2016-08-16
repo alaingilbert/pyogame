@@ -161,7 +161,7 @@ class OGame(object):
         res['rank'] = int(infos.group(2).replace('.', ''))
         res['total'] = int(infos.group(3).replace('.', ''))
         res['honour_points'] = int(re.search(r'textContent\[9\]="([^"]+)"', html).group(1).replace('.', ''))
-        res['ids'] = self.get_planet_ids(html)
+        res['planet_ids'] = self.get_planet_ids(html)
         return res
 
     def get_nbr(self, soup, name):
