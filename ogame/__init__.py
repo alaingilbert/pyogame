@@ -496,12 +496,15 @@ class OGame(object):
         date = datetime.datetime.strptime(date_str, format)
         return date
 
+    def get_planet_infos_regex(self, text):
+        return re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)([-\d]+).+C (?:bis|to) ([-\d]+).+C', text)
+
     def get_planet_infos(self, planet_id):
         res = self.session.get(self.get_url('overview', {'cp': planet_id})).content
         soup = BeautifulSoup(res)
         link = soup.find('div', {'id': 'planet-%s' % planet_id}).find('a')
         infos_label = BeautifulSoup(link['title']).text
-        infos = re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)([-\d]+).+C to ([-\d]+).+C', infos_label)
+        infos = self.get_planet_infos_regex(infos_label)
         res = {}
         res['id'] = planet_id
         res['planet_name'] = infos.group(1)
