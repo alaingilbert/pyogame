@@ -560,7 +560,19 @@ class OGame(object):
                 desc = ' '.join(desc.split())
                 tmp = {'name': short_name, 'code': code}
                 if idx == 2:
-                    count = int(box.find('div', {'id': 'shipSumCount7'}).text.replace('.', '').strip())
-                    tmp.update({'count': count})
+                    quantity = int(box.find('div', {'id': 'shipSumCount7'}).text.replace('.', '').strip())
+                    tmp.update({'quantity': quantity})
+                    tmp = [tmp]
+                    queue = box.find('table', {'class': 'queue'})
+                    if queue:
+                        tds = queue.findAll('td')
+                        for td in tds:
+                            link = td.find('a')
+                            quantity = int(''.join(link.text.replace('.', '').strip().split()))
+                            img = td.find('img')
+                            alt = img['alt']
+                            short_name = ''.join(alt.split())
+                            code = self.get_code(short_name)
+                            tmp.append({'name': short_name, 'code': code, 'quantity': quantity})
                 res[names[idx]] = tmp
         return res
