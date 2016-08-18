@@ -558,5 +558,9 @@ class OGame(object):
                 code = self.get_code(short_name)
                 desc = box.find('td', {'class': 'desc'}).text
                 desc = ' '.join(desc.split())
-                res[names[idx]] = {'name': short_name, 'code': code}
+                tmp = {'name': short_name, 'code': code}
+                if idx == 2:
+                    count = int(box.find('div', {'id': 'shipSumCount7'}).text.replace('.', '').strip())
+                    tmp.update({'count': count})
+                res[names[idx]] = tmp
         return res
