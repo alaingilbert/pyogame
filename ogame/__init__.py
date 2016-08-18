@@ -9,6 +9,10 @@ import math
 import re
 
 
+def parse_int(text):
+    return int(text.replace('.', '').strip())
+
+
 class OGame(object):
     def __init__(self, universe, username, password, domain='en.ogame.gameforge.com', auto_bootstrap=True):
         self.session = requests.session()
@@ -83,8 +87,8 @@ class OGame(object):
         soup = BeautifulSoup(res)
         tr = soup.find('tr', {'class': 'detailTableRow'})
         spans = soup.findAll('span', {'class': 'undermark'})
-        level = int(spans[0].text.strip())
-        val = int(spans[1].text.replace('.', '').strip())
+        level = parse_int(spans[0].text)
+        val = parse_int(spans[1].text)
         metal_production = self.metal_mine_production(level, 1)
         universe_speed = val / metal_production
         return universe_speed
@@ -157,10 +161,10 @@ class OGame(object):
         soup = BeautifulSoup(tmp)
         tmp = soup.text
         infos = re.search(r'([\d\\.]+) \(Place ([\d\.]+) of ([\d\.]+)\)', tmp)
-        res['points'] = int(infos.group(1).replace('.', ''))
-        res['rank'] = int(infos.group(2).replace('.', ''))
-        res['total'] = int(infos.group(3).replace('.', ''))
-        res['honour_points'] = int(re.search(r'textContent\[9\]="([^"]+)"', html).group(1).replace('.', ''))
+        res['points'] = parse_int(infos.group(1))
+        res['rank'] = parse_int(infos.group(2))
+        res['total'] = parse_int(infos.group(3))
+        res['honour_points'] = parse_int(re.search(r'textContent\[9\]="([^"]+)"', html).group(1))
         res['planet_ids'] = self.get_planet_ids(html)
         return res
 
@@ -169,7 +173,7 @@ class OGame(object):
         level = div.find('span', {'class': 'level'})
         for tag in level.findAll(True):
             tag.extract()
-        return int(level.text.strip())
+        return parse_int(level.text)
 
     def get_resources_buildings(self, planet_id):
         res = self.session.get(self.get_url('resources')).content
@@ -512,7 +516,7 @@ class OGame(object):
         res['coordinate']['galaxy'] = int(infos.group(2))
         res['coordinate']['system'] = int(infos.group(3))
         res['coordinate']['position'] = int(infos.group(4))
-        res['diameter'] = int(infos.group(5).replace('.', ''))
+        res['diameter'] = parse_int(infos.group(5))
         res['fields'] = {}
         res['fields']['built'] = int(infos.group(6))
         res['fields']['total'] = int(infos.group(7))
@@ -560,7 +564,7 @@ class OGame(object):
                 desc = ' '.join(desc.split())
                 tmp = {'name': short_name, 'code': code}
                 if idx == 2:
-                    quantity = int(box.find('div', {'id': 'shipSumCount7'}).text.replace('.', '').strip())
+                    quantity = parse_int(box.find('div', {'id': 'shipSumCount7'}).text)
                     tmp.update({'quantity': quantity})
                     tmp = [tmp]
                     queue = box.find('table', {'class': 'queue'})
@@ -568,7 +572,7 @@ class OGame(object):
                         tds = queue.findAll('td')
                         for td in tds:
                             link = td.find('a')
-                            quantity = int(''.join(link.text.replace('.', '').strip().split()))
+                            quantity = parse_int(link.text)
                             img = td.find('img')
                             alt = img['alt']
                             short_name = ''.join(alt.split())
