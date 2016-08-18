@@ -528,3 +528,35 @@ class OGame(object):
         footer = soup.find('div', {'id': 'siteFooter'})
         version = footer.find('a').text.strip()
         return version
+
+    def get_code(self, name):
+        if name in constants.Buildings.keys():
+            return constants.Buildings[name]
+        if name in constants.Facilities.keys():
+            return constants.Facilities[name]
+        if name in constants.Defense.keys():
+            return constants.Defense[name]
+        if name in constants.Ships.keys():
+            return constants.Ships[name]
+        if name in constants.Research.keys():
+            return constants.Research[name]
+        print 'Couldn\'t find code for %s' % name
+        return None
+
+    def get_overview(self):
+        html = self.session.get(self.get_url('overview')).content
+        soup = BeautifulSoup(html)
+        boxes = soup.findAll('div', {'class': 'content-box-s'})
+        res = {}
+        names = ['buildings', 'research', 'shipyard']
+        for idx, box in enumerate(boxes):
+            isIdle = box.find('td', {'class': 'idle'}) is not None
+            res[names[idx]] = None
+            if not isIdle:
+                name = box.find('th').text
+                short_name = ''.join(name.split())
+                code = self.get_code(short_name)
+                desc = box.find('td', {'class': 'desc'}).text
+                desc = ' '.join(desc.split())
+                res[names[idx]] = {'name': short_name, 'code': code}
+        return res
