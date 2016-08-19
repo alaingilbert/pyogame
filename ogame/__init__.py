@@ -13,10 +13,53 @@ def parse_int(text):
     return int(text.replace('.', '').strip())
 
 
+def for_all_methods(decorator):
+    def decorate(cls):
+        for attr in cls.__dict__: # there's propably a better way to do this
+            if callable(getattr(cls, attr)):
+                setattr(cls, attr, decorator(getattr(cls, attr)))
+        return cls
+    return decorate
+
+
+def sandbox(some_fn):
+    def wrapper(ogame, *args, **kwargs):
+        fn_name = some_fn.__name__
+
+        if fn_name == '__init__' or not ogame.sandbox:
+            return some_fn(ogame, *args, **kwargs)
+
+        if fn_name in ogame.sandbox_obj:
+            return ogame.sandbox_obj[fn_name]
+
+        res = None
+        if fn_name == 'login':
+            res = None
+        elif fn_name == 'get_resources':
+            res = {'metal': 0, 'crystal': 0, 'deuterium': 0, 'energy': 0, 'darkmatter': 0}
+        elif fn_name == 'get_universe_speed':
+            res = 1
+        elif fn_name == 'get_user_infos':
+            res = {}
+            res['player_id'] = 0
+            res['player_name'] = 'Sandbox'
+            res['points'] = 0
+            res['rank'] = 0
+            res['total'] = 0
+            res['honour_points'] = 0
+            res['planet_ids'] = []
+
+        return res
+    return wrapper
+
+
+@for_all_methods(sandbox)
 class OGame(object):
-    def __init__(self, universe, username, password, domain='en.ogame.gameforge.com', auto_bootstrap=True):
+    def __init__(self, universe, username, password, domain='en.ogame.gameforge.com', auto_bootstrap=True, sandbox=False, sandbox_obj={}):
         self.session = requests.session()
         self.session.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'})
+        self.sandbox = sandbox
+        self.sandbox_obj = sandbox_obj
         self.universe = universe
         self.domain = domain
         self.username = username
