@@ -142,8 +142,9 @@ class OGame(object):
                   'energy': energy, 'darkmatter': darkmatter}
         return result
 
-    def get_universe_speed(self):
-        res = self.session.get(self.get_url('techtree', {'tab': 2, 'techID': 1})).content
+    def get_universe_speed(self, res=None):
+        if not res:
+            res = self.session.get(self.get_url('techtree', {'tab': 2, 'techID': 1})).content
         soup = BeautifulSoup(res)
         if soup.find('head'):
             raise NOT_LOGGED
@@ -214,8 +215,9 @@ class OGame(object):
         seconds = int(round(res))
         return seconds
 
-    def get_user_infos(self):
-        html = self.session.get(self.get_url('overview')).content
+    def get_user_infos(self, html=None):
+        if not html:
+            html = self.session.get(self.get_url('overview')).content
         if not self.is_logged(html):
             raise NOT_LOGGED
         res = {}
@@ -336,8 +338,9 @@ class OGame(object):
         res['armour_technology'] = self.get_nbr(soup, 'research111')
         return res
 
-    def is_under_attack(self):
-        json = self.fetch_eventbox()
+    def is_under_attack(self, json=None):
+        if not json:
+            json = self.fetch_eventbox()
         return not json.get('hostile', 0) == 0
 
     def get_planet_ids(self, res=None):
@@ -351,9 +354,10 @@ class OGame(object):
         ids = [planet['id'].replace('planet-', '') for planet in planets]
         return ids
 
-    def get_planet_by_name(self, planet_name):
+    def get_planet_by_name(self, planet_name, res=None):
         """Returns the first planet id with the specified name."""
-        res = self.session.get(self.get_url('overview')).content
+        if not res:
+            res = self.session.get(self.get_url('overview')).content
         if not self.is_logged(res):
             raise NOT_LOGGED
         soup = BeautifulSoup(res)
@@ -421,10 +425,12 @@ class OGame(object):
         #    return False
         form = soup.find('form')
         token = form.find('input', {'name': 'token'}).get('value')
-
-        payload = {'modus': 1,
-                   'token': token,
-                   'type': building_id}
+        if not cancel:
+            payload = {'modus': 1,
+                       'type': building_id}
+        else:
+            payload = {'modus': 2,
+                       'type': building_id}
         self.session.post(url, data=payload)
         #return True
 
@@ -433,9 +439,12 @@ class OGame(object):
             raise BAD_RESEARCH_ID
 
         url = self.get_url('research', {'cp': planet_id})
-
-        payload = {'modus': 1,
-                   'type': technology_id}
+        if not cancel:
+            payload = {'modus': 1,
+                       'type': technology_id}
+        else:
+            payload = {'modus': 2,
+                       'type': technology_id}
         res = self.session.post(url, data=payload)
         if not self.is_logged(res):
             raise NOT_LOGGED
@@ -625,8 +634,9 @@ class OGame(object):
     def get_planet_infos_regex(self, text):
         return re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)([-\d]+).+C (?:bis|to) ([-\d]+).+C', text)
 
-    def get_planet_infos(self, planet_id):
-        res = self.session.get(self.get_url('overview', {'cp': planet_id})).content
+    def get_planet_infos(self, planet_id, res=None):
+        if not res:
+            res = self.session.get(self.get_url('overview', {'cp': planet_id})).content
         if not self.is_logged(res):
             raise NOT_LOGGED
         soup = BeautifulSoup(res)
@@ -650,9 +660,10 @@ class OGame(object):
         res['temperature']['max'] = int(infos.group(9))
         return res
 
-    def get_ogame_version(self):
+    def get_ogame_version(self, res=None):
         """Get ogame version on your server."""
-        res = self.session.get(self.get_url('overview')).content
+        if not res:
+            res = self.session.get(self.get_url('overview')).content
         if not self.is_logged(res):
             raise NOT_LOGGED
         soup = BeautifulSoup(res)
