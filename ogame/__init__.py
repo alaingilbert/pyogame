@@ -378,6 +378,9 @@ class OGame(object):
 
         res = self.session.get(url).content
         soup = BeautifulSoup(res)
+        #is_idle = bool(soup.find('td', {'class': 'idle'}))
+        #if not is_idle:
+        #    return False
         form = soup.find('form')
         token = form.find('input', {'name': 'token'}).get('value')
 
@@ -385,6 +388,7 @@ class OGame(object):
                    'token': token,
                    'type': building_id}
         self.session.post(url, data=payload)
+        #return True
 
     def build_technology(self, planet_id, technology_id):
         if technology_id not in constants.Research.values():
