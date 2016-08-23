@@ -473,6 +473,10 @@ class OGame(object):
         events = soup.findAll('tr', {'class': 'eventFleet'})
         attacks = []
         for ev in events:
+            mission_type = int(ev['data-mission-type'])
+            if mission_type != 1:
+                continue
+
             attack = {}
             coords_origin = ev.find('td', {'class': 'coordsOrigin'}) \
                               .text.strip()
@@ -488,8 +492,14 @@ class OGame(object):
             arrival_time = ev.find('td', {'class': 'arrivalTime'}).text.strip()
             coords = re.search(r'(\d+):(\d+):(\d+)', arrival_time)
             hour, minute, second = coords.groups()
-            arrival_time = get_datetime_from_time(hour, minute, second)
+            hour = int(hour)
+            minute = int(minute)
+            second = int(second)
+            arrival_time = self.get_datetime_from_time(hour, minute, second)
             attack.update({'arrival_time': arrival_time})
+
+            attacker_id = ev.find('a', {'class': 'sendMail'})['data-playerid']
+            attack.update({'attacker_id': attacker_id})
 
             attacks.append(attack)
         return attacks
