@@ -2,6 +2,10 @@ class OGameException(Exception):
     pass
 
 
+class BAD_CREDENTIALS(OGameException):
+    pass
+
+
 class BAD_UNIVERSE_NAME(OGameException):
     pass
 
