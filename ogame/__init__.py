@@ -639,3 +639,12 @@ class OGame(object):
         res['fusion_reactor']        = options[4]['value']
         res['solar_satellite']       = options[5]['value']
         return res
+
+    def send_message(self, player_id, msg):
+        headers = {'X-Requested-With': 'XMLHttpRequest'}
+        payload = {'playerId': player_id,
+                   'text': msg,
+                   'mode': 1,
+                   'ajax': 1}
+        url = self.get_url('ajaxChat')
+        self.session.post(url, data=payload, headers=headers)
