@@ -626,3 +626,16 @@ class OGame(object):
                             tmp.append({'name': short_name, 'code': code, 'quantity': quantity})
                 res[names[idx]] = tmp
         return res
+
+    def get_resource_settings(self, planet_id):
+        html = self.session.get(self.get_url('resourceSettings', {'cp': planet_id})).content
+        soup = BeautifulSoup(html)
+        options = soup.find_all('option', {'selected': True})
+        res = {}
+        res['metal_mine']            = options[0]['value']
+        res['crystal_mine']          = options[1]['value']
+        res['deuterium_synthesizer'] = options[2]['value']
+        res['solar_plant']           = options[3]['value']
+        res['fusion_reactor']        = options[4]['value']
+        res['solar_satellite']       = options[5]['value']
+        return res
