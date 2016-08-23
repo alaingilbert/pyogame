@@ -1,5 +1,5 @@
 from ogame import constants
-from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID, NOT_LOGGED
+from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID, NOT_LOGGED, BAD_CREDENTIALS
 from bs4 import BeautifulSoup
 
 import datetime
@@ -80,8 +80,11 @@ class OGame(object):
                    'pass': self.password}
         res = self.session.post(self.get_url('login'), data=payload).content
         soup = BeautifulSoup(res)
-        self.ogame_session = soup.find('meta', {'name': 'ogame-session'}) \
-                                 .get('content')
+        session_found = soup.find('meta', {'name': 'ogame-session'})
+        if session_found:
+            self.ogame_session = session_found.get('content')
+        else:
+            raise BAD_CREDENTIALS
 
     def logout(self):
         self.session.get(self.get_url('logout'))
@@ -622,4 +625,17 @@ class OGame(object):
                             code = self.get_code(short_name)
                             tmp.append({'name': short_name, 'code': code, 'quantity': quantity})
                 res[names[idx]] = tmp
+        return res
+
+    def get_resource_settings(self, planet_id):
+        html = self.session.get(self.get_url('resourceSettings', {'cp': planet_id})).content
+        soup = BeautifulSoup(html)
+        options = soup.find_all('option', {'selected': True})
+        res = {}
+        res['metal_mine']            = options[0]['value']
+        res['crystal_mine']          = options[1]['value']
+        res['deuterium_synthesizer'] = options[2]['value']
+        res['solar_plant']           = options[3]['value']
+        res['fusion_reactor']        = options[4]['value']
+        res['solar_satellite']       = options[5]['value']
         return res
