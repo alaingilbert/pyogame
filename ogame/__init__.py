@@ -509,7 +509,8 @@ class OGame(object):
         return attacks
 
     def get_datetime_from_time(self, hour, minute, second):
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
+        now += datetime.timedelta(hours=1)
         current_hour = now.hour
         date = datetime.date.today()
         if hour < current_hour:
