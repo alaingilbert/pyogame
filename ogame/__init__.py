@@ -607,8 +607,8 @@ class OGame(object):
         print 'Couldn\'t find code for %s' % name
         return None
 
-    def get_overview(self):
-        html = self.session.get(self.get_url('overview')).content
+    def get_overview(self, planet_id):
+        html = self.session.get(self.get_url('overview', {'cp': planet_id})).content
         soup = BeautifulSoup(html)
         boxes = soup.findAll('div', {'class': 'content-box-s'})
         res = {}
