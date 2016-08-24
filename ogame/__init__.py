@@ -1,7 +1,9 @@
 from ogame import constants
 from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID, NOT_LOGGED, BAD_CREDENTIALS
 from bs4 import BeautifulSoup
+from dateutil import tz
 
+import arrow
 import datetime
 import requests
 import json
@@ -66,6 +68,7 @@ class OGame(object):
         self.password = password
         self.universe_speed = 1
         self.server_url = ''
+        self.server_tz = 'GMT+1'
         if auto_bootstrap:
             self.login()
             self.universe_speed = self.get_universe_speed()
@@ -509,15 +512,11 @@ class OGame(object):
         return attacks
 
     def get_datetime_from_time(self, hour, minute, second):
-        now = datetime.datetime.utcnow()
-        now += datetime.timedelta(hours=1)
-        current_hour = now.hour
-        date = datetime.date.today()
-        if hour < current_hour:
-            date += datetime.timedelta(days=1)
-        time = datetime.time(hour, minute, second)
-        arrival_time = datetime.datetime.combine(date, time)
-        return arrival_time
+        attack_time = arrow.utcnow().to(self.server_tz).replace(hour=hour, minute=minute, second=second)
+        now = arrow.utcnow().to(self.server_tz)
+        if now.hour > attack_time.hour:
+            attack_time += datetime.timedelta(days=1)
+        return attack_time.to(tz.tzlocal()).datetime
 
     def get_url(self, page, params={}):
         if page == 'login':
