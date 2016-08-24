@@ -489,7 +489,7 @@ class OGame(object):
             attack.update({'origin': (int(galaxy), int(system), int(position))})
 
             dest_coords = ev.find('td', {'class': 'destCoords'}).text.strip()
-            coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_origin)
+            coords = re.search(r'\[(\d+):(\d+):(\d+)\]', dest_coords)
             galaxy, system, position = coords.groups()
             attack.update({'destination': (int(galaxy), int(system), int(position))})
 
