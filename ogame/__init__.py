@@ -459,7 +459,17 @@ class OGame(object):
                         'metal': resources.get('metal'),
                         'mission': mission})
         res = self.session.post(self.get_url('movement'), data=payload).content
-        # TODO: Should return the fleet ID.
+
+        res = self.session.get(self.get_url('movement')).content
+        soup = BeautifulSoup(res)
+        origin_coords = soup.find('meta', {'name': 'ogame-planet-coordinates'})['content']
+        fleets = soup.findAll('div', {'class': 'fleetDetails'})
+        for fleet in fleets:
+            origin = fleet.find('span', {'class': 'originCoords'}).text
+            dest = fleet.find('span', {'class': 'destinationCoords'}).text
+            fleet_id = int(fleet.find('span', {'class': 'reversal'}).get('ref'))
+            if dest == '[%s:%s:%s]' % (where['galaxy'], where['system'], where['position']) and origin == '[%s]' % origin_coords:
+                return fleet_id
 
     def cancel_fleet(self, fleet_id):
         self.session.get(self.get_url('movement') + '&return=%s' % fleet_id)
