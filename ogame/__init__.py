@@ -244,7 +244,7 @@ class OGame(object):
 
     @retry_if_logged_out
     def get_resources_buildings(self, planet_id):
-        res = self.session.get(self.get_url('resources')).content
+        res = self.session.get(self.get_url('resources', {'cp': planet_id})).content
         if not self.is_logged(res):
             raise NOT_LOGGED
         soup = BeautifulSoup(res)
@@ -262,7 +262,7 @@ class OGame(object):
 
     @retry_if_logged_out
     def get_defense(self, planet_id):
-        res = self.session.get(self.get_url('defense')).content
+        res = self.session.get(self.get_url('defense', {'cp': planet_id})).content
         if not self.is_logged(res):
             raise NOT_LOGGED
         soup = BeautifulSoup(res)
