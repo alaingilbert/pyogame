@@ -134,6 +134,8 @@ class OGame(object):
     def get_universe_speed(self):
         res = self.session.get(self.get_url('techtree', {'tab': 2, 'techID': 1})).content
         soup = BeautifulSoup(res)
+        if soup.find('head'):
+            raise NOT_LOGGED
         tr = soup.find('tr', {'class': 'detailTableRow'})
         spans = soup.findAll('span', {'class': 'undermark'})
         level = parse_int(spans[0].text)
@@ -204,6 +206,8 @@ class OGame(object):
     @retry_if_logged_out
     def get_user_infos(self):
         html = self.session.get(self.get_url('overview')).content
+        if not self.is_logged(html):
+            raise NOT_LOGGED
         res = {}
         res['player_id'] = int(re.search(r'playerId="(\w+)"', html).group(1))
         res['player_name'] = re.search(r'playerName="(\w+)"', html).group(1)
