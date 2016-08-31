@@ -14,6 +14,10 @@ class NOT_LOGGED(OGameException):
     pass
 
 
+class CANT_PROCESS(OGameException):
+    pass
+
+
 class BAD_DEFENSE_ID(OGameException):
     pass
 
