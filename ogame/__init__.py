@@ -28,28 +28,16 @@ def sandbox(some_fn):
     def wrapper(ogame, *args, **kwargs):
         fn_name = some_fn.__name__
 
+        local_fns = ['get_datetime_from_time', 'get_code', 'get_planet_infos_regex']
+
+        if fn_name == local_fns:
+            return some_fn(ogame, *args, **kwargs)
+
         if fn_name == '__init__' or not ogame.sandbox:
             return some_fn(ogame, *args, **kwargs)
 
         if fn_name in ogame.sandbox_obj:
             return ogame.sandbox_obj[fn_name]
-
-        res = None
-        if fn_name == 'login':
-            res = None
-        elif fn_name == 'get_resources':
-            res = {'metal': 0, 'crystal': 0, 'deuterium': 0, 'energy': 0, 'darkmatter': 0}
-        elif fn_name == 'get_universe_speed':
-            res = 1
-        elif fn_name == 'get_user_infos':
-            res = {}
-            res['player_id'] = 0
-            res['player_name'] = 'Sandbox'
-            res['points'] = 0
-            res['rank'] = 0
-            res['total'] = 0
-            res['honour_points'] = 0
-            res['planet_ids'] = []
 
         return res
     return wrapper
