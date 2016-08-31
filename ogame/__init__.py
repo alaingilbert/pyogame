@@ -580,6 +580,7 @@ class OGame(object):
         infos_label = BeautifulSoup(link['title']).text
         infos = self.get_planet_infos_regex(infos_label)
         res = {}
+        res['img'] = link.find('img').get('src')
         res['id'] = planet_id
         res['planet_name'] = infos.group(1)
         res['coordinate'] = {}
