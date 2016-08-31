@@ -52,7 +52,7 @@ def retry_if_logged_out(fn):
         while not working:
             try:
                 working = True
-                res = fn(self)
+                res = fn(self, *args, **kwargs)
             except NOT_LOGGED:
                 time.sleep(time_to_sleep)
                 attempt += 1
