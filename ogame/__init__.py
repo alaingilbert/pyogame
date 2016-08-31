@@ -55,6 +55,17 @@ def sandbox(some_fn):
     return wrapper
 
 
+def retry_if_logged_out(fn):
+    def wrapper(self, *args, **kwargs):
+        try:
+            res = fn(self)
+        except:
+            self.login()
+            res = fn(self)
+        return res
+    return wrapper
+
+
 @for_all_methods(sandbox)
 class OGame(object):
     def __init__(self, universe, username, password, domain='en.ogame.gameforge.com', auto_bootstrap=True, sandbox=False, sandbox_obj={}):
@@ -202,6 +213,7 @@ class OGame(object):
         seconds = int(round(res))
         return seconds
 
+    @retry_if_logged_out
     def get_user_infos(self):
         html = self.session.get(self.get_url('overview')).content
         res = {}
