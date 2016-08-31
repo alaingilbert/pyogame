@@ -92,9 +92,10 @@ class OGame(object):
     def logout(self):
         self.session.get(self.get_url('logout'))
 
-    def is_logged(self):
-        res = self.session.get(self.get_url('overview')).content
-        soup = BeautifulSoup(res)
+    def is_logged(self, html=None):
+        if not html:
+            html = self.session.get(self.get_url('overview')).content
+        soup = BeautifulSoup(html)
         session = soup.find('meta', {'name': 'ogame-session'})
         return session is not None
 
