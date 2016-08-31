@@ -40,7 +40,7 @@ def sandbox(some_fn):
         if fn_name in ogame.sandbox_obj:
             return ogame.sandbox_obj[fn_name]
 
-        return res
+        return None
     return wrapper
 
 
