@@ -528,7 +528,7 @@ class OGame(object):
 
     @retry_if_logged_out
     def cancel_fleet(self, fleet_id):
-        res = self.session.get(self.get_url('movement') + '&return=%s' % fleet_id)
+        res = self.session.get(self.get_url('movement') + '&return=%s' % fleet_id).content
         if not self.is_logged(res):
             raise NOT_LOGGED
 
