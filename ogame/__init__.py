@@ -20,7 +20,7 @@ def for_all_methods(decorator):
     def decorate(cls):
         for attr in cls.__dict__: # there's propably a better way to do this
             if callable(getattr(cls, attr)):
-                setattr(cls, attr, decorator(getattr(cls, attr)))
+                setattr(cls, attr, retry_if_logged_out(decorator(getattr(cls, attr))))
         return cls
     return decorate
 
@@ -130,7 +130,6 @@ class OGame(object):
             raise NOT_LOGGED
         return obj
 
-    @retry_if_logged_out
     def get_resources(self, planet_id):
         """Returns the planet resources stats."""
         resources = self.fetch_resources(planet_id)
@@ -143,7 +142,6 @@ class OGame(object):
                   'energy': energy, 'darkmatter': darkmatter}
         return result
 
-    @retry_if_logged_out
     def get_universe_speed(self):
         res = self.session.get(self.get_url('techtree', {'tab': 2, 'techID': 1})).content
         soup = BeautifulSoup(res)
@@ -216,7 +214,6 @@ class OGame(object):
         seconds = int(round(res))
         return seconds
 
-    @retry_if_logged_out
     def get_user_infos(self):
         html = self.session.get(self.get_url('overview')).content
         if not self.is_logged(html):
@@ -242,7 +239,6 @@ class OGame(object):
             tag.extract()
         return parse_int(level.text)
 
-    @retry_if_logged_out
     def get_resources_buildings(self, planet_id):
         res = self.session.get(self.get_url('resources', {'cp': planet_id})).content
         if not self.is_logged(res):
@@ -260,7 +256,6 @@ class OGame(object):
         res['deuterium_tank'] = self.get_nbr(soup, 'supply24')
         return res
 
-    @retry_if_logged_out
     def get_defense(self, planet_id):
         res = self.session.get(self.get_url('defense', {'cp': planet_id})).content
         if not self.is_logged(res):
@@ -279,7 +274,6 @@ class OGame(object):
         res['interplanetary_missiles'] = self.get_nbr(soup, 'defense503')
         return res
 
-    @retry_if_logged_out
     def get_ships(self, planet_id):
         res = self.session.get(self.get_url('shipyard', {'cp': planet_id})).content
         if not self.is_logged(res):
@@ -302,7 +296,6 @@ class OGame(object):
         res['solar_satellite'] = self.get_nbr(soup, 'civil212')
         return res
 
-    @retry_if_logged_out
     def get_facilities(self, planet_id):
         res = self.session.get(self.get_url('station', {'cp': planet_id})).content
         if not self.is_logged(res):
@@ -319,7 +312,6 @@ class OGame(object):
         res['space_dock'] = self.get_nbr(soup, 'station36')
         return res
 
-    @retry_if_logged_out
     def get_research(self):
         res = self.session.get(self.get_url('research')).content
         if not self.is_logged(res):
@@ -344,12 +336,10 @@ class OGame(object):
         res['armour_technology'] = self.get_nbr(soup, 'research111')
         return res
 
-    @retry_if_logged_out
     def is_under_attack(self):
         json = self.fetch_eventbox()
         return not json.get('hostile', 0) == 0
 
-    @retry_if_logged_out
     def get_planet_ids(self, res=None):
         """Get the ids of your planets."""
         if not res:
@@ -361,7 +351,6 @@ class OGame(object):
         ids = [planet['id'].replace('planet-', '') for planet in planets]
         return ids
 
-    @retry_if_logged_out
     def get_planet_by_name(self, planet_name):
         """Returns the first planet id with the specified name."""
         res = self.session.get(self.get_url('overview')).content
@@ -376,7 +365,6 @@ class OGame(object):
                 return id
         return None
 
-    @retry_if_logged_out
     def build_defense(self, planet_id, defense_id, nbr):
         """Build a defense unit."""
         if defense_id not in constants.Defense.values():
@@ -397,7 +385,6 @@ class OGame(object):
                    'type': defense_id}
         self.session.post(url, data=payload)
 
-    @retry_if_logged_out
     def build_ships(self, planet_id, ship_id, nbr):
         """Build a ship unit."""
         if ship_id not in constants.Ships.values():
@@ -418,7 +405,6 @@ class OGame(object):
                    'type': ship_id}
         self.session.post(url, data=payload)
 
-    @retry_if_logged_out
     def build_building(self, planet_id, building_id):
         """Build a ship unit."""
         if building_id not in constants.Buildings.values():
@@ -442,7 +428,6 @@ class OGame(object):
         self.session.post(url, data=payload)
         #return True
 
-    @retry_if_logged_out
     def build_technology(self, planet_id, technology_id):
         if technology_id not in constants.Research.values():
             raise BAD_RESEARCH_ID
@@ -476,7 +461,6 @@ class OGame(object):
             elem_id = arg
             self._build(planet_id, elem_id)
 
-    @retry_if_logged_out
     def send_fleet(self, planet_id, ships, speed, where, mission, resources):
         def get_hidden_fields(html):
             soup = BeautifulSoup(html)
@@ -526,13 +510,11 @@ class OGame(object):
             if dest == '[%s:%s:%s]' % (where['galaxy'], where['system'], where['position']) and origin == '[%s]' % origin_coords:
                 return fleet_id
 
-    @retry_if_logged_out
     def cancel_fleet(self, fleet_id):
         res = self.session.get(self.get_url('movement') + '&return=%s' % fleet_id).content
         if not self.is_logged(res):
             raise NOT_LOGGED
 
-    @retry_if_logged_out
     def get_fleet_ids(self):
         """Return the reversable fleet ids."""
         res = self.session.get(self.get_url('movement')).content
@@ -543,7 +525,6 @@ class OGame(object):
         fleet_ids = [span.get('ref') for span in spans]
         return fleet_ids
 
-    @retry_if_logged_out
     def get_attacks(self):
         headers = {'X-Requested-With': 'XMLHttpRequest'}
         res = self.session.get(self.get_url('eventList'), params={'ajax': 1},
@@ -625,7 +606,6 @@ class OGame(object):
             raise BAD_UNIVERSE_NAME
         return servers[universe]
 
-    @retry_if_logged_out
     def get_server_time(self):
         """Get the ogame server time."""
         res = self.session.get(self.get_url('overview')).content
@@ -640,7 +620,6 @@ class OGame(object):
     def get_planet_infos_regex(self, text):
         return re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)([-\d]+).+C (?:bis|to) ([-\d]+).+C', text)
 
-    @retry_if_logged_out
     def get_planet_infos(self, planet_id):
         res = self.session.get(self.get_url('overview', {'cp': planet_id})).content
         if not self.is_logged(res):
@@ -666,7 +645,6 @@ class OGame(object):
         res['temperature']['max'] = int(infos.group(9))
         return res
 
-    @retry_if_logged_out
     def get_ogame_version(self):
         """Get ogame version on your server."""
         res = self.session.get(self.get_url('overview')).content
@@ -691,7 +669,6 @@ class OGame(object):
         print 'Couldn\'t find code for %s' % name
         return None
 
-    @retry_if_logged_out
     def get_overview(self, planet_id):
         html = self.session.get(self.get_url('overview', {'cp': planet_id})).content
         if not self.is_logged(html):
@@ -728,7 +705,6 @@ class OGame(object):
                 res[names[idx]] = tmp
         return res
 
-    @retry_if_logged_out
     def get_resource_settings(self, planet_id):
         html = self.session.get(self.get_url('resourceSettings', {'cp': planet_id})).content
         if not self.is_logged(html):
