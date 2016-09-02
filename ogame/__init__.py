@@ -31,7 +31,7 @@ def sandbox(some_fn):
 
         local_fns = ['get_datetime_from_time', 'get_code', 'get_planet_infos_regex']
 
-        if fn_name == local_fns:
+        if fn_name in local_fns:
             return some_fn(ogame, *args, **kwargs)
 
         if fn_name == '__init__' or not ogame.sandbox:
