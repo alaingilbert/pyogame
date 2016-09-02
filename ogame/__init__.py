@@ -426,7 +426,7 @@ class OGame(object):
         form = soup.find('form')
         token = form.find('input', {'name': 'token'}).get('value')
         modus = 2 if cancel else 1
-        payload = {'modus': 1,
+        payload = {'modus': modus,
                    'token': token,
                    'type': building_id}
         self.session.post(url, data=payload)
