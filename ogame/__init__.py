@@ -409,7 +409,7 @@ class OGame(object):
                    'type': ship_id}
         self.session.post(url, data=payload)
 
-    def build_building(self, planet_id, building_id):
+    def build_building(self, planet_id, building_id, cancel=False):
         """Build a ship unit."""
         if building_id not in constants.Buildings.values():
             raise BAD_BUILDING_ID
@@ -425,26 +425,21 @@ class OGame(object):
         #    return False
         form = soup.find('form')
         token = form.find('input', {'name': 'token'}).get('value')
-        if not cancel:
-            payload = {'modus': 1,
-                       'type': building_id}
-        else:
-            payload = {'modus': 2,
-                       'type': building_id}
+        modus = 2 if cancel else 1
+        payload = {'modus': 1,
+                   'token': token,
+                   'type': building_id}
         self.session.post(url, data=payload)
         #return True
 
-    def build_technology(self, planet_id, technology_id):
+    def build_technology(self, planet_id, technology_id, cancel=False):
         if technology_id not in constants.Research.values():
             raise BAD_RESEARCH_ID
 
         url = self.get_url('research', {'cp': planet_id})
-        if not cancel:
-            payload = {'modus': 1,
-                       'type': technology_id}
-        else:
-            payload = {'modus': 2,
-                       'type': technology_id}
+        modus = 2 if cancel else 1
+        payload = {'modus': modus,
+                   'type': technology_id}
         res = self.session.post(url, data=payload)
         if not self.is_logged(res):
             raise NOT_LOGGED
