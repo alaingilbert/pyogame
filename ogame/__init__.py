@@ -503,12 +503,17 @@ class OGame(object):
         soup = BeautifulSoup(res)
         origin_coords = soup.find('meta', {'name': 'ogame-planet-coordinates'})['content']
         fleets = soup.findAll('div', {'class': 'fleetDetails'})
+        matches = []
         for fleet in fleets:
             origin = fleet.find('span', {'class': 'originCoords'}).text
             dest = fleet.find('span', {'class': 'destinationCoords'}).text
-            fleet_id = int(fleet.find('span', {'class': 'reversal'}).get('ref'))
+            reversal_span = fleet.find('span', {'class': 'reversal'})
+            if not reversal_span:
+                continue
+            fleet_id = int(reversal_span.get('ref'))
             if dest == '[%s:%s:%s]' % (where['galaxy'], where['system'], where['position']) and origin == '[%s]' % origin_coords:
-                return fleet_id
+                matches.append(fleet_id)
+        return max(matches)
 
     def cancel_fleet(self, fleet_id):
         res = self.session.get(self.get_url('movement') + '&return=%s' % fleet_id).content
