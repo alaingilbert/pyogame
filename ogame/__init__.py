@@ -117,7 +117,7 @@ class OGame(object):
         res = self.session.get(self.get_url('fetchEventbox')).content.decode('utf8')
         try:
             obj = json.loads(res)
-        except(ValueError, e):
+        except ValueError as e:
             raise NOT_LOGGED
         return obj
 
@@ -126,7 +126,7 @@ class OGame(object):
         res = self.session.get(url).content.decode('utf8')
         try:
             obj = json.loads(res)
-        except(ValueError, e):
+        except ValueError as e:
             raise NOT_LOGGED
         return obj
 
