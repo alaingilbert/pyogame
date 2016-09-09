@@ -164,10 +164,10 @@ class OGame(object):
     def get_resources(self, planet_id):
         """Returns the planet resources stats."""
         resources = self.fetch_resources(planet_id)
-        metal = resources['metal']['resources']['actual']
-        crystal = resources['crystal']['resources']['actual']
-        deuterium = resources['deuterium']['resources']['actual']
-        energy = resources['energy']['resources']['actual']
+        metal      = resources['metal']['resources']['actual']
+        crystal    = resources['crystal']['resources']['actual']
+        deuterium  = resources['deuterium']['resources']['actual']
+        energy     = resources['energy']['resources']['actual']
         darkmatter = resources['darkmatter']['resources']['actual']
         result = {'metal': metal, 'crystal': crystal, 'deuterium': deuterium,
                   'energy': energy, 'darkmatter': darkmatter}
@@ -211,15 +211,15 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['metal_mine'] = get_nbr(soup, 'supply1')
-        res['crystal_mine'] = get_nbr(soup, 'supply2')
+        res['metal_mine']            = get_nbr(soup, 'supply1')
+        res['crystal_mine']          = get_nbr(soup, 'supply2')
         res['deuterium_synthesizer'] = get_nbr(soup, 'supply3')
-        res['solar_plant'] = get_nbr(soup, 'supply4')
-        res['fusion_reactor'] = get_nbr(soup, 'supply12')
-        res['solar_satellite'] = get_nbr(soup, 'supply212')
-        res['metal_storage'] = get_nbr(soup, 'supply22')
-        res['crystal_storage'] = get_nbr(soup, 'supply23')
-        res['deuterium_tank'] = get_nbr(soup, 'supply24')
+        res['solar_plant']           = get_nbr(soup, 'supply4')
+        res['fusion_reactor']        = get_nbr(soup, 'supply12')
+        res['solar_satellite']       = get_nbr(soup, 'supply212')
+        res['metal_storage']         = get_nbr(soup, 'supply22')
+        res['crystal_storage']       = get_nbr(soup, 'supply23')
+        res['deuterium_tank']        = get_nbr(soup, 'supply24')
         return res
 
     def get_defense(self, planet_id):
@@ -228,14 +228,14 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['rocket_launcher'] = get_nbr(soup, 'defense401')
-        res['light_laser'] = get_nbr(soup, 'defense402')
-        res['heavy_laser'] = get_nbr(soup, 'defense403')
-        res['gauss_cannon'] = get_nbr(soup, 'defense404')
-        res['ion_cannon'] = get_nbr(soup, 'defense405')
-        res['plasma_turret'] = get_nbr(soup, 'defense406')
-        res['small_shield_dome'] = get_nbr(soup, 'defense407')
-        res['large_shield_dome'] = get_nbr(soup, 'defense408')
+        res['rocket_launcher']         = get_nbr(soup, 'defense401')
+        res['light_laser']             = get_nbr(soup, 'defense402')
+        res['heavy_laser']             = get_nbr(soup, 'defense403')
+        res['gauss_cannon']            = get_nbr(soup, 'defense404')
+        res['ion_cannon']              = get_nbr(soup, 'defense405')
+        res['plasma_turret']           = get_nbr(soup, 'defense406')
+        res['small_shield_dome']       = get_nbr(soup, 'defense407')
+        res['large_shield_dome']       = get_nbr(soup, 'defense408')
         res['anti_ballistic_missiles'] = get_nbr(soup, 'defense502')
         res['interplanetary_missiles'] = get_nbr(soup, 'defense503')
         return res
@@ -246,18 +246,18 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['light_fighter'] = get_nbr(soup, 'military204')
-        res['heavy_fighter'] = get_nbr(soup, 'military205')
-        res['cruiser'] = get_nbr(soup, 'military206')
-        res['battleship'] = get_nbr(soup, 'military207')
-        res['battlecruiser'] = get_nbr(soup, 'military215')
-        res['bomber'] = get_nbr(soup, 'military211')
-        res['destroyer'] = get_nbr(soup, 'military213')
-        res['deathstar'] = get_nbr(soup, 'military214')
-        res['small_cargo'] = get_nbr(soup, 'civil202')
-        res['large_cargo'] = get_nbr(soup, 'civil203')
-        res['colony_ship'] = get_nbr(soup, 'civil208')
-        res['recycler'] = get_nbr(soup, 'civil209')
+        res['light_fighter']   = get_nbr(soup, 'military204')
+        res['heavy_fighter']   = get_nbr(soup, 'military205')
+        res['cruiser']         = get_nbr(soup, 'military206')
+        res['battleship']      = get_nbr(soup, 'military207')
+        res['battlecruiser']   = get_nbr(soup, 'military215')
+        res['bomber']          = get_nbr(soup, 'military211')
+        res['destroyer']       = get_nbr(soup, 'military213')
+        res['deathstar']       = get_nbr(soup, 'military214')
+        res['small_cargo']     = get_nbr(soup, 'civil202')
+        res['large_cargo']     = get_nbr(soup, 'civil203')
+        res['colony_ship']     = get_nbr(soup, 'civil208')
+        res['recycler']        = get_nbr(soup, 'civil209')
         res['espionage_probe'] = get_nbr(soup, 'civil210')
         res['solar_satellite'] = get_nbr(soup, 'civil212')
         return res
@@ -269,13 +269,13 @@ class OGame(object):
         soup = BeautifulSoup(res, 'lxml')
         res = {}
         res['robotics_factory'] = get_nbr(soup, 'station14')
-        res['shipyard'] = get_nbr(soup, 'station21')
-        res['research_lab'] = get_nbr(soup, 'station31')
-        res['alliance_depot'] = get_nbr(soup, 'station34')
-        res['missile_silo'] = get_nbr(soup, 'station44')
-        res['nanite_factory'] = get_nbr(soup, 'station15')
-        res['terraformer'] = get_nbr(soup, 'station33')
-        res['space_dock'] = get_nbr(soup, 'station36')
+        res['shipyard']         = get_nbr(soup, 'station21')
+        res['research_lab']     = get_nbr(soup, 'station31')
+        res['alliance_depot']   = get_nbr(soup, 'station34')
+        res['missile_silo']     = get_nbr(soup, 'station44')
+        res['nanite_factory']   = get_nbr(soup, 'station15')
+        res['terraformer']      = get_nbr(soup, 'station33')
+        res['space_dock']       = get_nbr(soup, 'station36')
         return res
 
     def get_research(self):
@@ -284,22 +284,22 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['energy_technology'] = get_nbr(soup, 'research113')
-        res['laser_technology'] = get_nbr(soup, 'research120')
-        res['ion_technology'] = get_nbr(soup, 'research121')
-        res['hyperspace_technology'] = get_nbr(soup, 'research114')
-        res['plasma_technology'] = get_nbr(soup, 'research122')
-        res['combustion_drive'] = get_nbr(soup, 'research115')
-        res['impulse_drive'] = get_nbr(soup, 'research117')
-        res['hyperspace_drive'] = get_nbr(soup, 'research118')
-        res['espionage_technology'] = get_nbr(soup, 'research106')
-        res['computer_technology'] = get_nbr(soup, 'research108')
-        res['astrophysics'] = get_nbr(soup, 'research124')
+        res['energy_technology']              = get_nbr(soup, 'research113')
+        res['laser_technology']               = get_nbr(soup, 'research120')
+        res['ion_technology']                 = get_nbr(soup, 'research121')
+        res['hyperspace_technology']          = get_nbr(soup, 'research114')
+        res['plasma_technology']              = get_nbr(soup, 'research122')
+        res['combustion_drive']               = get_nbr(soup, 'research115')
+        res['impulse_drive']                  = get_nbr(soup, 'research117')
+        res['hyperspace_drive']               = get_nbr(soup, 'research118')
+        res['espionage_technology']           = get_nbr(soup, 'research106')
+        res['computer_technology']            = get_nbr(soup, 'research108')
+        res['astrophysics']                   = get_nbr(soup, 'research124')
         res['intergalactic_research_network'] = get_nbr(soup, 'research123')
-        res['graviton_technology'] = get_nbr(soup, 'research199')
-        res['weapons_technology'] = get_nbr(soup, 'research109')
-        res['shielding_technology'] = get_nbr(soup, 'research110')
-        res['armour_technology'] = get_nbr(soup, 'research111')
+        res['graviton_technology']            = get_nbr(soup, 'research199')
+        res['weapons_technology']             = get_nbr(soup, 'research109')
+        res['shielding_technology']           = get_nbr(soup, 'research110')
+        res['armour_technology']              = get_nbr(soup, 'research111')
         return res
 
     def is_under_attack(self, json_obj=None):
