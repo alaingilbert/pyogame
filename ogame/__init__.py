@@ -639,18 +639,17 @@ class OGame(object):
         names = ['buildings', 'research', 'shipyard']
         for idx, box in enumerate(boxes):
             is_idle = box.find('td', {'class': 'idle'}) is not None
-            res[names[idx]] = None
+            res[names[idx]] = []
             if not is_idle:
                 name = box.find('th').text
                 short_name = ''.join(name.split())
                 code = get_code(short_name)
                 desc = box.find('td', {'class': 'desc'}).text
                 desc = ' '.join(desc.split())
-                tmp = {'name': short_name, 'code': code}
+                tmp = [{'name': short_name, 'code': code}]
                 if idx == 2:
                     quantity = parse_int(box.find('div', {'id': 'shipSumCount7'}).text)
-                    tmp.update({'quantity': quantity})
-                    tmp = [tmp]
+                    tmp[0].update({'quantity': quantity})
                     queue = box.find('table', {'class': 'queue'})
                     if queue:
                         tds = queue.findAll('td')
