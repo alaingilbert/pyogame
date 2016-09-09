@@ -67,13 +67,13 @@ def retry_if_logged_out(fn):
 
 @for_all_methods(sandbox)
 class OGame(object):
-    def __init__(self, universe, username, password, domain='en.ogame.gameforge.com', auto_bootstrap=True, sandbox=False, sandbox_obj={}):
+    def __init__(self, country, universe, username, password, domain='.ogame.gameforge.com', auto_bootstrap=True, sandbox=False, sandbox_obj={}):
         self.session = requests.session()
         self.session.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'})
         self.sandbox = sandbox
         self.sandbox_obj = sandbox_obj
         self.universe = universe
-        self.domain = domain
+        self.domain = country+domain
         self.username = username
         self.password = password
         self.universe_speed = 1
