@@ -408,26 +408,26 @@ class OGame(object):
         if not self.is_logged(res):
             raise NOT_LOGGED
 
-    def _build(self, planet_id, object_id, nbr=None):
+    def _build(self, planet_id, object_id, nbr=None, cancel=False):
         if object_id in constants.Buildings.values():
-            self.build_building(planet_id, object_id)
+            self.build_building(planet_id, object_id, cancel=cancel)
         elif object_id in constants.Research.values():
-            self.build_technology(planet_id, object_id)
+            self.build_technology(planet_id, object_id, cancel=cancel)
         elif object_id in constants.Ships.values():
             self.build_ships(planet_id, object_id, nbr)
         elif object_id in constants.Defense.values():
             self.build_defense(planet_id, object_id, nbr)
 
-    def build(self, planet_id, arg):
+    def build(self, planet_id, arg, cancel=False):
         if isinstance(arg, list):
             for element in arg:
-                self.build(planet_id, element)
+                self.build(planet_id, element, cancel=cancel)
         elif isinstance(arg, tuple):
             elem_id, nbr = arg
-            self._build(planet_id, elem_id, nbr)
+            self._build(planet_id, elem_id, nbr, cancel=cancel)
         else:
             elem_id = arg
-            self._build(planet_id, elem_id)
+            self._build(planet_id, elem_id, cancel=cancel)
 
     def send_fleet(self, planet_id, ships, speed, where, mission, resources):
         def get_hidden_fields(html):
