@@ -11,4 +11,4 @@ setup(name='ogame',
       url='https://github.com/alaingilbert/pyogame',
       install_requires=['requests',
                         'beautifulsoup4'],
-     )
+      )

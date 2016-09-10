@@ -18,7 +18,7 @@ def parse_int(text):
 
 def for_all_methods(decorator):
     def decorate(cls):
-        for attr in cls.__dict__: # there's propably a better way to do this
+        for attr in cls.__dict__:  # there's propably a better way to do this
             if callable(getattr(cls, attr)):
                 setattr(cls, attr, retry_if_logged_out(decorator(getattr(cls, attr))))
         return cls
@@ -384,9 +384,9 @@ class OGame(object):
         if not self.is_logged(res):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
-        #is_idle = bool(soup.find('td', {'class': 'idle'}))
-        #if not is_idle:
-        #    return False
+        # is_idle = bool(soup.find('td', {'class': 'idle'}))
+        # if not is_idle:
+        #     return False
         form = soup.find('form')
         token = form.find('input', {'name': 'token'}).get('value')
         modus = 2 if cancel else 1
@@ -394,7 +394,7 @@ class OGame(object):
                    'token': token,
                    'type': building_id}
         self.session.post(url, data=payload)
-        #return True
+        # return True
 
     def build_technology(self, planet_id, technology_id, cancel=False):
         if technology_id not in constants.Research.values():
@@ -514,7 +514,7 @@ class OGame(object):
 
             attack = {}
             coords_origin = event.find('td', {'class': 'coordsOrigin'}) \
-                              .text.strip()
+                .text.strip()
             coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_origin)
             galaxy, system, position = coords.groups()
             attack.update({'origin': (int(galaxy), int(system), int(position))})
