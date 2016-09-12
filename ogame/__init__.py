@@ -142,7 +142,10 @@ class OGame(object):
 
     def get_page_content(self, page='overview'):
         """Return the html of a specific page."""
-        return self.session.get(self.get_url(page)).content
+        html = self.session.get(self.get_url(page)).content
+        if not self.is_logged(html):
+            raise NOT_LOGGED
+        return html
 
     def fetch_eventbox(self):
         res = self.session.get(self.get_url('fetchEventbox')).content.decode('utf8')
