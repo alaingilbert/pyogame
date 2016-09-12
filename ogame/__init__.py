@@ -140,9 +140,12 @@ class OGame(object):
         session = soup.find('meta', {'name': 'ogame-session'})
         return session is not None
 
-    def get_page_content(self, page='overview'):
+    def get_page_content(self, page='overview', cp=None):
         """Return the html of a specific page."""
-        html = self.session.get(self.get_url(page)).content
+        payload = {}
+        if cp is not None:
+            payload.update({'cp': cp})
+        html = self.session.get(self.get_url(page, payload)).content
         if not self.is_logged(html):
             raise NOT_LOGGED
         return html
