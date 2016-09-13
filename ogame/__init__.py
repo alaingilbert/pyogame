@@ -517,7 +517,9 @@ class OGame(object):
             fleet_id = int(reversal_span.get('ref'))
             if dest == '[%s:%s:%s]' % (where['galaxy'], where['system'], where['position']) and origin == '[%s]' % origin_coords:
                 matches.append(fleet_id)
-        return max(matches)
+        if (matches):
+            return max(matches)
+        return 0
 
     def cancel_fleet(self, fleet_id):
         res = self.session.get(self.get_url('movement') + '&return=%s' % fleet_id).content
