@@ -519,7 +519,7 @@ class OGame(object):
                 matches.append(fleet_id)
         if (matches):
             return max(matches)
-        return 0
+        return None
 
     def cancel_fleet(self, fleet_id):
         res = self.session.get(self.get_url('movement') + '&return=%s' % fleet_id).content
