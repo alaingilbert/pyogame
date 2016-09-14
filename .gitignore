@@ -3,3 +3,6 @@
 .DS_Store
 dist/
 .env/
+samples/
+.cache/
+bot.py

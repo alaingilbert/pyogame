@@ -109,6 +109,13 @@ True
 ### get_ogame_version():string
 
 
+## Contributions
+
+- Fork the repo
+- Checkout development branch `develop`
+- Make your changes
+- Make a Pull Request on `develop` (not `master`)
+
 
 ## Author
 

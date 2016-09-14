@@ -1,15 +1,15 @@
-from ogame import constants
-from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID, NOT_LOGGED, BAD_CREDENTIALS, CANT_PROCESS
-from bs4 import BeautifulSoup
-from dateutil import tz
-
-import arrow
 import datetime
-import requests
 import json
 import math
 import re
 import time
+import arrow
+import requests
+
+from ogame import constants
+from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID, NOT_LOGGED, BAD_CREDENTIALS, CANT_PROCESS, BAD_BUILDING_ID, BAD_SHIP_ID, BAD_RESEARCH_ID
+from bs4 import BeautifulSoup
+from dateutil import tz
 
 
 def parse_int(text):
@@ -18,18 +18,18 @@ def parse_int(text):
 
 def for_all_methods(decorator):
     def decorate(cls):
-        for attr in cls.__dict__: # there's propably a better way to do this
+        for attr in cls.__dict__:  # there's propably a better way to do this
             if callable(getattr(cls, attr)):
                 setattr(cls, attr, retry_if_logged_out(decorator(getattr(cls, attr))))
         return cls
     return decorate
 
 
-def sandbox(some_fn):
+def sandbox_decorator(some_fn):
     def wrapper(ogame, *args, **kwargs):
         fn_name = some_fn.__name__
 
-        local_fns = ['get_datetime_from_time', 'get_code', 'get_planet_infos_regex']
+        local_fns = ['get_datetime_from_time']
 
         if fn_name in local_fns:
             return some_fn(ogame, *args, **kwargs)
@@ -44,7 +44,7 @@ def sandbox(some_fn):
     return wrapper
 
 
-def retry_if_logged_out(fn):
+def retry_if_logged_out(method):
     def wrapper(self, *args, **kwargs):
         attempt = 0
         time_to_sleep = 0
@@ -52,7 +52,7 @@ def retry_if_logged_out(fn):
         while not working:
             try:
                 working = True
-                res = fn(self, *args, **kwargs)
+                res = method(self, *args, **kwargs)
             except NOT_LOGGED:
                 time.sleep(time_to_sleep)
                 attempt += 1
@@ -65,13 +65,44 @@ def retry_if_logged_out(fn):
     return wrapper
 
 
-@for_all_methods(sandbox)
+def get_nbr(soup, name):
+    div = soup.find('div', {'class': name})
+    level = div.find('span', {'class': 'level'})
+    for tag in level.findAll(True):
+        tag.extract()
+    return parse_int(level.text)
+
+
+def metal_mine_production(level, universe_speed=1):
+    return int(math.floor(30 * level * 1.1 ** level) * universe_speed)
+
+
+def get_planet_infos_regex(text):
+    return re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)([-\d]+).+C (?:bis|to) ([-\d]+).+C', text)
+
+
+def get_code(name):
+    if name in constants.Buildings.keys():
+        return constants.Buildings[name]
+    if name in constants.Facilities.keys():
+        return constants.Facilities[name]
+    if name in constants.Defense.keys():
+        return constants.Defense[name]
+    if name in constants.Ships.keys():
+        return constants.Ships[name]
+    if name in constants.Research.keys():
+        return constants.Research[name]
+    print('Couldn\'t find code for %s' % name)
+    return None
+
+
+@for_all_methods(sandbox_decorator)
 class OGame(object):
-    def __init__(self, universe, username, password, domain='en.ogame.gameforge.com', auto_bootstrap=True, sandbox=False, sandbox_obj={}):
+    def __init__(self, universe, username, password, domain='en.ogame.gameforge.com', auto_bootstrap=True, sandbox=False, sandbox_obj=None):
         self.session = requests.session()
         self.session.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'})
         self.sandbox = sandbox
-        self.sandbox_obj = sandbox_obj
+        self.sandbox_obj = sandbox_obj if sandbox_obj is not None else {}
         self.universe = universe
         self.domain = domain
         self.username = username
@@ -109,15 +140,21 @@ class OGame(object):
         session = soup.find('meta', {'name': 'ogame-session'})
         return session is not None
 
-    def get_page_content(self, page='overview'):
+    def get_page_content(self, page='overview', cp=None):
         """Return the html of a specific page."""
-        return self.session.get(self.get_url(page)).content
+        payload = {}
+        if cp is not None:
+            payload.update({'cp': cp})
+        html = self.session.get(self.get_url(page, payload)).content
+        if not self.is_logged(html):
+            raise NOT_LOGGED
+        return html
 
     def fetch_eventbox(self):
         res = self.session.get(self.get_url('fetchEventbox')).content.decode('utf8')
         try:
             obj = json.loads(res)
-        except ValueError as e:
+        except ValueError:
             raise NOT_LOGGED
         return obj
 
@@ -126,17 +163,17 @@ class OGame(object):
         res = self.session.get(url).content.decode('utf8')
         try:
             obj = json.loads(res)
-        except ValueError as e:
+        except ValueError:
             raise NOT_LOGGED
         return obj
 
     def get_resources(self, planet_id):
         """Returns the planet resources stats."""
         resources = self.fetch_resources(planet_id)
-        metal = resources['metal']['resources']['actual']
-        crystal = resources['crystal']['resources']['actual']
-        deuterium = resources['deuterium']['resources']['actual']
-        energy = resources['energy']['resources']['actual']
+        metal      = resources['metal']['resources']['actual']
+        crystal    = resources['crystal']['resources']['actual']
+        deuterium  = resources['deuterium']['resources']['actual']
+        energy     = resources['energy']['resources']['actual']
         darkmatter = resources['darkmatter']['resources']['actual']
         result = {'metal': metal, 'crystal': crystal, 'deuterium': deuterium,
                   'energy': energy, 'darkmatter': darkmatter}
@@ -148,72 +185,12 @@ class OGame(object):
         soup = BeautifulSoup(res, 'lxml')
         if soup.find('head'):
             raise NOT_LOGGED
-        tr = soup.find('tr', {'class': 'detailTableRow'})
         spans = soup.findAll('span', {'class': 'undermark'})
         level = parse_int(spans[0].text)
         val = parse_int(spans[1].text)
-        metal_production = self.metal_mine_production(level, 1)
+        metal_production = metal_mine_production(level, 1)
         universe_speed = val / metal_production
         return universe_speed
-
-    def metal_mine_production(self, level, universe_speed=1):
-        return int(math.floor(30 * level * 1.1 ** level) * universe_speed)
-
-    def crystal_mine_production(level, universe_speed=1):
-        return int(math.floor(20 * level * 1.1 ** level) * universe_speed)
-
-    def deuterium_synthesizer_production(level, max_temperature, universe_speed=1):
-        return int(math.floor(10 * level * 1.1 ** level) * (1.44 - 0.004 * max_temperature) * universe_speed)
-
-    def SolarPlantProduction(level):
-        return int(math.floor(20 * level * 1.1 ** level))
-
-    def metal_mine_cost(level):
-        metal = int(60 * 1.5 ** (level-1))
-        crystal = int(15 * 1.5 ** (level-1))
-        return (metal, crystal)
-
-    def crystal_mine_cost(level):
-        metal = int(48 * 1.6 ** (level-1))
-        crystal = int(24 * 1.6 ** (level-1))
-        return (metal, crystal)
-
-    def deuterium_synthesizer_cost(level):
-        metal = int(225 * 1.5 ** (level-1))
-        crystal = int(75 * 1.5 ** (level-1))
-        return (metal, crystal)
-
-    def solar_plant_cost(level):
-        metal = int(75 * 1.5 ** (level-1))
-        crystal = int(30 * 1.5 ** (level-1))
-        return (metal, crystal)
-
-    def fusion_reactor_cost(level):
-        metal = int(900 * 1.8 ** (level-1))
-        crystal = int(360 * 1.8 ** (level-1))
-        deuterium = int(180 * 1.8 ** (level-1))
-        return (metal, crystal, deuterium)
-
-    def building_production_time(metal, crystal, level_robotics_factory, level_nanite_factory, level, universe_speed=1):
-        res = (metal + crystal) / (2500 * max(4-level/2, 1) * (1 + level_robotics_factory) * universe_speed * 2 ** level_nanite_factory) * 3600
-        seconds = int(round(res))
-        return seconds
-
-    def building_production_time2(metal, crystal, level_robotics_factory, level_nanite_factory, level, universe_speed=1):
-        """Nanite Factories, Lunar Bases, Sensor Phalanxes, and Jumpgates do not get the MAX() time reduction, so their formula is just"""
-        res = (metal + crystal) / (2500 * (1 + level_robotics_factory) * universe_speed * 2 ** level_nanite_factory) * 3600
-        seconds = int(round(res))
-        return seconds
-
-    def research_time(metal, crystal, research_lab_level):
-        res = (metal + crystal) / (1000 * (1 + research_lab_level))
-        seconds = int(round(res))
-        return seconds
-
-    def ships_defense_time(metal, crystal, shipyard_level, nanite_factory_level):
-        res = (metal + crystal) / (2500 * (1 + shipyard_level) * (2 ^ nanite_factory_level))
-        seconds = int(round(res))
-        return seconds
 
     def get_user_infos(self, html=None):
         if not html:
@@ -234,28 +211,21 @@ class OGame(object):
         res['planet_ids'] = self.get_planet_ids(html)
         return res
 
-    def get_nbr(self, soup, name):
-        div = soup.find('div', {'class': name})
-        level = div.find('span', {'class': 'level'})
-        for tag in level.findAll(True):
-            tag.extract()
-        return parse_int(level.text)
-
     def get_resources_buildings(self, planet_id):
         res = self.session.get(self.get_url('resources', {'cp': planet_id})).content
         if not self.is_logged(res):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['metal_mine'] = self.get_nbr(soup, 'supply1')
-        res['crystal_mine'] = self.get_nbr(soup, 'supply2')
-        res['deuterium_synthesizer'] = self.get_nbr(soup, 'supply3')
-        res['solar_plant'] = self.get_nbr(soup, 'supply4')
-        res['fusion_reactor'] = self.get_nbr(soup, 'supply12')
-        res['solar_satellite'] = self.get_nbr(soup, 'supply212')
-        res['metal_storage'] = self.get_nbr(soup, 'supply22')
-        res['crystal_storage'] = self.get_nbr(soup, 'supply23')
-        res['deuterium_tank'] = self.get_nbr(soup, 'supply24')
+        res['metal_mine']            = get_nbr(soup, 'supply1')
+        res['crystal_mine']          = get_nbr(soup, 'supply2')
+        res['deuterium_synthesizer'] = get_nbr(soup, 'supply3')
+        res['solar_plant']           = get_nbr(soup, 'supply4')
+        res['fusion_reactor']        = get_nbr(soup, 'supply12')
+        res['solar_satellite']       = get_nbr(soup, 'supply212')
+        res['metal_storage']         = get_nbr(soup, 'supply22')
+        res['crystal_storage']       = get_nbr(soup, 'supply23')
+        res['deuterium_tank']        = get_nbr(soup, 'supply24')
         return res
 
     def get_defense(self, planet_id):
@@ -264,16 +234,16 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['rocket_launcher'] = self.get_nbr(soup, 'defense401')
-        res['light_laser'] = self.get_nbr(soup, 'defense402')
-        res['heavy_laser'] = self.get_nbr(soup, 'defense403')
-        res['gauss_cannon'] = self.get_nbr(soup, 'defense404')
-        res['ion_cannon'] = self.get_nbr(soup, 'defense405')
-        res['plasma_turret'] = self.get_nbr(soup, 'defense406')
-        res['small_shield_dome'] = self.get_nbr(soup, 'defense407')
-        res['large_shield_dome'] = self.get_nbr(soup, 'defense408')
-        res['anti_ballistic_missiles'] = self.get_nbr(soup, 'defense502')
-        res['interplanetary_missiles'] = self.get_nbr(soup, 'defense503')
+        res['rocket_launcher']         = get_nbr(soup, 'defense401')
+        res['light_laser']             = get_nbr(soup, 'defense402')
+        res['heavy_laser']             = get_nbr(soup, 'defense403')
+        res['gauss_cannon']            = get_nbr(soup, 'defense404')
+        res['ion_cannon']              = get_nbr(soup, 'defense405')
+        res['plasma_turret']           = get_nbr(soup, 'defense406')
+        res['small_shield_dome']       = get_nbr(soup, 'defense407')
+        res['large_shield_dome']       = get_nbr(soup, 'defense408')
+        res['anti_ballistic_missiles'] = get_nbr(soup, 'defense502')
+        res['interplanetary_missiles'] = get_nbr(soup, 'defense503')
         return res
 
     def get_ships(self, planet_id):
@@ -282,20 +252,20 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['light_fighter'] = self.get_nbr(soup, 'military204')
-        res['heavy_fighter'] = self.get_nbr(soup, 'military205')
-        res['cruiser'] = self.get_nbr(soup, 'military206')
-        res['battleship'] = self.get_nbr(soup, 'military207')
-        res['battlecruiser'] = self.get_nbr(soup, 'military215')
-        res['bomber'] = self.get_nbr(soup, 'military211')
-        res['destroyer'] = self.get_nbr(soup, 'military213')
-        res['deathstar'] = self.get_nbr(soup, 'military214')
-        res['small_cargo'] = self.get_nbr(soup, 'civil202')
-        res['large_cargo'] = self.get_nbr(soup, 'civil203')
-        res['colony_ship'] = self.get_nbr(soup, 'civil208')
-        res['recycler'] = self.get_nbr(soup, 'civil209')
-        res['espionage_probe'] = self.get_nbr(soup, 'civil210')
-        res['solar_satellite'] = self.get_nbr(soup, 'civil212')
+        res['light_fighter']   = get_nbr(soup, 'military204')
+        res['heavy_fighter']   = get_nbr(soup, 'military205')
+        res['cruiser']         = get_nbr(soup, 'military206')
+        res['battleship']      = get_nbr(soup, 'military207')
+        res['battlecruiser']   = get_nbr(soup, 'military215')
+        res['bomber']          = get_nbr(soup, 'military211')
+        res['destroyer']       = get_nbr(soup, 'military213')
+        res['deathstar']       = get_nbr(soup, 'military214')
+        res['small_cargo']     = get_nbr(soup, 'civil202')
+        res['large_cargo']     = get_nbr(soup, 'civil203')
+        res['colony_ship']     = get_nbr(soup, 'civil208')
+        res['recycler']        = get_nbr(soup, 'civil209')
+        res['espionage_probe'] = get_nbr(soup, 'civil210')
+        res['solar_satellite'] = get_nbr(soup, 'civil212')
         return res
 
     def get_facilities(self, planet_id):
@@ -304,14 +274,14 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['robotics_factory'] = self.get_nbr(soup, 'station14')
-        res['shipyard'] = self.get_nbr(soup, 'station21')
-        res['research_lab'] = self.get_nbr(soup, 'station31')
-        res['alliance_depot'] = self.get_nbr(soup, 'station34')
-        res['missile_silo'] = self.get_nbr(soup, 'station44')
-        res['nanite_factory'] = self.get_nbr(soup, 'station15')
-        res['terraformer'] = self.get_nbr(soup, 'station33')
-        res['space_dock'] = self.get_nbr(soup, 'station36')
+        res['robotics_factory'] = get_nbr(soup, 'station14')
+        res['shipyard']         = get_nbr(soup, 'station21')
+        res['research_lab']     = get_nbr(soup, 'station31')
+        res['alliance_depot']   = get_nbr(soup, 'station34')
+        res['missile_silo']     = get_nbr(soup, 'station44')
+        res['nanite_factory']   = get_nbr(soup, 'station15')
+        res['terraformer']      = get_nbr(soup, 'station33')
+        res['space_dock']       = get_nbr(soup, 'station36')
         return res
 
     def get_research(self):
@@ -320,28 +290,28 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['energy_technology'] = self.get_nbr(soup, 'research113')
-        res['laser_technology'] = self.get_nbr(soup, 'research120')
-        res['ion_technology'] = self.get_nbr(soup, 'research121')
-        res['hyperspace_technology'] = self.get_nbr(soup, 'research114')
-        res['plasma_technology'] = self.get_nbr(soup, 'research122')
-        res['combustion_drive'] = self.get_nbr(soup, 'research115')
-        res['impulse_drive'] = self.get_nbr(soup, 'research117')
-        res['hyperspace_drive'] = self.get_nbr(soup, 'research118')
-        res['espionage_technology'] = self.get_nbr(soup, 'research106')
-        res['computer_technology'] = self.get_nbr(soup, 'research108')
-        res['astrophysics'] = self.get_nbr(soup, 'research124')
-        res['intergalactic_research_network'] = self.get_nbr(soup, 'research123')
-        res['graviton_technology'] = self.get_nbr(soup, 'research199')
-        res['weapons_technology'] = self.get_nbr(soup, 'research109')
-        res['shielding_technology'] = self.get_nbr(soup, 'research110')
-        res['armour_technology'] = self.get_nbr(soup, 'research111')
+        res['energy_technology']              = get_nbr(soup, 'research113')
+        res['laser_technology']               = get_nbr(soup, 'research120')
+        res['ion_technology']                 = get_nbr(soup, 'research121')
+        res['hyperspace_technology']          = get_nbr(soup, 'research114')
+        res['plasma_technology']              = get_nbr(soup, 'research122')
+        res['combustion_drive']               = get_nbr(soup, 'research115')
+        res['impulse_drive']                  = get_nbr(soup, 'research117')
+        res['hyperspace_drive']               = get_nbr(soup, 'research118')
+        res['espionage_technology']           = get_nbr(soup, 'research106')
+        res['computer_technology']            = get_nbr(soup, 'research108')
+        res['astrophysics']                   = get_nbr(soup, 'research124')
+        res['intergalactic_research_network'] = get_nbr(soup, 'research123')
+        res['graviton_technology']            = get_nbr(soup, 'research199')
+        res['weapons_technology']             = get_nbr(soup, 'research109')
+        res['shielding_technology']           = get_nbr(soup, 'research110')
+        res['armour_technology']              = get_nbr(soup, 'research111')
         return res
 
-    def is_under_attack(self, json=None):
-        if not json:
-            json = self.fetch_eventbox()
-        return not json.get('hostile', 0) == 0
+    def is_under_attack(self, json_obj=None):
+        if not json_obj:
+            json_obj = self.fetch_eventbox()
+        return not json_obj.get('hostile', 0) == 0
 
     def get_planet_ids(self, res=None):
         """Get the ids of your planets."""
@@ -365,8 +335,8 @@ class OGame(object):
         for planet in planets:
             name = planet.find('span', {'class': 'planet-name'}).string
             if name == planet_name:
-                id = planet['id'].replace('planet-', '')
-                return id
+                planet_id = planet['id'].replace('planet-', '')
+                return planet_id
         return None
 
     def build_defense(self, planet_id, defense_id, nbr):
@@ -420,9 +390,9 @@ class OGame(object):
         if not self.is_logged(res):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
-        #is_idle = bool(soup.find('td', {'class': 'idle'}))
-        #if not is_idle:
-        #    return False
+        # is_idle = bool(soup.find('td', {'class': 'idle'}))
+        # if not is_idle:
+        #     return False
         form = soup.find('form')
         token = form.find('input', {'name': 'token'}).get('value')
         modus = 2 if cancel else 1
@@ -430,7 +400,7 @@ class OGame(object):
                    'token': token,
                    'type': building_id}
         self.session.post(url, data=payload)
-        #return True
+        # return True
 
     def build_technology(self, planet_id, technology_id, cancel=False):
         if technology_id not in constants.Research.values():
@@ -444,35 +414,35 @@ class OGame(object):
         if not self.is_logged(res):
             raise NOT_LOGGED
 
-    def _build(self, planet_id, object_id, nbr=None):
+    def _build(self, planet_id, object_id, nbr=None, cancel=False):
         if object_id in constants.Buildings.values():
-            self.build_building(planet_id, object_id)
+            self.build_building(planet_id, object_id, cancel=cancel)
         elif object_id in constants.Research.values():
-            self.build_technology(planet_id, object_id)
+            self.build_technology(planet_id, object_id, cancel=cancel)
         elif object_id in constants.Ships.values():
             self.build_ships(planet_id, object_id, nbr)
         elif object_id in constants.Defense.values():
             self.build_defense(planet_id, object_id, nbr)
 
-    def build(self, planet_id, arg):
+    def build(self, planet_id, arg, cancel=False):
         if isinstance(arg, list):
-            for el in arg:
-                self.build(planet_id, el)
+            for element in arg:
+                self.build(planet_id, element, cancel=cancel)
         elif isinstance(arg, tuple):
             elem_id, nbr = arg
-            self._build(planet_id, elem_id, nbr)
+            self._build(planet_id, elem_id, nbr, cancel=cancel)
         else:
             elem_id = arg
-            self._build(planet_id, elem_id)
+            self._build(planet_id, elem_id, cancel=cancel)
 
     def send_fleet(self, planet_id, ships, speed, where, mission, resources):
         def get_hidden_fields(html):
             soup = BeautifulSoup(html, 'lxml')
             inputs = soup.findAll('input', {'type': 'hidden'})
             fields = {}
-            for input in inputs:
-                name = input.get('name')
-                value = input.get('value')
+            for input_element in inputs:
+                name = input_element.get('name')
+                value = input_element.get('value')
                 fields[name] = value
             return fields
 
@@ -517,7 +487,9 @@ class OGame(object):
             fleet_id = int(reversal_span.get('ref'))
             if dest == '[%s:%s:%s]' % (where['galaxy'], where['system'], where['position']) and origin == '[%s]' % origin_coords:
                 matches.append(fleet_id)
-        return max(matches)
+        if matches:
+            return max(matches)
+        return None
 
     def cancel_fleet(self, fleet_id):
         res = self.session.get(self.get_url('movement') + '&return=%s' % fleet_id).content
@@ -543,24 +515,24 @@ class OGame(object):
             raise NOT_LOGGED
         events = soup.findAll('tr', {'class': 'eventFleet'})
         attacks = []
-        for ev in events:
-            mission_type = int(ev['data-mission-type'])
+        for event in events:
+            mission_type = int(event['data-mission-type'])
             if mission_type != 1:
                 continue
 
             attack = {}
-            coords_origin = ev.find('td', {'class': 'coordsOrigin'}) \
-                              .text.strip()
+            coords_origin = event.find('td', {'class': 'coordsOrigin'}) \
+                .text.strip()
             coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_origin)
             galaxy, system, position = coords.groups()
             attack.update({'origin': (int(galaxy), int(system), int(position))})
 
-            dest_coords = ev.find('td', {'class': 'destCoords'}).text.strip()
+            dest_coords = event.find('td', {'class': 'destCoords'}).text.strip()
             coords = re.search(r'\[(\d+):(\d+):(\d+)\]', dest_coords)
             galaxy, system, position = coords.groups()
             attack.update({'destination': (int(galaxy), int(system), int(position))})
 
-            arrival_time = ev.find('td', {'class': 'arrivalTime'}).text.strip()
+            arrival_time = event.find('td', {'class': 'arrivalTime'}).text.strip()
             coords = re.search(r'(\d+):(\d+):(\d+)', arrival_time)
             hour, minute, second = coords.groups()
             hour = int(hour)
@@ -569,7 +541,7 @@ class OGame(object):
             arrival_time = self.get_datetime_from_time(hour, minute, second)
             attack.update({'arrival_time': arrival_time})
 
-            attacker_id = ev.find('a', {'class': 'sendMail'})['data-playerid']
+            attacker_id = event.find('a', {'class': 'sendMail'})['data-playerid']
             attack.update({'attacker_id': int(attacker_id)})
 
             attacks.append(attack)
@@ -582,12 +554,14 @@ class OGame(object):
             attack_time += datetime.timedelta(days=1)
         return attack_time.to(tz.tzlocal()).datetime
 
-    def get_url(self, page, params={}):
+    def get_url(self, page, params=None):
+        if params is None:
+            params = {}
         if page == 'login':
             return 'https://%s/main/login' % self.domain
         else:
             if self.server_url == '':
-                self.server_url = self.get_universe_url(universe)
+                self.server_url = self.get_universe_url(self.universe)
             url = 'https://%s/game/index.php?page=%s' % (self.server_url, page)
             if params:
                 arr = []
@@ -622,12 +596,9 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         date_str = soup.find('li', {'class': 'OGameClock'}).text
-        format = '%d.%m.%Y %H:%M:%S'
-        date = datetime.datetime.strptime(date_str, format)
+        date_format = '%d.%m.%Y %H:%M:%S'
+        date = datetime.datetime.strptime(date_str, date_format)
         return date
-
-    def get_planet_infos_regex(self, text):
-        return re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)([-\d]+).+C (?:bis|to) ([-\d]+).+C', text)
 
     def get_planet_infos(self, planet_id, res=None):
         if not res:
@@ -637,7 +608,7 @@ class OGame(object):
         soup = BeautifulSoup(res, 'lxml')
         link = soup.find('div', {'id': 'planet-%s' % planet_id}).find('a')
         infos_label = BeautifulSoup(link['title'], 'lxml').text
-        infos = self.get_planet_infos_regex(infos_label)
+        infos = get_planet_infos_regex(infos_label)
         res = {}
         res['img'] = link.find('img').get('src')
         res['id'] = planet_id
@@ -666,20 +637,6 @@ class OGame(object):
         version = footer.find('a').text.strip()
         return version
 
-    def get_code(self, name):
-        if name in constants.Buildings.keys():
-            return constants.Buildings[name]
-        if name in constants.Facilities.keys():
-            return constants.Facilities[name]
-        if name in constants.Defense.keys():
-            return constants.Defense[name]
-        if name in constants.Ships.keys():
-            return constants.Ships[name]
-        if name in constants.Research.keys():
-            return constants.Research[name]
-        print('Couldn\'t find code for %s' % name)
-        return None
-
     def get_overview(self, planet_id):
         html = self.session.get(self.get_url('overview', {'cp': planet_id})).content
         if not self.is_logged(html):
@@ -689,29 +646,28 @@ class OGame(object):
         res = {}
         names = ['buildings', 'research', 'shipyard']
         for idx, box in enumerate(boxes):
-            isIdle = box.find('td', {'class': 'idle'}) is not None
-            res[names[idx]] = None
-            if not isIdle:
+            is_idle = box.find('td', {'class': 'idle'}) is not None
+            res[names[idx]] = []
+            if not is_idle:
                 name = box.find('th').text
                 short_name = ''.join(name.split())
-                code = self.get_code(short_name)
+                code = get_code(short_name)
                 desc = box.find('td', {'class': 'desc'}).text
                 desc = ' '.join(desc.split())
-                tmp = {'name': short_name, 'code': code}
+                tmp = [{'name': short_name, 'code': code}]
                 if idx == 2:
                     quantity = parse_int(box.find('div', {'id': 'shipSumCount7'}).text)
-                    tmp.update({'quantity': quantity})
-                    tmp = [tmp]
+                    tmp[0].update({'quantity': quantity})
                     queue = box.find('table', {'class': 'queue'})
                     if queue:
                         tds = queue.findAll('td')
-                        for td in tds:
-                            link = td.find('a')
+                        for td_element in tds:
+                            link = td_element.find('a')
                             quantity = parse_int(link.text)
-                            img = td.find('img')
+                            img = td_element.find('img')
                             alt = img['alt']
                             short_name = ''.join(alt.split())
-                            code = self.get_code(short_name)
+                            code = get_code(short_name)
                             tmp.append({'name': short_name, 'code': code, 'quantity': quantity})
                 res[names[idx]] = tmp
         return res

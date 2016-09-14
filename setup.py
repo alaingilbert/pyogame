@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='ogame',
-      version='1.0.1',
+      version='1.0.2',
       description='OGame wrapper.',
       author='Alain Gilbert',
       author_email='alain.gilbert.15@gmail.com',
@@ -11,4 +11,4 @@ setup(name='ogame',
       url='https://github.com/alaingilbert/pyogame',
       install_requires=['requests',
                         'beautifulsoup4'],
-     )
+      )
