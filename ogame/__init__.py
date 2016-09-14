@@ -517,7 +517,7 @@ class OGame(object):
             fleet_id = int(reversal_span.get('ref'))
             if dest == '[%s:%s:%s]' % (where['galaxy'], where['system'], where['position']) and origin == '[%s]' % origin_coords:
                 matches.append(fleet_id)
-        if (matches):
+        if matches:
             return max(matches)
         return None
 
