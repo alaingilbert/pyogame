@@ -525,11 +525,11 @@ class OGame(object):
             attack = {}
             attack.update({'mission_type': mission_type})
             if mission_type == 1:
-            coords_origin = event.find('td', {'class': 'coordsOrigin'}) \
-                .text.strip()
-            coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_origin)
-            galaxy, system, position = coords.groups()
-            attack.update({'origin': (int(galaxy), int(system), int(position))})
+                coords_origin = event.find('td', {'class': 'coordsOrigin'}) \
+                    .text.strip()
+                coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_origin)
+                galaxy, system, position = coords.groups()
+                attack.update({'origin': (int(galaxy), int(system), int(position))})
             else:
                 attack.update({'origin': None})
 
@@ -548,8 +548,8 @@ class OGame(object):
             attack.update({'arrival_time': arrival_time})
 
             if mission_type == 1:
-            attacker_id = event.find('a', {'class': 'sendMail'})['data-playerid']
-            attack.update({'attacker_id': int(attacker_id)})
+                attacker_id = event.find('a', {'class': 'sendMail'})['data-playerid']
+                attack.update({'attacker_id': int(attacker_id)})
             else:
                 attack.update({'attacker_id': None})
 
