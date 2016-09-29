@@ -514,18 +514,24 @@ class OGame(object):
         if soup.find('head'):
             raise NOT_LOGGED
         events = soup.findAll('tr', {'class': 'eventFleet'})
+        events = filter(lambda x: 'partnerInfo' not in x.get('class', []), events)
+        events += soup.findAll('tr', {'class': 'allianceAttack'})
         attacks = []
         for event in events:
             mission_type = int(event['data-mission-type'])
-            if mission_type != 1:
+            if mission_type not in [1, 2]:
                 continue
 
             attack = {}
-            coords_origin = event.find('td', {'class': 'coordsOrigin'}) \
-                .text.strip()
-            coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_origin)
-            galaxy, system, position = coords.groups()
-            attack.update({'origin': (int(galaxy), int(system), int(position))})
+            attack.update({'mission_type': mission_type})
+            if mission_type == 1:
+                coords_origin = event.find('td', {'class': 'coordsOrigin'}) \
+                    .text.strip()
+                coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_origin)
+                galaxy, system, position = coords.groups()
+                attack.update({'origin': (int(galaxy), int(system), int(position))})
+            else:
+                attack.update({'origin': None})
 
             dest_coords = event.find('td', {'class': 'destCoords'}).text.strip()
             coords = re.search(r'\[(\d+):(\d+):(\d+)\]', dest_coords)
@@ -541,8 +547,11 @@ class OGame(object):
             arrival_time = self.get_datetime_from_time(hour, minute, second)
             attack.update({'arrival_time': arrival_time})
 
-            attacker_id = event.find('a', {'class': 'sendMail'})['data-playerid']
-            attack.update({'attacker_id': int(attacker_id)})
+            if mission_type == 1:
+                attacker_id = event.find('a', {'class': 'sendMail'})['data-playerid']
+                attack.update({'attacker_id': int(attacker_id)})
+            else:
+                attack.update({'attacker_id': None})
 
             attacks.append(attack)
         return attacks
