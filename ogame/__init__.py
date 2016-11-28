@@ -704,3 +704,15 @@ class OGame(object):
                    'ajax': 1}
         url = self.get_url('ajaxChat')
         self.session.post(url, data=payload, headers=headers)
+
+    def galaxy_content(self, galaxy, system):
+        headers = {'X-Requested-With': 'XMLHttpRequest',
+                   'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+        payload = {'galaxy': galaxy, 'system': system}
+        url = self.get_url('galaxyContent', {'ajax': 1})
+        res = self.session.post(url, data=payload, headers=headers).content
+        try:
+            obj = json.loads(res)
+        except ValueError:
+            raise NOT_LOGGED
+        return obj
