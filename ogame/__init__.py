@@ -710,7 +710,7 @@ class OGame(object):
                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
         payload = {'galaxy': galaxy, 'system': system}
         url = self.get_url('galaxyContent', {'ajax': 1})
-        res = self.session.post(url, data=payload, headers=headers).content
+        res = self.session.post(url, data=payload, headers=headers).content.decode('utf8')
         try:
             obj = json.loads(res)
         except ValueError:
