@@ -462,7 +462,13 @@ class OGame(object):
         payload.update({'speed': speed,
                         'galaxy': where.get('galaxy'),
                         'system': where.get('system'),
-                        'position': where.get('position')})
+                        'position': where.get('position'),
+                        'type': where.get('type', 1)})
+        if mission == constants.Missions['RecycleDebrisField']:
+            # planet type: 1
+            # debris type: 2
+            # moon type: 3
+            payload.update({'type': 2}) # Send to debris field
         res = self.session.post(self.get_url('fleet3'), data=payload).content
 
         payload = {}
