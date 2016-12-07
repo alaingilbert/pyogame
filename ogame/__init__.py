@@ -380,8 +380,8 @@ class OGame(object):
         self.session.post(url, data=payload)
 
     def build_building(self, planet_id, building_id, cancel=False):
-        """Build a ship unit."""
-        if building_id not in constants.Buildings.values():
+        """Build a building."""
+        if building_id not in constants.Buildings.values() and building_id not in constants.Facilities.values():
             raise BAD_BUILDING_ID
 
         url = self.get_url('resources', {'cp': planet_id})
@@ -415,7 +415,7 @@ class OGame(object):
             raise NOT_LOGGED
 
     def _build(self, planet_id, object_id, nbr=None, cancel=False):
-        if object_id in constants.Buildings.values():
+        if object_id in constants.Buildings.values() or object_id in constants.Facilities.values():
             self.build_building(planet_id, object_id, cancel=cancel)
         elif object_id in constants.Research.values():
             self.build_technology(planet_id, object_id, cancel=cancel)
