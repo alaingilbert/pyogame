@@ -410,7 +410,7 @@ class OGame(object):
         modus = 2 if cancel else 1
         payload = {'modus': modus,
                    'type': technology_id}
-        res = self.session.post(url, data=payload)
+        res = self.session.post(url, data=payload).content
         if not self.is_logged(res):
             raise NOT_LOGGED
 
