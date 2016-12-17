@@ -8,7 +8,17 @@ Buildings = {'MetalMine': 1,
              'DeuteriumTank': 24,
              'ShieldedMetalDen': 25,
              'UndergroundCrystalDen': 26,
-             'SeabedDeuteriumDen': 27}
+             'SeabedDeuteriumDen': 27,
+
+             # NL
+             'Metaalmijn': 1,
+             'Kristalmijn': 2,
+             'Deuteriumfabriek': 3,
+             'Zonne-energiecentrale': 4,
+             'Fusiecentrale': 12,
+             'Metaalopslag': 22,
+             'Kristalopslag': 23,
+             'Deuteriumtank': 24}
 
 
 Facilities = {'AllianceDepot': 34,
@@ -18,7 +28,17 @@ Facilities = {'AllianceDepot': 34,
               'MissileSilo': 44,
               'NaniteFactory': 15,
               'Terraformer': 33,
-              'SpaceDock': 36}
+              'SpaceDock': 36,
+
+              # NL
+              'Alliantiehanger': 34,
+              'Robotfabriek': 14,
+              'Werf': 21,
+              'Onderzoekslab': 31,
+              'Raketsilo': 44,
+              'Nanorobotfabriek': 15,
+              'Terravormer': 33,
+              'Ruimtewerf': 36}
 
 
 Defense = {'RocketLauncher': 401,
@@ -30,7 +50,19 @@ Defense = {'RocketLauncher': 401,
            'SmallShieldDome': 407,
            'LargeShieldDome': 408,
            'AntiBallisticMissiles': 502,
-           'InterplanetaryMissiles': 503}
+           'InterplanetaryMissiles': 503,
+
+           # NL
+           'Raketlanceerder': 401,
+           'Kleinelaser': 402,
+           'Grotelaser': 403,
+           'Gausskannon': 404,
+           'Ionkannon': 405,
+           'Plasmakannon': 406,
+           'Kleineplanetaireschildkoepel': 407,
+           'GroteplanetaireschildkoepelLargeShieldDome': 408,
+           'Antiballistischeraketten': 502,
+           'Interplanetaireraketten': 503}
 
 
 Ships = {'SmallCargo': 202,
@@ -46,7 +78,23 @@ Ships = {'SmallCargo': 202,
          'SolarSatellite': 212,
          'Destroyer': 213,
          'Deathstar': 214,
-         'Battlecruiser': 215}
+         'Battlecruiser': 215,
+
+         # NL
+         'Kleinvrachtschip': 202,
+         'Grootvrachtschip': 203,
+         'Lichtgevechtsschip': 204,
+         'Zwaargevechtsschip': 205,
+         'Kruiser': 206,
+         'Slagschip': 207,
+         'Kolonisatiesschip': 208,
+         'Recycler': 209,
+         'Spionagesonde': 210,
+         'Bommenwerper': 211,
+         'Zonne-energiesatelliet': 212,
+         'Vernietiger': 213,
+         'Sterdesdoods': 214,
+         'Interceptor': 215}
 
 
 Research = {'EspionageTechnology': 106,
@@ -64,7 +112,25 @@ Research = {'EspionageTechnology': 106,
             'PlasmaTechnology': 122,
             'IntergalacticResearchNetwork': 123,
             'Astrophysics': 124,
-            'GravitonTechnology': 199}
+            'GravitonTechnology': 199,
+
+            # NL
+            'Spionagetechniek': 106,
+            'Computertechniek': 108,
+            'Wapentechniek': 109,
+            'Schildtechniek': 110,
+            'Pantsertechniek': 111,
+            'Energietechniek': 113,
+            'Hyperruimtetechniek': 114,
+            'Verbrandingsmotor': 115,
+            'Impulsmotor': 117,
+            'Hyperruimtemotor': 118,
+            'Lasertechniek': 120,
+            'Iontechniek': 121,
+            'Plasmatechniek': 122,
+            'Intergalactischonderzoeksnetwerk': 123,
+            'Astrofysica': 124,
+            'Gravitontechniek': 199}
 
 
 Speed = {'10%': 1,
