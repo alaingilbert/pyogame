@@ -128,7 +128,7 @@ Research = {'EspionageTechnology': 106,
             'Lasertechniek': 120,
             'Iontechniek': 121,
             'Plasmatechniek': 122,
-            'Intergalactischonderzoeksnetwerk': 123,
+            'IntergalactischOnderzoeksnetwerk': 123,
             'Astrofysica': 124,
             'Gravitontechniek': 199}
 
