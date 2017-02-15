@@ -324,6 +324,17 @@ class OGame(object):
         ids = [planet['id'].replace('planet-', '') for planet in planets]
         return ids
 
+    def get_moon_ids(self, res=None):
+        """Get the ids of your moons."""
+        if not res:
+            res = self.session.get(self.get_url('overview')).content
+        if not self.is_logged(res):
+            raise NOT_LOGGED
+        soup = BeautifulSoup(res, 'lxml')
+        moons = soup.findAll('a', {'class': 'moonlink'})
+        ids = [moon['href'].split('&cp=')[1] for moon in moons]
+        return ids
+
     def get_planet_by_name(self, planet_name, res=None):
         """Returns the first planet id with the specified name."""
         if not res:
