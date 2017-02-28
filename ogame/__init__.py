@@ -78,7 +78,11 @@ def metal_mine_production(level, universe_speed=1):
 
 
 def get_planet_infos_regex(text):
-    return re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)([-\d]+).+C (?:bis|to) ([-\d]+).+C', text)
+    result = re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)([-\d]+).+C (?:bis|to) ([-\d]+).+C', text)
+    if result is not None :
+        return result #is a plenet
+    else :
+        return re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)', text) #is a moon
 
 
 def get_code(name):
@@ -632,7 +636,21 @@ class OGame(object):
         if not self.is_logged(res):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
-        link = soup.find('div', {'id': 'planet-%s' % planet_id}).find('a')
+        link = soup.find('div', {'id': 'planet-%s' % planet_id})
+        if  link is not None: #is a planet pid
+            link = link.find('a')
+        else :#is a moon pid
+            link = soup.find('div', {'id': 'planetList'})
+            link = link.find_all('a', {'class' : 'moonlink'})
+            for node in link :
+                nodeContent = node['title']
+                if nodeContent.find("cp="+planet_id) > -1 :
+                    link = node
+                    break
+                else :
+                    continue
+
+
         infos_label = BeautifulSoup(link['title'], 'lxml').text
         infos = get_planet_infos_regex(infos_label)
         res = {}
@@ -648,8 +666,9 @@ class OGame(object):
         res['fields']['built'] = int(infos.group(6))
         res['fields']['total'] = int(infos.group(7))
         res['temperature'] = {}
-        res['temperature']['min'] = int(infos.group(8))
-        res['temperature']['max'] = int(infos.group(9))
+        if infos.groups().__len__() > 7 : #is a planet
+            res['temperature']['min'] = int(infos.group(8))
+            res['temperature']['max'] = int(infos.group(9))
         return res
 
     def get_ogame_version(self, res=None):
