@@ -1,3 +1,5 @@
+# coding: utf-8
+
 Buildings = {'MetalMine': 1,
              'CrystalMine': 2,
              'DeuteriumSynthesizer': 3,
@@ -18,8 +20,13 @@ Buildings = {'MetalMine': 1,
              'Fusiecentrale': 12,
              'Metaalopslag': 22,
              'Kristalopslag': 23,
-             'Deuteriumtank': 24}
+             'Deuteriumtank': 24,
 
+             #FR
+             'Minedemétal': 1,
+             'Minedecristal': 2,
+             'Synthétiseurdedeutérium': 3,
+             'Centraleélectriquesolaire': 4}
 
 Facilities = {'AllianceDepot': 34,
               'RoboticsFactory': 14,
@@ -38,7 +45,10 @@ Facilities = {'AllianceDepot': 34,
               'Raketsilo': 44,
               'Nanorobotfabriek': 15,
               'Terravormer': 33,
-              'Ruimtewerf': 36}
+              'Ruimtewerf': 36,
+              
+              #FR
+	      'Usinederobots': 14}
 
 
 Defense = {'RocketLauncher': 401,
