@@ -694,7 +694,7 @@ class OGame(object):
             is_idle = box.find('td', {'class': 'idle'}) is not None
             res[names[idx]] = []
             if not is_idle:
-                name = box.find('th').text
+                name = box.find('th').text.encode('utf8')
                 short_name = ''.join(name.split())
                 code = get_code(short_name)
                 desc = box.find('td', {'class': 'desc'}).text
