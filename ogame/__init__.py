@@ -99,6 +99,12 @@ def get_code(name):
     print('Couldn\'t find code for %s' % name)
     return None
 
+def building_cost(lvl, type):
+    cost = {}
+    cost['metal'] = int(math.floor(constants.Formules[type]['Metal'][0]*constants.Formules[type]['Metal'][1]**(lvl-1)))
+    cost['crystal'] = int(math.floor(constants.Formules[type]['Crystal'][0]*constants.Formules[type]['Crystal'][1]**(lvl-1)))
+    cost['deuterium'] = int(math.floor(constants.Formules[type]['Deuterium'][0]*constants.Formules[type]['Deuterium'][1]**(lvl-1)))
+    return cost
 
 @for_all_methods(sandbox_decorator)
 class OGame(object):
@@ -694,7 +700,7 @@ class OGame(object):
             is_idle = box.find('td', {'class': 'idle'}) is not None
             res[names[idx]] = []
             if not is_idle:
-                name = box.find('th').text
+                name = box.find('th').text.encode('utf8')
                 short_name = ''.join(name.split())
                 code = get_code(short_name)
                 desc = box.find('td', {'class': 'desc'}).text
@@ -752,3 +758,9 @@ class OGame(object):
         except ValueError:
             raise NOT_LOGGED
         return obj
+
+def Consommation(batiment, lvl):
+    """ Retourne la consommation du batiment du level lvl + 1 """
+    energieLvl = Formules['batiments'][batiment]['consommation'][0] * lvl * (Formules['batiments'][batiment]['consommation'][1]**lvl)
+    energieNextLvl = Formules['batiments'][batiment]['consommation'][0] * (lvl+1) * (Formules['batiments'][batiment]['consommation'][1]**(lvl+1))
+    return math.floor(energieNextLvl - energieLvl)
