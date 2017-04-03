@@ -752,3 +752,15 @@ class OGame(object):
         except ValueError:
             raise NOT_LOGGED
         return obj
+    
+    def get_spy_reports(self):
+        headers = {'X-Requested-With': 'XMLHttpRequest'}
+        payload = {'tab': 20,                   
+                   'ajax': 1}
+        url = self.get_url('messages')
+        res = self.session.post(url, data=payload, headers=headers).content.decode('utf8')
+        try:
+            obj = json.loads(res)
+        except ValueError:
+            raise NOT_LOGGED
+        return obj
