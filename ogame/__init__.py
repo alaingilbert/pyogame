@@ -759,8 +759,5 @@ class OGame(object):
                    'ajax': 1}
         url = self.get_url('messages')
         res = self.session.post(url, data=payload, headers=headers).content.decode('utf8')
-        try:
-            obj = json.loads(res)
-        except ValueError:
-            raise NOT_LOGGED
-        return obj
+        
+        return res
