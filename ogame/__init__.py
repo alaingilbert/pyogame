@@ -11,6 +11,13 @@ from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID, NOT_LOGGED, BAD_CRED
 from bs4 import BeautifulSoup
 from dateutil import tz
 
+miniFleetToken = None
+
+
+def set_mini_fleet_token(token):
+    global miniFleetToken  # Needed to modify global copy of globvar
+    miniFleetToken = token
+
 
 def parse_int(text):
     return int(text.replace('.', '').strip())
@@ -752,12 +759,43 @@ class OGame(object):
         except ValueError:
             raise NOT_LOGGED
         return obj
-    
+
     def get_spy_reports(self):
         headers = {'X-Requested-With': 'XMLHttpRequest'}
-        payload = {'tab': 20,                   
+        payload = {'tab': 20,
                    'ajax': 1}
         url = self.get_url('messages')
         res = self.session.post(url, data=payload, headers=headers).content.decode('utf8')
-        
+
         return res
+
+    def send_spy(self, galaxy, system, position, ship_count):
+        headers = {'X-Requested-With': 'XMLHttpRequest'}
+        payload = {'mission': 6,
+                   'type': 1,
+                   'token': '',
+                   'galaxy': galaxy,
+                   'system': system,
+                   'position': position,
+                   'shipCount': ship_count,
+                   'speed': 10}
+
+        token = ''
+        if miniFleetToken is None or miniFleetToken == '':
+            first_res = self.session.get(self.get_url('overview')).content
+            moon_soup = BeautifulSoup(first_res, 'html.parser')
+            data = moon_soup.find_all('script', {'type': 'text/javascript'})
+            parameter = 'miniFleetToken'
+            for d in data:
+                d = d.text
+                if 'var miniFleetToken=' in d:
+                    regex_string = 'var {parameter}="(.*?)"'.format(parameter=parameter)
+                    token = re.findall(regex_string, d)
+        else:
+            token = miniFleetToken
+
+        url = self.get_url('minifleet', {'ajax': 1})
+        payload['token'] = token
+        res = self.session.post(url, data=payload, headers=headers).content.decode('utf8')
+        return res
+
