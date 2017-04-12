@@ -110,7 +110,9 @@ def get_code(name):
 
 @for_all_methods(sandbox_decorator)
 class OGame(object):
-    def __init__(self, universe, username, password, domain='en.ogame.gameforge.com', auto_bootstrap=True, sandbox=False, sandbox_obj=None, session=None):
+    def __init__(self, universe, username, password, domain='en.ogame.gameforge.com', auto_bootstrap=True, sandbox=False, sandbox_obj=None):
+        self.session = requests.session()
+        self.session.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'})
         self.sandbox = sandbox
         self.sandbox_obj = sandbox_obj if sandbox_obj is not None else {}
         self.universe = universe
@@ -120,15 +122,6 @@ class OGame(object):
         self.universe_speed = 1
         self.server_url = ''
         self.server_tz = 'GMT+1'
-
-        if session is None:
-            self.session = requests.session()
-            self.session.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'})
-            # Save the session to a file
-            with open('../session.txt', 'w') as f:
-                pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), f)
-        else:
-            self.session = session
 
         if auto_bootstrap:
             self.login()
@@ -147,6 +140,9 @@ class OGame(object):
         session_found = soup.find('meta', {'name': 'ogame-session'})
         if session_found:
             self.ogame_session = session_found.get('content')
+            # Save the session to a file
+            session_dict = requests.utils.dict_from_cookiejar(self.session.cookies)
+            pickle.dump(session_dict, open("save.txt", "wb"))
         else:
             raise BAD_CREDENTIALS
 
