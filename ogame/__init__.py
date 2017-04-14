@@ -772,7 +772,9 @@ class OGame(object):
         url = self.get_url('movement')
         res = self.session.get(url).content
         soup = BeautifulSoup(res, 'lxml')
-        fleets = soup.find('div', {'class': 'fleetStatus'}).find('span', {'class': 'fleetSlots'}).find('span', {
-            'class': 'current'}).contents[0]
-        return fleets
+        fleets = soup.find('span', {
+            'class': 'current'})
+        if fleets is None:
+            return '0'
+        return fleets.contents[0]
     
