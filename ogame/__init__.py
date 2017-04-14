@@ -755,12 +755,24 @@ class OGame(object):
     
     def get_spy_reports(self):
         headers = {'X-Requested-With': 'XMLHttpRequest'}
-        payload = {'tab': 20,                   
+        payload = {'tab': 20,
                    'ajax': 1}
+        url = self.get_url('messages', payload)
+        res = self.session.get(url).content.decode('utf8')
+        return res
+
+    def delete_spy_reports(self, message_id):
+        headers = {'X-Requested-With': 'XMLHttpRequest'}
+        payload = {'messageId': message_id, 'action': 103, 'ajax': 1}
         url = self.get_url('messages')
         res = self.session.post(url, data=payload, headers=headers).content.decode('utf8')
-        try:
-            obj = json.loads(res)
-        except ValueError:
-            raise NOT_LOGGED
-        return obj
+        return res
+
+    def get_flying_fleets(self):
+        url = self.get_url('movement')
+        res = self.session.get(url).content
+        soup = BeautifulSoup(res, 'lxml')
+        fleets = soup.find('div', {'class': 'fleetStatus'}).find('span', {'class': 'fleetSlots'}).find('span', {
+            'class': 'current'}).contents[0]
+        return fleets
+    
