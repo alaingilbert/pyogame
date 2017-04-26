@@ -109,7 +109,8 @@ Ships = {'SmallCargo': 202,
          'Interceptor': 215,
 
          # FR
-         'Grandtransporteur': 203}
+         'Grandtransporteur': 203,
+         'Vaisseaudecolonisation': 208}
 
 Research = {'EspionageTechnology': 106,
             'ComputerTechnology': 108,
@@ -149,7 +150,8 @@ Research = {'EspionageTechnology': 106,
             # FR
             'TechnologieOrdinateur': 108,
             'Astrophysique': 124,
-            'TechnologieEspionnage': 106}
+            'TechnologieEspionnage': 106,
+            'TechnologieBouclier': 111}
 
 
 Speed = {'10%': 1,
