@@ -74,7 +74,11 @@ Defense = {'RocketLauncher': 401,
            'Kleineplanetaireschildkoepel': 407,
            'GroteplanetaireschildkoepelLargeShieldDome': 408,
            'Antiballistischeraketten': 502,
-           'Interplanetaireraketten': 503}
+           'Interplanetaireraketten': 503,
+           
+           # FR
+           'Lanceurdemissiles': 401,
+           'Artillerielaserlégère': 402}
 
 
 Ships = {'SmallCargo': 202,
@@ -151,7 +155,8 @@ Research = {'EspionageTechnology': 106,
             'TechnologieOrdinateur': 108,
             'Astrophysique': 124,
             'TechnologieEspionnage': 106,
-            'TechnologieBouclier': 111}
+            'TechnologieBouclier': 111,
+            'TechnologieProtectiondesvaisseauxspatiaux': 110}
 
 
 Speed = {'10%': 1,
