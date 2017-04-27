@@ -13,7 +13,11 @@ from dateutil import tz
 
 
 def parse_int(text):
-    return int(text.replace('.', '').strip())
+    try:
+        a = int(text.replace('.', '').strip())
+        return a
+    except ValueError:
+        return 0
 
 
 def for_all_methods(decorator):
