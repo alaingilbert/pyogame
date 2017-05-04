@@ -7,7 +7,8 @@ import arrow
 import requests
 
 from ogame import constants
-from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID, NOT_LOGGED, BAD_CREDENTIALS, CANT_PROCESS, BAD_BUILDING_ID, BAD_SHIP_ID, BAD_RESEARCH_ID
+from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID, NOT_LOGGED, BAD_CREDENTIALS, CANT_PROCESS, BAD_BUILDING_ID, \
+    BAD_SHIP_ID, BAD_RESEARCH_ID
 from bs4 import BeautifulSoup
 from dateutil import tz
 
@@ -26,6 +27,7 @@ def for_all_methods(decorator):
             if callable(getattr(cls, attr)):
                 setattr(cls, attr, retry_if_logged_out(decorator(getattr(cls, attr))))
         return cls
+
     return decorate
 
 
@@ -45,6 +47,7 @@ def sandbox_decorator(some_fn):
             return ogame.sandbox_obj[fn_name]
 
         return None
+
     return wrapper
 
 
@@ -66,6 +69,7 @@ def retry_if_logged_out(method):
                 working = False
                 self.login()
         return res
+
     return wrapper
 
 
@@ -82,11 +86,12 @@ def metal_mine_production(level, universe_speed=1):
 
 
 def get_planet_infos_regex(text):
-    result = re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)([-\d]+).+C (?:bis|to) ([-\d]+).+C', text)
-    if result is not None :
-        return result #is a plenet
-    else :
-        return re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)', text) #is a moon
+    result = re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)([-\d]+).+C (?:bis|to) ([-\d]+).+C',
+                       text)
+    if result is not None:
+        return result  # is a plenet
+    else:
+        return re.search(r'(\w+) \[(\d+):(\d+):(\d+)\]([\d\.]+)km \((\d+)/(\d+)\)', text)  # is a moon
 
 
 def get_code(name):
@@ -106,9 +111,11 @@ def get_code(name):
 
 @for_all_methods(sandbox_decorator)
 class OGame(object):
-    def __init__(self, universe, username, password, domain='en.ogame.gameforge.com', auto_bootstrap=True, sandbox=False, sandbox_obj=None):
+    def __init__(self, universe, username, password, domain='en.ogame.gameforge.com', auto_bootstrap=True,
+                 sandbox=False, sandbox_obj=None):
         self.session = requests.session()
-        self.session.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'})
+        self.session.headers.update({
+                                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'})
         self.sandbox = sandbox
         self.sandbox_obj = sandbox_obj if sandbox_obj is not None else {}
         self.universe = universe
@@ -178,10 +185,10 @@ class OGame(object):
     def get_resources(self, planet_id):
         """Returns the planet resources stats."""
         resources = self.fetch_resources(planet_id)
-        metal      = resources['metal']['resources']['actual']
-        crystal    = resources['crystal']['resources']['actual']
-        deuterium  = resources['deuterium']['resources']['actual']
-        energy     = resources['energy']['resources']['actual']
+        metal = resources['metal']['resources']['actual']
+        crystal = resources['crystal']['resources']['actual']
+        deuterium = resources['deuterium']['resources']['actual']
+        energy = resources['energy']['resources']['actual']
         darkmatter = resources['darkmatter']['resources']['actual']
         result = {'metal': metal, 'crystal': crystal, 'deuterium': deuterium,
                   'energy': energy, 'darkmatter': darkmatter}
@@ -225,15 +232,15 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['metal_mine']            = get_nbr(soup, 'supply1')
-        res['crystal_mine']          = get_nbr(soup, 'supply2')
+        res['metal_mine'] = get_nbr(soup, 'supply1')
+        res['crystal_mine'] = get_nbr(soup, 'supply2')
         res['deuterium_synthesizer'] = get_nbr(soup, 'supply3')
-        res['solar_plant']           = get_nbr(soup, 'supply4')
-        res['fusion_reactor']        = get_nbr(soup, 'supply12')
-        res['solar_satellite']       = get_nbr(soup, 'supply212')
-        res['metal_storage']         = get_nbr(soup, 'supply22')
-        res['crystal_storage']       = get_nbr(soup, 'supply23')
-        res['deuterium_tank']        = get_nbr(soup, 'supply24')
+        res['solar_plant'] = get_nbr(soup, 'supply4')
+        res['fusion_reactor'] = get_nbr(soup, 'supply12')
+        res['solar_satellite'] = get_nbr(soup, 'supply212')
+        res['metal_storage'] = get_nbr(soup, 'supply22')
+        res['crystal_storage'] = get_nbr(soup, 'supply23')
+        res['deuterium_tank'] = get_nbr(soup, 'supply24')
         return res
 
     def get_defense(self, planet_id):
@@ -242,14 +249,14 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['rocket_launcher']         = get_nbr(soup, 'defense401')
-        res['light_laser']             = get_nbr(soup, 'defense402')
-        res['heavy_laser']             = get_nbr(soup, 'defense403')
-        res['gauss_cannon']            = get_nbr(soup, 'defense404')
-        res['ion_cannon']              = get_nbr(soup, 'defense405')
-        res['plasma_turret']           = get_nbr(soup, 'defense406')
-        res['small_shield_dome']       = get_nbr(soup, 'defense407')
-        res['large_shield_dome']       = get_nbr(soup, 'defense408')
+        res['rocket_launcher'] = get_nbr(soup, 'defense401')
+        res['light_laser'] = get_nbr(soup, 'defense402')
+        res['heavy_laser'] = get_nbr(soup, 'defense403')
+        res['gauss_cannon'] = get_nbr(soup, 'defense404')
+        res['ion_cannon'] = get_nbr(soup, 'defense405')
+        res['plasma_turret'] = get_nbr(soup, 'defense406')
+        res['small_shield_dome'] = get_nbr(soup, 'defense407')
+        res['large_shield_dome'] = get_nbr(soup, 'defense408')
         res['anti_ballistic_missiles'] = get_nbr(soup, 'defense502')
         res['interplanetary_missiles'] = get_nbr(soup, 'defense503')
         return res
@@ -260,18 +267,18 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['light_fighter']   = get_nbr(soup, 'military204')
-        res['heavy_fighter']   = get_nbr(soup, 'military205')
-        res['cruiser']         = get_nbr(soup, 'military206')
-        res['battleship']      = get_nbr(soup, 'military207')
-        res['battlecruiser']   = get_nbr(soup, 'military215')
-        res['bomber']          = get_nbr(soup, 'military211')
-        res['destroyer']       = get_nbr(soup, 'military213')
-        res['deathstar']       = get_nbr(soup, 'military214')
-        res['small_cargo']     = get_nbr(soup, 'civil202')
-        res['large_cargo']     = get_nbr(soup, 'civil203')
-        res['colony_ship']     = get_nbr(soup, 'civil208')
-        res['recycler']        = get_nbr(soup, 'civil209')
+        res['light_fighter'] = get_nbr(soup, 'military204')
+        res['heavy_fighter'] = get_nbr(soup, 'military205')
+        res['cruiser'] = get_nbr(soup, 'military206')
+        res['battleship'] = get_nbr(soup, 'military207')
+        res['battlecruiser'] = get_nbr(soup, 'military215')
+        res['bomber'] = get_nbr(soup, 'military211')
+        res['destroyer'] = get_nbr(soup, 'military213')
+        res['deathstar'] = get_nbr(soup, 'military214')
+        res['small_cargo'] = get_nbr(soup, 'civil202')
+        res['large_cargo'] = get_nbr(soup, 'civil203')
+        res['colony_ship'] = get_nbr(soup, 'civil208')
+        res['recycler'] = get_nbr(soup, 'civil209')
         res['espionage_probe'] = get_nbr(soup, 'civil210')
         res['solar_satellite'] = get_nbr(soup, 'civil212')
         return res
@@ -283,13 +290,13 @@ class OGame(object):
         soup = BeautifulSoup(res, 'lxml')
         res = {}
         res['robotics_factory'] = get_nbr(soup, 'station14')
-        res['shipyard']         = get_nbr(soup, 'station21')
-        res['research_lab']     = get_nbr(soup, 'station31')
-        res['alliance_depot']   = get_nbr(soup, 'station34')
-        res['missile_silo']     = get_nbr(soup, 'station44')
-        res['nanite_factory']   = get_nbr(soup, 'station15')
-        res['terraformer']      = get_nbr(soup, 'station33')
-        res['space_dock']       = get_nbr(soup, 'station36')
+        res['shipyard'] = get_nbr(soup, 'station21')
+        res['research_lab'] = get_nbr(soup, 'station31')
+        res['alliance_depot'] = get_nbr(soup, 'station34')
+        res['missile_silo'] = get_nbr(soup, 'station44')
+        res['nanite_factory'] = get_nbr(soup, 'station15')
+        res['terraformer'] = get_nbr(soup, 'station33')
+        res['space_dock'] = get_nbr(soup, 'station36')
         return res
 
     def get_research(self):
@@ -298,22 +305,22 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         res = {}
-        res['energy_technology']              = get_nbr(soup, 'research113')
-        res['laser_technology']               = get_nbr(soup, 'research120')
-        res['ion_technology']                 = get_nbr(soup, 'research121')
-        res['hyperspace_technology']          = get_nbr(soup, 'research114')
-        res['plasma_technology']              = get_nbr(soup, 'research122')
-        res['combustion_drive']               = get_nbr(soup, 'research115')
-        res['impulse_drive']                  = get_nbr(soup, 'research117')
-        res['hyperspace_drive']               = get_nbr(soup, 'research118')
-        res['espionage_technology']           = get_nbr(soup, 'research106')
-        res['computer_technology']            = get_nbr(soup, 'research108')
-        res['astrophysics']                   = get_nbr(soup, 'research124')
+        res['energy_technology'] = get_nbr(soup, 'research113')
+        res['laser_technology'] = get_nbr(soup, 'research120')
+        res['ion_technology'] = get_nbr(soup, 'research121')
+        res['hyperspace_technology'] = get_nbr(soup, 'research114')
+        res['plasma_technology'] = get_nbr(soup, 'research122')
+        res['combustion_drive'] = get_nbr(soup, 'research115')
+        res['impulse_drive'] = get_nbr(soup, 'research117')
+        res['hyperspace_drive'] = get_nbr(soup, 'research118')
+        res['espionage_technology'] = get_nbr(soup, 'research106')
+        res['computer_technology'] = get_nbr(soup, 'research108')
+        res['astrophysics'] = get_nbr(soup, 'research124')
         res['intergalactic_research_network'] = get_nbr(soup, 'research123')
-        res['graviton_technology']            = get_nbr(soup, 'research199')
-        res['weapons_technology']             = get_nbr(soup, 'research109')
-        res['shielding_technology']           = get_nbr(soup, 'research110')
-        res['armour_technology']              = get_nbr(soup, 'research111')
+        res['graviton_technology'] = get_nbr(soup, 'research199')
+        res['weapons_technology'] = get_nbr(soup, 'research109')
+        res['shielding_technology'] = get_nbr(soup, 'research110')
+        res['armour_technology'] = get_nbr(soup, 'research111')
         return res
 
     def is_under_attack(self, json_obj=None):
@@ -487,7 +494,7 @@ class OGame(object):
             # planet type: 1
             # debris type: 2
             # moon type: 3
-            payload.update({'type': 2}) # Send to debris field
+            payload.update({'type': 2})  # Send to debris field
         res = self.session.post(self.get_url('fleet3'), data=payload).content
 
         payload = {}
@@ -510,7 +517,8 @@ class OGame(object):
             if not reversal_span:
                 continue
             fleet_id = int(reversal_span.get('ref'))
-            if dest == '[%s:%s:%s]' % (where['galaxy'], where['system'], where['position']) and origin == '[%s]' % origin_coords:
+            if dest == '[%s:%s:%s]' % (
+            where['galaxy'], where['system'], where['position']) and origin == '[%s]' % origin_coords:
                 matches.append(fleet_id)
         if matches:
             return max(matches)
@@ -641,19 +649,18 @@ class OGame(object):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
         link = soup.find('div', {'id': 'planet-%s' % planet_id})
-        if  link is not None: #is a planet pid
+        if link is not None:  # is a planet pid
             link = link.find('a')
-        else :#is a moon pid
+        else:  # is a moon pid
             link = soup.find('div', {'id': 'planetList'})
-            link = link.find_all('a', {'class' : 'moonlink'})
-            for node in link :
+            link = link.find_all('a', {'class': 'moonlink'})
+            for node in link:
                 nodeContent = node['title']
-                if nodeContent.find("cp="+planet_id) > -1 :
+                if nodeContent.find("cp=" + planet_id) > -1:
                     link = node
                     break
-                else :
+                else:
                     continue
-
 
         infos_label = BeautifulSoup(link['title'], 'lxml').text
         infos = get_planet_infos_regex(infos_label)
@@ -670,7 +677,7 @@ class OGame(object):
         res['fields']['built'] = int(infos.group(6))
         res['fields']['total'] = int(infos.group(7))
         res['temperature'] = {}
-        if infos.groups().__len__() > 7 : #is a planet
+        if infos.groups().__len__() > 7:  # is a planet
             res['temperature']['min'] = int(infos.group(8))
             res['temperature']['max'] = int(infos.group(9))
         return res
@@ -728,12 +735,12 @@ class OGame(object):
         soup = BeautifulSoup(html, 'lxml')
         options = soup.find_all('option', {'selected': True})
         res = {}
-        res['metal_mine']            = options[0]['value']
-        res['crystal_mine']          = options[1]['value']
+        res['metal_mine'] = options[0]['value']
+        res['crystal_mine'] = options[1]['value']
         res['deuterium_synthesizer'] = options[2]['value']
-        res['solar_plant']           = options[3]['value']
-        res['fusion_reactor']        = options[4]['value']
-        res['solar_satellite']       = options[5]['value']
+        res['solar_plant'] = options[3]['value']
+        res['fusion_reactor'] = options[4]['value']
+        res['solar_satellite'] = options[5]['value']
         return res
 
     def send_message(self, player_id, msg):
@@ -756,7 +763,7 @@ class OGame(object):
         except ValueError:
             raise NOT_LOGGED
         return obj
-    
+
     def get_spy_reports(self):
         headers = {'X-Requested-With': 'XMLHttpRequest'}
         payload = {'tab': 20,
@@ -776,15 +783,25 @@ class OGame(object):
         url = self.get_url('movement')
         res = self.session.get(url).content
         soup = BeautifulSoup(res, 'lxml')
-        fleets = soup.find('span', {
+        current_fleets = soup.find('span', {
             'class': 'current'})
-        if fleets is None:
-            return '0'
-        return fleets.contents[0]
-    
+        max_fleets = soup.find('span', {
+            'class': 'all'})
+        if current_fleets is None:
+            text_fleets = soup.find('span', {'class': 'tooltip advice'}).contents[1]
+            current_fleets = int(text_fleets.split('/')[0])
+            max_fleets = int(text_fleets.split('/')[1])
+            available_fleets = max_fleets - current_fleets
+            fleet_dict = {'current_fleets': current_fleets, 'max_fleets': max_fleets,
+                          'available_fleets': available_fleets}
+            return fleet_dict
+        current_fleets = int(current_fleets.contents[0])
+        max_fleets = int(max_fleets.contents[0])
+        available_fleets = max_fleets - current_fleets
+        fleet_dict = {'current_fleets': current_fleets, 'max_fleets': max_fleets, 'available_fleets': available_fleets}
+        return fleet_dict
+
     def jumpgate_execute(self):
         res = self.session.get(self.get_url('jumpgate_execute')).content
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         return True
-    
-    
