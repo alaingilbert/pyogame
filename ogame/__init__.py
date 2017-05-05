@@ -805,3 +805,17 @@ class OGame(object):
         res = self.session.get(self.get_url('jumpgate_execute')).content
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         return True
+
+    def send_minifleet_spy(self, where, ship_count, token):
+        headers = {'X-Requested-With': 'XMLHttpRequest'}
+        payload = {'mission': 6,
+                   'galaxy': where.get('galaxy'),
+                   'system': where.get('system'),
+                   'position': where.get('position'),
+                   'type': 1,
+                   'shipCount': ship_count,
+                   'token': token,
+                   'speed': 10
+                   }
+        res = self.session.post(self.get_url('minifleet'), params={'ajax': 1}, headers=headers, data=payload).content
+        return res
