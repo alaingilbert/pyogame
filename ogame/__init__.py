@@ -818,4 +818,21 @@ class OGame(object):
                    'speed': 10
                    }
         res = self.session.post(self.get_url('minifleet'), params={'ajax': 1}, headers=headers, data=payload).content
-        return res
+        json_response = json.loads(res)
+        res_dict = json_response.get('response').get('success')
+        if res_dict:
+            return 'Sended spy probes'
+        return None
+
+    def get_minifleet_token(self, html):
+        token = None
+        moon_soup = BeautifulSoup(html, 'html.parser')
+        data = moon_soup.find_all('script', {'type': 'text/javascript'})
+        parameter = 'miniFleetToken'
+        for d in data:
+            d = d.text
+            if 'var miniFleetToken=' in d:
+                regex_string = 'var {parameter}="(.*?)"'.format(parameter=parameter)
+                token = re.findall(regex_string, d)
+
+        return token
