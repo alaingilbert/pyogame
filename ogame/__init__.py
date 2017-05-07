@@ -818,7 +818,13 @@ class OGame(object):
                    'speed': 10
                    }
         res = self.session.post(self.get_url('minifleet'), params={'ajax': 1}, headers=headers, data=payload).content
-        json_response = json.loads(res)
+        try:
+            json_response = json.loads(res)
+        except ValueError:
+            from send_message import send_message
+            send_message(
+                'No se pudo espiar a {}:{}:{}'.format(where.get('galaxy'), where.get('system'), where.get('position')))
+            return None
         res_dict = json_response.get('response').get('success')
         if res_dict:
             return 'Sended spy probes'
