@@ -563,6 +563,14 @@ class OGame(object):
                 coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_origin)
                 galaxy, system, position = coords.groups()
                 attack.update({'origin': (int(galaxy), int(system), int(position))})
+
+                # CHECK IF IT IS HOSTILE
+                is_hostile = False
+                check_hostile = event.find('td', {'class': 'hostile'})
+                if check_hostile is not None:
+                    is_hostile = True
+                attack.update({'is_hostile': is_hostile})
+
             else:
                 attack.update({'origin': None})
 
@@ -818,7 +826,13 @@ class OGame(object):
                    'speed': 10
                    }
         res = self.session.post(self.get_url('minifleet'), params={'ajax': 1}, headers=headers, data=payload).content
-        json_response = json.loads(res)
+        try:
+            json_response = json.loads(res)
+        except ValueError:
+            from send_message import send_message
+            send_message(
+                'No se pudo espiar a {}:{}:{}'.format(where.get('galaxy'), where.get('system'), where.get('position')))
+            return None
         res_dict = json_response.get('response').get('success')
         if res_dict:
             return 'Sended spy probes'
