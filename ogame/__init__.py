@@ -563,6 +563,14 @@ class OGame(object):
                 coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_origin)
                 galaxy, system, position = coords.groups()
                 attack.update({'origin': (int(galaxy), int(system), int(position))})
+
+                # CHECK IF IT IS HOSTILE
+                is_hostile = False
+                check_hostile = event.find('td', {'class': 'hostile'})
+                if check_hostile is not None:
+                    is_hostile = True
+                attack.update({'is_hostile': is_hostile})
+
             else:
                 attack.update({'origin': None})
 
