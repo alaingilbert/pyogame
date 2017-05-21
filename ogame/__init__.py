@@ -752,3 +752,41 @@ class OGame(object):
         except ValueError:
             raise NOT_LOGGED
         return obj
+
+    def galaxy_infos(self, galaxy, system):
+        html = self.galaxy_content(galaxy, system)['galaxy']
+        soup = BeautifulSoup(html, 'lxml')
+        rows = soup.findAll('tr', {'class': 'row'})
+        res = []
+        for row in rows:
+            if 'empty_filter' not in row.get('class'):
+                tooltips = row.findAll('div', {'class': 'htmlTooltip'})
+                planet_tooltip = tooltips[0]
+                planet_name = planet_tooltip.find('h1').find('span').text
+                planet_url = planet_tooltip.find('img').get('src')
+                coords_raw = planet_tooltip.find('span', {'id': 'pos-planet'}).text
+                coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_raw)
+                galaxy, system, position = coords.groups()
+                planet_infos = {}
+                planet_infos['name'] = planet_name
+                planet_infos['img'] = planet_url
+                planet_infos['coordinate'] = {}
+                planet_infos['coordinate']['galaxy'] = int(galaxy)
+                planet_infos['coordinate']['system'] = int(system)
+                planet_infos['coordinate']['position'] = int(position)
+                if len(tooltips) > 1:
+                    player_tooltip = tooltips[1]
+                    player_id_raw = player_tooltip.get('id')
+                    player_id = int(re.search(r'player(\d+)', player_id_raw).groups()[0])
+                    player_name = player_tooltip.find('h1').find('span').text
+                    player_rank = parse_int(player_tooltip.find('li', {'class': 'rank'}).find('a').text)
+                else:
+                    player_id = None
+                    player_name = row.find('td', {'class': 'playername'}).find('span').text.strip()
+                    player_rank = None
+                planet_infos['player'] = {}
+                planet_infos['player']['id'] = player_id
+                planet_infos['player']['name'] = player_name
+                planet_infos['player']['rank'] = player_rank
+                res.append(planet_infos)
+        return res
