@@ -348,7 +348,8 @@ class OGame(object):
         soup = BeautifulSoup(res, 'lxml')
         planets = soup.findAll('div', {'class': 'smallplanet'})
         for planet in planets:
-            name = planet.find('span', {'class': 'planet-name'}).string
+            title = planet.find('a', {'class': 'planetlink'}).get('title')
+            name = re.search(r'<b>(.+) \[(\d+):(\d+):(\d+)\]</b>', title).groups()[0]
             if name == planet_name:
                 planet_id = planet['id'].replace('planet-', '')
                 return planet_id
