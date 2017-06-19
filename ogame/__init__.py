@@ -12,6 +12,8 @@ from ogame.errors import BAD_UNIVERSE_NAME, BAD_DEFENSE_ID, NOT_LOGGED, BAD_CRED
 from bs4 import BeautifulSoup
 from dateutil import tz
 
+import logging
+logging.getLogger("requests").setLevel(logging.ERROR)
 
 def parse_int(text):
     return int(text.replace('.', '').strip())
