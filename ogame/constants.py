@@ -78,7 +78,9 @@ Defense = {'RocketLauncher': 401,
            
            # FR
            'Lanceurdemissiles': 401,
-           'Artillerielaserlégère': 402}
+           'Artillerielaserlégère': 402,
+           'Artillerieàions': 405,
+           'Artillerielaserlourde': 403}
 
 
 Ships = {'SmallCargo': 202,
@@ -114,7 +116,8 @@ Ships = {'SmallCargo': 202,
 
          # FR
          'Grandtransporteur': 203,
-         'Vaisseaudecolonisation': 208}
+         'Vaisseaudecolonisation': 208,
+         'Satellitesolaire': 212}
 
 Research = {'EspionageTechnology': 106,
             'ComputerTechnology': 108,
