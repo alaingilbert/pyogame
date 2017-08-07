@@ -256,7 +256,7 @@ Formules = {
             },
         },
         'facilities':{
-            'robotics_factory' : {
+            'RoboticsFactory' : {
                 'cout' : {
                     'Metal':[400, 2], 'Crystal': [120,2], 'Deuterium': [200,2]
                     },
