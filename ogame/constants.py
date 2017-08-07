@@ -32,7 +32,6 @@ Buildings = {'MetalMine': 1,
 
 Facilities = {'AllianceDepot': 34,
               'RoboticsFactory': 14,
-              'robotics_factory': 14,
               'Shipyard': 21,
               'ResearchLab': 31,
               'MissileSilo': 44,
@@ -49,9 +48,12 @@ Facilities = {'AllianceDepot': 34,
               'Nanorobotfabriek': 15,
               'Terravormer': 33,
               'Ruimtewerf': 36,
-              
+
+              #Ogame
+              'robotics_factory': 14,
+
               # FR
-	      'Usinederobots': 14}
+	          'Usinederobots': 14}
 
 
 Defense = {'RocketLauncher': 401,
