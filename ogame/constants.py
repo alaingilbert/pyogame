@@ -32,6 +32,7 @@ Buildings = {'MetalMine': 1,
 
 Facilities = {'AllianceDepot': 34,
               'RoboticsFactory': 14,
+              'robotics_factory': 14,
               'Shipyard': 21,
               'ResearchLab': 31,
               'MissileSilo': 44,
@@ -256,7 +257,7 @@ Formules = {
             },
         },
         'facilities':{
-            'RoboticsFactory' : {
+            'robotics_factory' : {
                 'cout' : {
                     'Metal':[400, 2], 'Crystal': [120,2], 'Deuterium': [200,2]
                     },
