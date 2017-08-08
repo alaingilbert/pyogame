@@ -1,6 +1,7 @@
 # coding: utf-8
 
 Buildings = {'MetalMine': 1,
+             'metal_mine': 1,
              'CrystalMine': 2,
              'DeuteriumSynthesizer': 3,
              'deuterium_synthesizer': 3,
