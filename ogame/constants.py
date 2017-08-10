@@ -3,6 +3,7 @@
 Buildings = {'MetalMine': 1,
              'metal_mine': 1,
              'CrystalMine': 2,
+             'crystal_mine': 2,
              'DeuteriumSynthesizer': 3,
              'deuterium_synthesizer': 3,
              'SolarPlant': 4,
