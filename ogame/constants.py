@@ -220,21 +220,21 @@ Formules = {
             },
             'metal_storage':{
                 'cout': {
-                    'Metal':[500,2], 'Crystal':[0,0], 'Deuterieum':[0,0]
+                    'Metal':[500,2], 'Crystal':[0,0], 'Deuterium':[0,0]
                 },
             'capacite': [1.6],
                 'consommation': [0,0]
             },
             'crystal_storage':{
                 'cout': {
-                    'Metal':[500,2], 'Crystal':[250,2], 'Deuterieum':[0,0]
+                    'Metal':[500,2], 'Crystal':[250,2], 'Deuterium':[0,0]
                     },
                 'capacite': [1.6],
                 'consommation': [0,0]
             },
             'deuterium_tank':{
                 'cout': {
-                    'Metal':[1000,2], 'Crystal':[1000,2], 'Deuterieum':[0,0]
+                    'Metal':[1000,2], 'Crystal':[1000,2], 'Deuterium':[0,0]
                     },
                 'capacite': [1.6],
                 'consommation': [0,0]
@@ -257,14 +257,14 @@ Formules = {
             },
             'solar_satellite':{
                 'cout': {
-                    'Metal':[0,0], 'Crystal':[0,0], 'Deuterieum':[0,0]
+                    'Metal':[0,0], 'Crystal':[0,0], 'Deuterium':[0,0]
                     },
                 'production': [],
                 'consommation': [0,0]
             },
             'fusion_reactor':{
                 'cout': {
-                    'Metal':[0,0], 'Crystal':[0,0], 'Deuterieum':[0,0]
+                    'Metal':[0,0], 'Crystal':[0,0], 'Deuterium':[0,0]
                     },
                 'production': [],
                 'consommation': [10,1.1]
