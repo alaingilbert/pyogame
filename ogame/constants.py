@@ -246,6 +246,13 @@ Formules = {
                 'production': [20,1.1],
                 'consommation': [0,0]
             },
+            'robotics_factory' : {
+                'cout' : {
+                    'Metal':[400, 2], 'Crystal': [120,2], 'Deuterium': [200,2]
+                    },
+                'prerequis' : {
+                },
+            }
         },
         'energy' : {
             'solar_plant':{
