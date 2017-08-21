@@ -250,6 +250,7 @@ Formules = {
                 'cout' : {
                     'Metal':[400, 2], 'Crystal': [120,2], 'Deuterium': [200,2]
                     },
+                'consommation': [0,0]
                 'prerequis' : {
                 },
             }
