@@ -281,6 +281,7 @@ Formules = {
                     'Metal':[400, 2], 'Crystal': [120,2], 'Deuterium': [200,2]
                     },
                 'prerequis' : {
+                },
             },
         },
         'facilities':{
@@ -293,3 +294,4 @@ Formules = {
             }
         }
     }
+
