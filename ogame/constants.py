@@ -251,7 +251,7 @@ Formules = {
                 'consommation': [0,0],
                 'prerequis': [['robotics_factory', 2]],
                 }
-            }
+            },
         'energy' : {
             'solar_plant':{
                 'cout': {'Metal':[75,1.5], 'Crystal':[30,1.5], 'Deuterium':[0,0]},
