@@ -198,100 +198,85 @@ Missions = {'Attack': 1,
 Formules = {
         'batiments' : {
             'metal_mine': { 
-                'cout': {
-                    'Metal':[60,1.5], 'Crystal':[15,1.5], 'Deuterium':[0,0]
-                },
+                'cout': {'Metal':[60,1.5], 'Crystal':[15,1.5], 'Deuterium':[0,0]},
                 'production': [30,1.1],
                 'consommation': [10,1.1],
+                'prerequis' : {},
             },
             'crystal_mine':{
-                'cout': {
-                    'Metal':[48, 1.6], 'Crystal':[24,1.6], 'Deuterium':[0,0]
-                    },
+                'cout': {'Metal':[48, 1.6], 'Crystal':[24,1.6], 'Deuterium':[0,0]},
                 'production': [20,1.1],
                 'consommation': [10,1.1],
+                'prerequis' : {},
             },
             'deuterium_synthesizer':{
-                'cout': {
-                    'Metal':[225,1.5], 'Crystal':[75,1.5], 'Deuterium':[0,0]
-                    },
+                'cout': {'Metal':[225,1.5], 'Crystal':[75,1.5], 'Deuterium':[0,0]},
                 'production': [10,1.1],
-                'consommation': [20,1.1]
+                'consommation': [20,1.1],
+                'prerequis' : {},
             },
             'metal_storage':{
-                'cout': {
-                    'Metal':[500,2], 'Crystal':[0,0], 'Deuterium':[0,0]
-                },
-            'capacite': [1.6],
-                'consommation': [0,0]
+                'cout': {'Metal':[500,2], 'Crystal':[0,0], 'Deuterium':[0,0]},
+                'capacite': [1.6],
+                'consommation': [0,0],
+                'prerequis' : {},
             },
             'crystal_storage':{
-                'cout': {
-                    'Metal':[500,2], 'Crystal':[250,2], 'Deuterium':[0,0]
-                    },
+                'cout': {'Metal':[500,2], 'Crystal':[250,2], 'Deuterium':[0,0]},
                 'capacite': [1.6],
-                'consommation': [0,0]
+                'consommation': [0,0],
+                'prerequis' : {},
             },
             'deuterium_tank':{
-                'cout': {
-                    'Metal':[1000,2], 'Crystal':[1000,2], 'Deuterium':[0,0]
-                    },
+                'cout': {'Metal':[1000,2], 'Crystal':[1000,2], 'Deuterium':[0,0]},
                 'capacite': [1.6],
-                'consommation': [0,0]
+                'consommation': [0,0],
+                'prerequis' : {},
             },
             'solar_plant':{
-                'cout': {
-                    'Metal':[75,1.5], 'Crystal':[30,1.5], 'Deuterium':[0,0]
-                    },
+                'cout': {'Metal':[75,1.5], 'Crystal':[30,1.5], 'Deuterium':[0,0]},
                 'production': [20,1.1],
-                'consommation': [0,0]
+                'consommation': [0,0],
+                'prerequis' : {},
             },
             'robotics_factory' : {
-                'cout' : {
-                    'Metal':[400, 2], 'Crystal': [120,2], 'Deuterium': [200,2]
-                    },
+                'cout' : {'Metal':[400, 2], 'Crystal': [120,2], 'Deuterium': [200,2]},
+                'production': [0,0],
                 'consommation': [0,0],
-                'prerequis' : {
-                },
+                'prerequis' : {},
+            },
+            'Shipyard' : {
+                'cout' : {'Metal': [0,0], 'Crystal': [0,2], 'Deuterium': [0,2]},
+                'production': [0,0],
+                'consommation': [0,0],
+                'prerequis': [['robotics_factory', 2]],
+                }
             }
-        },
         'energy' : {
             'solar_plant':{
-                'cout': {
-                    'Metal':[75,1.5], 'Crystal':[30,1.5], 'Deuterium':[0,0]
-                    },
+                'cout': {'Metal':[75,1.5], 'Crystal':[30,1.5], 'Deuterium':[0,0]},
                 'production': [20,1.1],
                 'consommation': [0,0]
             },
             'solar_satellite':{
-                'cout': {
-                    'Metal':[0,0], 'Crystal':[0,0], 'Deuterium':[0,0]
-                    },
+                'cout': {'Metal':[0,0], 'Crystal':[0,0], 'Deuterium':[0,0]},
                 'production': [],
                 'consommation': [0,0]
             },
             'fusion_reactor':{
-                'cout': {
-                    'Metal':[0,0], 'Crystal':[0,0], 'Deuterium':[0,0]
-                    },
+                'cout': {'Metal':[0,0], 'Crystal':[0,0], 'Deuterium':[0,0]},
                 'production': [],
                 'consommation': [10,1.1]
             },
             'robotics_factory' : {
-                'cout' : {
-                    'Metal':[400, 2], 'Crystal': [120,2], 'Deuterium': [200,2]
-                    },
-                'prerequis' : {
-                },
+                'cout' : {'Metal':[400, 2], 'Crystal': [120,2], 'Deuterium': [200,2]},
+                'prerequis' : {},
             },
         },
         'facilities':{
             'robotics_factory' : {
-                'cout' : {
-                    'Metal':[400, 2], 'Crystal': [120,2], 'Deuterium': [200,2]
-                    },
-                'prerequis' : {
-                },
+                'cout' : {'Metal':[400, 2], 'Crystal': [120,2], 'Deuterium': [200,2]},
+                'prerequis' : {},
             }
         }
     }
