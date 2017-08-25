@@ -245,16 +245,16 @@ Formules = {
                 'consommation': [0,0],
                 'prerequis' : {},
             },
-            'Shipyard' : {
-                'cout' : {'Metal': [0,0], 'Crystal': [0,2], 'Deuterium': [0,2]},
+            'shipyard' : {
+                'cout' : {'Metal': [400,2], 'Crystal': [200,2], 'Deuterium': [100,2]},
                 'production': [0,0],
                 'consommation': [0,0],
                 'prerequis': [['robotics_factory', 2]],
             },
-            'ResearchLab' : {
-                'cout' : {},
-                'production' : [],
-                'consommation': [],
+            'research_lab' : {
+                'cout' : {'Metal' : [200,2], 'Crystal': [400,2], 'Deuterium':  [200,2]},
+                'production' : [0,0],
+                'consommation': [0,0],
                 'prerequis': [],
             },
         },
