@@ -250,8 +250,14 @@ Formules = {
                 'production': [0,0],
                 'consommation': [0,0],
                 'prerequis': [['robotics_factory', 2]],
-                }
             },
+            'ResearchLab' : {
+                'cout' : {},
+                'production' : [],
+                'consommation': [],
+                'prerequis': [],
+            },
+        },
         'energy' : {
             'solar_plant':{
                 'cout': {'Metal':[75,1.5], 'Crystal':[30,1.5], 'Deuterium':[0,0]},
