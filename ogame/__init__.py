@@ -205,7 +205,7 @@ class OGame(object):
             raise NOT_LOGGED
         res = {}
         res['player_id'] = int(re.search(r'playerId="(\w+)"', html).group(1))
-        res['player_name'] = re.search(r'playerName="(\w+)"', html).group(1)
+        res['player_name'] = re.search(r'playerName="([^"]+)"', html).group(1)
         tmp = re.search(r'textContent\[7\]="([^"]+)"', html).group(1)
         soup = BeautifulSoup(tmp, 'lxml')
         tmp = soup.text
