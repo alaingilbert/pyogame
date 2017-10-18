@@ -14,7 +14,7 @@ from dateutil import tz
 
 
 def parse_int(text):
-    return int(text.replace('.', '').strip())
+    return int(text.replace('.', '').replace(',', '').strip())
 
 
 def for_all_methods(decorator):
@@ -97,7 +97,7 @@ def get_code(name):
         return constants.Ships[name]
     if name in constants.Research.keys():
         return constants.Research[name]
-    print('Couldn\'t find code for %s' % name)
+    print('Couldn\'t find code for {}'.format(name))
     return None
 
 
@@ -205,7 +205,7 @@ class OGame(object):
             raise NOT_LOGGED
         res = {}
         res['player_id'] = int(re.search(r'playerId="(\w+)"', html).group(1))
-        res['player_name'] = re.search(r'playerName="(\w+)"', html).group(1)
+        res['player_name'] = re.search(r'playerName="([^"]+)"', html).group(1)
         tmp = re.search(r'textContent\[7\]="([^"]+)"', html).group(1)
         soup = BeautifulSoup(tmp, 'lxml')
         tmp = soup.text
@@ -472,7 +472,7 @@ class OGame(object):
         payload = {}
         payload.update(get_hidden_fields(res))
         for name, value in ships:
-            payload['am%s' % name] = value
+            payload['am{}'.format(name)] = value
         res = self.session.post(self.get_url('fleet2'), data=payload).content
 
         payload = {}
@@ -509,14 +509,14 @@ class OGame(object):
             if not reversal_span:
                 continue
             fleet_id = int(reversal_span.get('ref'))
-            if dest == '[%s:%s:%s]' % (where['galaxy'], where['system'], where['position']) and origin == '[%s]' % origin_coords:
+            if dest == '[{}:{}:{}]'.format(where['galaxy'], where['system'], where['position']) and origin == '[{}]'.format(origin_coords):
                 matches.append(fleet_id)
         if matches:
             return max(matches)
         return None
 
     def cancel_fleet(self, fleet_id):
-        res = self.session.get(self.get_url('movement') + '&return=%s' % fleet_id).content
+        res = self.session.get(self.get_url('movement') + '&return={}'.format(fleet_id)).content
         if not self.is_logged(res):
             raise NOT_LOGGED
 
@@ -591,20 +591,20 @@ class OGame(object):
         if params is None:
             params = {}
         if page == 'login':
-            return 'https://%s/main/login' % self.domain
+            return 'https://{}/main/login'.format(self.domain)
         else:
             if self.server_url == '':
                 self.server_url = self.get_universe_url(self.universe)
-            url = 'https://%s/game/index.php?page=%s' % (self.server_url, page)
+            url = 'https://{}/game/index.php?page={}'.format(self.server_url, page)
             if params:
                 arr = []
                 for key in params:
-                    arr.append("%s=%s" % (key, params[key]))
+                    arr.append("{}={}".format(key, params[key]))
                 url += '&' + '&'.join(arr)
             return url
 
     def get_servers(self, domain):
-        res = self.session.get('https://%s' % domain).content
+        res = self.session.get('https://{}'.format(domain)).content
         soup = BeautifulSoup(res, 'lxml')
         select = soup.find('select', {'id': 'serverLogin'})
         servers = {}
@@ -639,7 +639,7 @@ class OGame(object):
         if not self.is_logged(res):
             raise NOT_LOGGED
         soup = BeautifulSoup(res, 'lxml')
-        link = soup.find('div', {'id': 'planet-%s' % planet_id})
+        link = soup.find('div', {'id': 'planet-{}'.format(planet_id)})
         if  link is not None: #is a planet pid
             link = link.find('a')
         else :#is a moon pid
