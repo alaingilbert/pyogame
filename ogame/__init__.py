@@ -763,6 +763,12 @@ class OGame(object):
         res = []
         for row in rows:
             if 'empty_filter' not in row.get('class'):
+                activity = None
+                activity_div = row.findAll('div', {'class': 'activity'})
+                if len(activity_div) > 0:
+                    activity_raw = activity_div[0].text.strip()
+                    if activity_raw != '':
+                        activity = int(activity_raw)
                 tooltips = row.findAll('div', {'class': 'htmlTooltip'})
                 planet_tooltip = tooltips[0]
                 planet_name = planet_tooltip.find('h1').find('span').text
@@ -771,13 +777,24 @@ class OGame(object):
                 coords = re.search(r'\[(\d+):(\d+):(\d+)\]', coords_raw)
                 galaxy, system, position = coords.groups()
                 planet_infos = {}
+                planet_infos['activity'] = activity
                 planet_infos['name'] = planet_name
                 planet_infos['img'] = planet_url
                 planet_infos['coordinate'] = {}
                 planet_infos['coordinate']['galaxy'] = int(galaxy)
                 planet_infos['coordinate']['system'] = int(system)
                 planet_infos['coordinate']['position'] = int(position)
-                if len(tooltips) > 1:
+                if len(tooltips) > 2:
+                    for i in range(1, 3):
+                        player_tooltip = tooltips[i]
+                        player_id_raw = player_tooltip.get('id')
+                        if player_id_raw.startswith('debris'):
+                            continue
+                        player_id = int(re.search(r'player(\d+)', player_id_raw).groups()[0])
+                        player_name = player_tooltip.find('h1').find('span').text
+                        player_rank = parse_int(player_tooltip.find('li', {'class': 'rank'}).find('a').text)
+                        break
+                elif len(tooltips) > 1:
                     player_tooltip = tooltips[1]
                     player_id_raw = player_tooltip.get('id')
                     player_id = int(re.search(r'player(\d+)', player_id_raw).groups()[0])
