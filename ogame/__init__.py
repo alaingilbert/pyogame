@@ -769,6 +769,8 @@ class OGame(object):
                     activity_raw = activity_div[0].text.strip()
                     if activity_raw != '':
                         activity = int(activity_raw)
+                    else:
+                        activity = 0
                 tooltips = row.findAll('div', {'class': 'htmlTooltip'})
                 planet_tooltip = tooltips[0]
                 planet_name = planet_tooltip.find('h1').find('span').text
