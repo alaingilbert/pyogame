@@ -121,14 +121,48 @@ class OGame(object):
 
     def login(self):
         """Get the ogame session token."""
-        if self.server_url == '':
-            self.server_url = self.get_universe_url(self.universe)
         payload = {'kid': '',
-                   'uni': self.server_url,
-                   'login': self.username,
-                   'pass': self.password}
-        time.sleep(random.uniform(1, 5))
-        res = self.session.post(self.get_url('login'), data=payload).content
+                   'language': 'en',
+                   'autologin': 'false',
+                   'credentials[email]': self.username,
+                   'credentials[password]': self.password}
+        time.sleep(random.uniform(1, 2))
+        res = self.session.post('https://lobby-api.ogame.gameforge.com/users', data=payload)
+
+        php_session_id = None
+        for c in res.cookies:
+            if c.name == 'PHPSESSID':
+                php_session_id = c.value
+                break
+        cookie = {'PHPSESSID': php_session_id}
+
+        res = self.session.get('https://lobby-api.ogame.gameforge.com/servers').json()
+        server_num = None
+        for server in res:
+            name = server['name'].lower()
+            if self.universe.lower() == name:
+                server_num = server['number']
+                break
+
+        res = self.session.get('https://lobby-api.ogame.gameforge.com/users/me/accounts', cookies=cookie)
+        selected_server_id = None
+        lang = None
+        server_accounts = res.json()
+        for server_account in server_accounts:
+            if server_account['server']['number'] == server_num:
+                lang = server_account['server']['language']
+                selected_server_id = server_account['id']
+                break
+
+
+        time.sleep(random.uniform(1, 2))
+        res = self.session.get('https://lobby-api.ogame.gameforge.com/users/me/loginLink?id={}&server[language]={}&server[number]={}'
+                .format(selected_server_id, lang, str(server_num)), cookies=cookie).json()
+        selected_server_url = res['url']
+        b = re.search('https://(.+\.ogame\.gameforge\.com)/game', selected_server_url)
+        self.server_url = b.group(1)
+
+        res = self.session.get(selected_server_url).content
         soup = BeautifulSoup(res, 'html.parser')
         session_found = soup.find('meta', {'name': 'ogame-session'})
         if session_found:
@@ -604,13 +638,13 @@ class OGame(object):
             return url
 
     def get_servers(self, domain):
-        res = self.session.get('https://{}'.format(domain)).content
-        soup = BeautifulSoup(res, 'html.parser')
-        select = soup.find('select', {'id': 'serverLogin'})
+        res = self.session.get('https://lobby-api.ogame.gameforge.com/servers').json()
         servers = {}
-        for opt in select.findAll('option'):
-            url = opt.get('value')
-            name = opt.string.strip().lower()
+        for server in res:
+            name = server['name'].lower()
+            lang = server['language']
+            num = server['number']
+            url = 's{}-{}.ogame.gameforge.com'.format(num, lang)
             servers[name] = url
         return servers
 
