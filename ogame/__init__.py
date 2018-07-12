@@ -348,6 +348,24 @@ class OGame(object):
         res['armour_technology']              = get_nbr(soup, 'research111')
         return res
 
+    def constructions_being_built(self, planet_id):
+        res = self.session.get(self.get_url('overview', {'cp': planet_id})).text
+        if not self.is_logged(res):
+            raise NOT_LOGGED
+        buildingCountdown = 0
+        buildingID = 0
+        researchCountdown = 0
+        researchID = 0
+        buildingCountdownMatch = re.search('getElementByIdWithCache\("Countdown"\),(\d+),', res)
+        if buildingCountdownMatch:
+            buildingCountdown = buildingCountdownMatch.group(1)
+            buildingID = re.search('onclick="cancelProduction\((\d+),', res).group(1)
+        researchCountdownMatch = re.search('getElementByIdWithCache\("researchCountdown"\),(\d+),', res)
+        if researchCountdownMatch:
+            researchCountdown = researchCountdownMatch.group(1)
+            researchID = re.search('onclick="cancelResearch\((\d+),', res).group(1)
+        return buildingID, buildingCountdown, researchID, researchCountdown
+
     def is_under_attack(self, json_obj=None):
         if not json_obj:
             json_obj = self.fetch_eventbox()
