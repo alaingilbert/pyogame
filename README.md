@@ -96,6 +96,8 @@ True
 
 ### get_planet_by_name(name:string):int
 
+### constructions_being_built(planet_id:int):(buildingID:int, buildingCountdown:int, researchID:int, researchCountdown:int)
+
 ### build(planet_id:int, arg:*)
 
 ### send_fleet(planet_id:int, ships:array.\<tuple\>, speed:int, where:obj, mission:int, resources:obj)
