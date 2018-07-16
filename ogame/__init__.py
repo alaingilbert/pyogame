@@ -572,6 +572,55 @@ class OGame(object):
         if not self.is_logged(res):
             raise NOT_LOGGED
 
+    def get_fleets(self):
+        res = self.session.get(self.get_url('movement')).content
+        if not self.is_logged(res):
+            raise NOT_LOGGED
+        fleets = []
+        soup = BeautifulSoup(res, 'html.parser')
+        divs = soup.findAll('div', {'class': 'fleetDetails'})
+        for div in divs:
+            originText = div.find('span', {'class': 'originCoords'}).find('a').text
+            coords = re.search(r'\[(\d+):(\d+):(\d+)\]', originText)
+            galaxy, system, position = coords.groups()
+            origin = (int(galaxy), int(system), int(position))
+            destText = div.find('span', {'class': 'destinationCoords'}).find('a').text
+            coords = re.search(r'\[(\d+):(\d+):(\d+)\]', destText)
+            galaxy, system, position = coords.groups()
+            dest = (int(galaxy), int(system), int(position))
+            reversal_id = None
+            reversal_span = div.find('span', {'class': 'reversal'})
+            if reversal_span:
+                reversal_id = int(reversal_span.get('ref'))
+            mission_type = int(div.get('data-mission-type'))
+            return_flight = bool(div.get('data-return-flight'))
+            trs = div.find('table', {'class': 'fleetinfo'}).findAll('tr')
+            metal = parse_int(trs[-3].findAll('td')[1].text.strip())
+            crystal = parse_int(trs[-2].findAll('td')[1].text.strip())
+            deuterium = parse_int(trs[-1].findAll('td')[1].text.strip())
+            fleet = {
+                'id': reversal_id,
+                'origin': origin,
+                'destination': dest,
+                'mission': mission_type,
+                'return_flight': return_flight,
+                'resources': {
+                    'metal': metal,
+                    'crystal': crystal,
+                    'deuterium': deuterium,
+                },
+                'ships': [],
+            }
+            for i in range(1, len(trs)-5):
+                name = trs[i].findAll('td')[0].text.strip(' \r\t\n:')
+                short_name = ''.join(name.split())
+                code = get_code(short_name)
+                qty = trs[i].findAll('td')[1].text.strip()
+                fleet['ships'].append({'code': code, 'quantity': qty})
+            fleets.append(fleet)
+        return fleets
+
+
     def get_fleet_ids(self):
         """Return the reversable fleet ids."""
         res = self.session.get(self.get_url('movement')).content
