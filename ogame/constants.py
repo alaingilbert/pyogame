@@ -80,6 +80,22 @@ Ships = {'SmallCargo': 202,
          'Deathstar': 214,
          'Battlecruiser': 215,
 
+         # FR
+         'Petittransporteur': 202,
+         'Grandtransporteur': 203,
+         'Chasseurléger': 204,
+         'Chasseurlourd': 205,
+         'Croiseur': 206,
+         'Vaisseaudebataille': 207,
+         'Vaisseaudecolonisation': 208,
+         'Recycleur': 209,
+         'Sonded`espionnage': 210,
+         'Bombardier': 211,
+         'Satellitesolaire': 212,
+         'Destructeur': 213,
+         'Étoiledelamort': 214,
+         'Traqueur': 215,
+
          # NL
          'Kleinvrachtschip': 202,
          'Grootvrachtschip': 203,
