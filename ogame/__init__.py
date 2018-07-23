@@ -635,7 +635,7 @@ class OGame(object):
                 name = trs[i].findAll('td')[0].text.strip(' \r\t\n:')
                 short_name = ''.join(name.split())
                 code = get_code(short_name)
-                qty = trs[i].findAll('td')[1].text.strip()
+                qty = parse_int(trs[i].findAll('td')[1].text.strip())
                 if code == 202: fleet['ships']['small_cargo']     = qty
                 if code == 203: fleet['ships']['large_cargo']     = qty
                 if code == 204: fleet['ships']['light_fighter']   = qty
