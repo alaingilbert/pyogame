@@ -594,6 +594,10 @@ class OGame(object):
                 reversal_id = int(reversal_span.get('ref'))
             mission_type = int(div.get('data-mission-type'))
             return_flight = bool(div.get('data-return-flight'))
+            arrival_time = int(div.get('data-arrival-time'))
+            ogameTimestamp = int(soup.find('meta', {'name': 'ogame-timestamp'})['content'])
+            secs = arrival_time - ogameTimestamp
+            if secs < 0: secs = 0
             trs = div.find('table', {'class': 'fleetinfo'}).findAll('tr')
             metal = parse_int(trs[-3].findAll('td')[1].text.strip())
             crystal = parse_int(trs[-2].findAll('td')[1].text.strip())
@@ -604,19 +608,48 @@ class OGame(object):
                 'destination': dest,
                 'mission': mission_type,
                 'return_flight': return_flight,
+                'arrive_in': secs,
                 'resources': {
                     'metal': metal,
                     'crystal': crystal,
                     'deuterium': deuterium,
                 },
-                'ships': [],
+                'ships': {
+                    'light_fighter': 0,
+                    'heavy_fighter': 0,
+                    'cruiser': 0,
+                    'battleship': 0,
+                    'battlecruiser': 0,
+                    'bomber': 0,
+                    'destroyer': 0,
+                    'deathstar': 0,
+                    'small_cargo': 0,
+                    'large_cargo': 0,
+                    'colony_ship': 0,
+                    'recycler': 0,
+                    'espionage_probe': 0,
+                    'solar_satellite': 0,
+                }
             }
             for i in range(1, len(trs)-5):
                 name = trs[i].findAll('td')[0].text.strip(' \r\t\n:')
                 short_name = ''.join(name.split())
                 code = get_code(short_name)
                 qty = trs[i].findAll('td')[1].text.strip()
-                fleet['ships'].append({'code': code, 'quantity': qty})
+                if code == 202: fleet['ships']['small_cargo']     = qty
+                if code == 203: fleet['ships']['large_cargo']     = qty
+                if code == 204: fleet['ships']['light_fighter']   = qty
+                if code == 205: fleet['ships']['heavy_fighter']   = qty
+                if code == 206: fleet['ships']['cruiser']         = qty
+                if code == 207: fleet['ships']['battleship']      = qty
+                if code == 208: fleet['ships']['colony_ship']     = qty
+                if code == 209: fleet['ships']['recycler']        = qty
+                if code == 210: fleet['ships']['espionage_probe'] = qty
+                if code == 211: fleet['ships']['bomber']          = qty
+                if code == 212: fleet['ships']['solar_satellite'] = qty
+                if code == 213: fleet['ships']['destroyer']       = qty
+                if code == 214: fleet['ships']['deathstar']       = qty
+                if code == 215: fleet['ships']['battlecruiser']   = qty
             fleets.append(fleet)
         return fleets
 
