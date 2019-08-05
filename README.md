@@ -110,6 +110,8 @@ True
 
 ### get_ogame_version():string
 
+### get_all_spy_messages():array of dictionary
+
 
 ## Contributions
 
