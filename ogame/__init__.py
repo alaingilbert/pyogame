@@ -877,7 +877,60 @@ class OGame(object):
                    'ajax': 1}
         url = self.get_url('ajaxChat')
         self.session.post(url, data=payload, headers=headers)
+    
+    def get_spy_message_id(self):
+        mes = self.session.get(self.get_url('messages&tab=20&ajax=1')).content
+        soup = BeautifulSoup(mes, 'html.parser')
+        ul = soup.find('ul', {'class': 'tab_inner ctn_with_trash clearfix'})
+        ids = []
+        for id in ul.select('li[data-msg-id]'):
+            ids.append(id['data-msg-id'])
+        return ids
 
+    def get_spy_message(self,message_id):
+        mes = self.session.get(self.get_url('messages&tab=20&ajax=1')).content
+        soup = BeautifulSoup(mes, 'html.parser')
+        li = soup.find('li', {'data-msg-id': message_id})
+        ressources = li.find('span', {'class': 'ctn ctn4'})
+        if ressources != None: #to Find out if it is a Spyreport and not a notofication that you got spyed
+            msg = {}
+            ressources = li.findAll('span', {'class': 'resspan'})
+            msg['id'] = message_id
+            msg['time'] = li.find('span', {'class': 'msg_date fright'}).text
+
+            #Ogame classefies if a player is a bandid or not or active or not you need to try out to get to the name:
+            try:
+                msg['player'] = li.find('span', {'class': 'status_abbr_honorableTarget'}).text.replace('\xa0\xa0\xa0', '')
+            except:
+                try:
+                    msg['player'] = li.find('span', {'class': 'status_abbr_active'}).text.replace('\xa0\xa0\xa0', '')
+                except:
+                    try:
+                        msg['player'] = li.find('span', {'class': 'status_abbr_bandit'}).text.replace('\xa0\xa0\xa0', '')
+                    except:
+                        msg['player'] = li.find('span', {'class': 'status_abbr_inactive'}).text.replace('\xa0\xa0\xa0',
+                                                                                                      '')
+            msg['coordinates'] = '('+li.find('span', {'class': 'msg_title blue_txt'}).text.split('[')[1].replace(':',', ').replace(']',')')
+            msg['activity'] = li.find('span', {'class': 'ctn ctn4 fright'}).text.split(' ')[1]
+            try:
+                msg['fleet'] = li.find('span', {'class': 'ctn ctn4 tooltipLeft'}).text.split(': ')[1]
+                msg['defense'] = li.find('span', {'class': 'ctn ctn4 fright tooltipRight'}).text.split(': ')[1]
+            except:
+                msg['fleet'] = None
+                msg['defense'] = None
+            msg['metal'] = ressources[0].text.split(': ')[1]
+            msg['crystal'] = ressources[1].text.split(': ')[1]
+            msg['deuterium'] = ressources[2].text.split(': ')[1]
+            return msg
+
+    def get_all_spy_messages(self):
+        messages = []
+        for id in self.get_spy_message_id():
+            report = self.get_spy_message(id)
+            if report != None:
+                messages.append(report)
+        return messages    
+      
     def galaxy_content(self, galaxy, system):
         headers = {'X-Requested-With': 'XMLHttpRequest',
                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
