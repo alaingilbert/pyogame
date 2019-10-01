@@ -171,3 +171,9 @@ Missions = {'Attack': 1,
             'RecycleDebrisField': 8,
             'Destroy': 9,
             'Expedition': 15}
+
+Messages = {'Spyreport': 20,
+            'Battlereport': 0,
+            'Expeditionreport': 0,
+            'Transportreport': 0,
+            'else': 0}
