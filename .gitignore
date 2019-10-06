@@ -6,3 +6,4 @@ dist/
 samples/
 .cache/
 bot.py
+.vscode
