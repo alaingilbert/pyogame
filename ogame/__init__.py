@@ -484,7 +484,8 @@ class OGame(object):
         if not self.is_logged(res):
             raise NOT_LOGGED
 
-    def _build(self, planet_id, object_id, nbr=None, cancel=False):
+    def _build(self, planet_id, object_name, nbr=None, cancel=False):
+        object_id = object_name.value
         if object_id in constants.Buildings.values() or object_id in constants.Facilities.values():
             self.build_building(planet_id, object_id, cancel=cancel)
         elif object_id in constants.Research.values():
