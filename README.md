@@ -1,4 +1,4 @@
-# pyogame2
+# pyogame
 ![picture](ogame_icon.png)
 
 OGame is a browser-based, money-management and space-war themed massively multiplayer online browser game with over 
@@ -10,16 +10,16 @@ version `12`
 
 ## install
 <pre>
-pip install pyogame2
+pip install pyogame
 </pre>
 update
 <pre>
-pip uninstall pyogame2
-pip install pyogame2
+pip uninstall pyogame
+pip install pyogame
 </pre>
 dont want to wait for new updates download direct from the develop branch
 <pre>
-pip install git+https://github.com/PiecePaperCode/pyogame2.git@develop
+pip install git+https://github.com/PiecePaperCode/pyogame.git@develop
 </pre>
 
 ## get started
@@ -31,16 +31,22 @@ pip install git+https://github.com/PiecePaperCode/pyogame2.git@develop
 ## functions
 ### login
 <pre>
-from pyogame2 import OGame2
-from pyogame2.constants import destination, coordinates, ships, mission, speed, buildings, status
+from pyogame import OGame
+from pyogame.constants import destination, coordinates, ships, mission, speed, buildings, status
  
-empire = OGame2(UNI, USER, PASSWORD)
+empire = OGame(UNI, USER, PASSWORD)
 
 #optional
-empire = OGame2(UNI, USER, PASSWORD, user_agent='NCSA_Mosaic/2.0 (Windows 3.1)', proxy='https://proxy.com:port')
+empire = OGame(UNI, USER, PASSWORD, user_agent='NCSA_Mosaic/2.0 (Windows 3.1)', proxy='https://proxy.com:port')
 </pre>
 Want to use it with tor?
-[Tutorial](https://github.com/PiecePaperCode/pyogame2/wiki/Using-Tor-with-pyogame2)
+[Tutorial](https://github.com/PiecePaperCode/pyogame2/wiki/Using-Tor-with-pyogame)
+
+### test
+<pre>
+This is a command that will try to run all functions with parameters. I suggest creating your own testing model.
+empire.test()
+</pre>
 
 ### get attacked
 <pre>
@@ -81,14 +87,14 @@ coordinates have the format [galaxy, system, position, destination]
 
 destination is referred to planet moon or debris on that coordinate planet=1 debris=2 moon=3
 for example [1,200,16,3] = galaxy=1, system=200, position=16, destination=3 for moon
-with from pyogame2.constants import destination the process is much more readable.
+with from pyogame.constants import destination the process is much more readable.
 
 when you dont give it an destination it will default to planet
 
                                         returns list
 </pre>
 ```python
-from pyogame2.constants import coordinates, destination
+from pyogame.constants import coordinates, destination
 pos = coordinates(galaxy=1,
                   system=2,
                   position=12,
@@ -110,7 +116,7 @@ resources have the format [metal, crystal, deuterium]
 darkmatter & energy are irrelevant, because you cant transport these.
 It is used for transport and market functions
 
-from pyogame2.constants import resources
+from pyogame.constants import resources
 res = resources(metal=1, crystal=2, deuterium=3)
 [1, 2, 3]
 </pre>
@@ -382,7 +388,7 @@ for spyreport in empire.spyreports():
 
 ### send fleet
 ```python
-from pyogame2.constants import coordinates, ships, mission, speed
+from pyogame.constants import coordinates, ships, mission, speed
 empire.send_fleet(mission=mission.expedition,
                   id=id,
                   where=coordinates(1, 12, 16),
@@ -404,7 +410,7 @@ empire.send_message(player_id, msg)     returns bool
 ### build
 Buildings
 ```python
-from pyogame2.constants import buildings
+from pyogame.constants import buildings
 empire.build(what=buildings.alliance_depot, 
              id=id)
 
@@ -448,7 +454,7 @@ buildings.jump_gate
 ```
 Ships
 ```python
-from pyogame2.constants import ships
+from pyogame.constants import ships
 empire.build(what=ships.bomber(10), 
              id=id)
 
@@ -474,7 +480,7 @@ ships.espionage_probe(int)
 
 ### do research
 ```python
-from pyogame2.constants import research
+from pyogame.constants import research
 empire.do_research(research=research.energy, id=id)
 
 research.energy

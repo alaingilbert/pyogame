@@ -103,6 +103,14 @@ class OGame(object):
                     continue
             return attributes
 
+    def test(self):
+        try:
+            import test
+        except ImportError:
+            import test
+        empire = OGame(self.universe, self.username, self.password)
+        test.pyogame(empire)
+
     def attacked(self):
         response = self.session.get(
             url=self.index_php + 'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
