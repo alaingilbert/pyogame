@@ -40,7 +40,6 @@ empire = OGame(UNI, USER, PASSWORD)
 empire = OGame(UNI, USER, PASSWORD, user_agent='NCSA_Mosaic/2.0 (Windows 3.1)', proxy='https://proxy.com:port')
 </pre>
 Want to use it with tor?
-[Tutorial](https://ggithub.com/alaingilbert/pyogame/wiki/Using-Tor-with-pyogame)
 
 ### test
 <pre>
