@@ -1,3 +1,0 @@
-[flake8]
-ignore=E501,E221
-exclude=bot.py

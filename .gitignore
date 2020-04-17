@@ -1,8 +1,4 @@
-*.swp
+.idea
+user.py
+*.bat
 *.pyc
-.DS_Store
-dist/
-.env/
-samples/
-.cache/
-bot.py
