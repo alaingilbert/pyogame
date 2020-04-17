@@ -1,6 +1,6 @@
-from pyogame.constants import destination, coordinates, ships, mission, speed, buildings, resources, status, research
+from ogame.constants import destination, coordinates, ships, mission, speed, buildings, resources, status, research
 
-print('\033[1;34;40m TEST PYOGAME FUNCTIONS')
+print('\033[1;34;40m TEST OGAME FUNCTIONS')
 
 
 def test(function, mandatory=False):

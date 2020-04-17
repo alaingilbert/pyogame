@@ -5,7 +5,7 @@ from datetime import datetime
 try:
     import constants as const
 except ImportError:
-    import pyogame.constants as const
+    import ogame.constants as const
 
 
 class OGame(object):
@@ -105,7 +105,7 @@ class OGame(object):
 
     def test(self):
         try:
-            import test
+            import ogame.test as test
         except ImportError:
             import test
         empire = OGame(self.universe, self.username, self.password)
