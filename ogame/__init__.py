@@ -47,7 +47,7 @@ class OGame(object):
             '&clickedButton=account_list'
             .format(self.server_id, self.server_language, self.server_number)).json()
 
-        self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?'\
+        self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
             .format(self.server_number, self.server_language)
         self.landing_page = self.session.get(login_link['url']).text
         response = self.session.get(self.index_php + 'page=ingame').text
@@ -92,6 +92,7 @@ class OGame(object):
                     val = line[result].replace(' ', '')
                     if val is not '':
                         attributes.append(val)
+
             for line in self.parsed.values():
                 try:
                     if attribute_tag in line['attribute']:
@@ -135,6 +136,7 @@ class OGame(object):
         class speed:
             universe = int(self.landing_page.find_all('content', '', 'attribute')[6])
             fleet = int(self.landing_page.find_all('content', '', 'attribute')[7])
+
         return speed
 
     def planet_ids(self):
@@ -401,7 +403,7 @@ class OGame(object):
         biddings = []
         response = self.session.get(
             url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=fetchBuyingItems&ajax=1&'
-            'pagination%5Bpage%5D={}&cp={}'.format(page, id),
+                                 'pagination%5Bpage%5D={}&cp={}'.format(page, id),
             headers={'X-Requested-With': 'XMLHttpRequest'}).json()
 
         def item_type(item):
@@ -469,7 +471,7 @@ class OGame(object):
     def buy_marketplace(self, market_id, id):
         self.session.get(
             url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=fetchBuyingItems&ajax=1&'
-            'pagination%5Bpage%5D={}&cp={}'.format(1, id),
+                                 'pagination%5Bpage%5D={}&cp={}'.format(1, id),
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         form_data = {'marketItemId': market_id}
@@ -531,7 +533,7 @@ class OGame(object):
         for page, action, collect in zip(history_pages, action, collect):
             response = self.session.get(
                 url=self.index_php + 'page=ingame&component=marketplace&tab={}&action={}&ajax=1&pagination%5Bpage%5D=1'
-                .format(page, action, OGame.planet_ids(self)[0]),
+                    .format(page, action, OGame.planet_ids(self)[0]),
                 headers={'X-Requested-With': 'XMLHttpRequest'}
             ).json()
             items = response['content']['marketplace/marketplace_items_history'].split('data-transactionid=')
@@ -692,6 +694,7 @@ class OGame(object):
                 else:
                     moon = False
                 list = [name, position, player, player_id, status, moon]
+
             planets.append(planet_class)
         return planets
 
@@ -907,8 +910,8 @@ class OGame(object):
 
     def collect_rubble_field(self, id):
         self.session.get(
-            url='{}page=ajax&component=repairlayer&component=repairlayer&ajax=1&action=startRepairs&asJson=1&cp={}'
-            .format(self.index_php, id),
+            url=self.index_php + 'page=ajax&component=repairlayer&component=repairlayer&ajax=1'
+                                 '&action=startRepairs&asJson=1&cp={}'.format(id),
             headers={'X-Requested-With': 'XMLHttpRequest'})
 
     def logout(self):
