@@ -161,6 +161,7 @@ def Object_Oriented(self):
         def Moon(nr):
             id = ogame.moon_ids()[nr]
             facilities = ogame.moon_facilities(id)
+            defences = ogame.defences(id)
 
             class Moon:
                 class Buildings:
@@ -205,6 +206,18 @@ def Object_Oriented(self):
                         in_construction = facilities.jump_gate.in_construction
 
                         def build(): return ogame.build(const.buildings.jump_gate, id)
+
+                class Defences:
+                    rocket_launcher = defences.rocket_launcher
+                    laser_cannon_light = defences.laser_cannon_light
+                    laser_cannon_heavy = defences.laser_cannon_heavy
+                    gauss_cannon = defences.gauss_cannon
+                    ion_cannon = defences.ion_cannon
+                    plasma_cannon = defences.plasma_cannon
+                    shield_dome_small = defences.shield_dome_small
+                    shield_dome_large = defences.shield_dome_large
+                    missile_interceptor = defences.missile_interceptor
+                    missile_interplanetary = defences.missile_interplanetary
 
             return Moon
 
