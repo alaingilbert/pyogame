@@ -170,7 +170,7 @@ class OGame(object):
         html = OGame.HTML(response)
 
         def to_int(string):
-            return int(string.replace('.', '').replace(',', '').replace('M', '000'))
+            return int(string.replace('.', '').replace(',', '').replace('M', '000').replace('n', ''))
 
         class resources:
             resources = [html.find_all('id', 'resources_metal', 'value')[0],
