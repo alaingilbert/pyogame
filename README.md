@@ -77,6 +77,8 @@ empire.planet_names()               returns list
 <pre>
 empire.moon_ids()                   returns list
 
+empire.moon_names()                 returns list
+
 **keep in mind to prefer planets id's moon id dont works on every function**
 </pre>
 
@@ -512,5 +514,5 @@ empire.collect_rubble_field(id)         returns None
 
 ### logout
 <pre>                 
-empire.logout()                         returns exit()
+empire.logout()                         returns Bool
 </pre>

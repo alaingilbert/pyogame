@@ -112,6 +112,10 @@ class OGame(object):
         empire = OGame(self.universe, self.username, self.password)
         test.pyogame(empire)
 
+    def version(self):
+        from pip._internal import main as pip
+        print(pip(['show', 'ogame']))
+
     def attacked(self):
         response = self.session.get(
             url=self.index_php + 'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
@@ -154,6 +158,12 @@ class OGame(object):
     def moon_ids(self):
         moons = self.landing_page.find_all('class', 'moonlink', 'attribute', 'href')
         return [moon_id.split('cp')[1] for moon_id in moons]
+
+    def moon_names(self):
+        names = []
+        for name in self.landing_page.find_all('class', 'moonlink', 'attribute', 'title'):
+            names.append(name.split(';')[2].split('[')[0])
+        return names
 
     def celestial_coordinates(self, id):
         celestial = self.landing_page.find_all('title', 'componentgalaxy&amp;cp{}'.format(id), 'attribute')
@@ -405,7 +415,6 @@ class OGame(object):
             url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=fetchBuyingItems&ajax=1&'
                                  'pagination%5Bpage%5D={}&cp={}'.format(page, id),
             headers={'X-Requested-With': 'XMLHttpRequest'}).json()
-
         def item_type(item):
             type = None
             if 'sprite ship small ' in item:
@@ -916,4 +925,4 @@ class OGame(object):
 
     def logout(self):
         self.session.get(self.index_php + 'page=logout')
-        return exit()
+        return True
