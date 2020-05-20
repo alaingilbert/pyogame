@@ -180,6 +180,7 @@ class OGame(object):
         html = OGame.HTML(response)
 
         def to_int(string):
+            string = string.split(',')[0]
             return int(string.replace('.', '').replace(',', '').replace('M', '000').replace('n', ''))
 
         class resources:
@@ -618,7 +619,10 @@ class OGame(object):
             recycler = ships_amount[13]
             espionage_probe = ships_amount[14]
             solarSatellite = ships_amount[15]
-            crawler = ships_amount[16]
+            if id not in OGame.moon_ids(self):
+                crawler = ships_amount[16]
+            else:
+                crawler = 0
 
         return ships_class
 
