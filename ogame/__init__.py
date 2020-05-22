@@ -13,21 +13,25 @@ class OGame(object):
         self.universe = universe
         self.username = username
         self.password = password
+        self.user_agent = user_agent
+        self.proxy = proxy
         self.session = requests.Session()
-        self.session.proxies.update({'https': proxy})
-        if user_agent is None:
-            user_agent = {
+        self.session.proxies.update({'https': self.proxy})
+        if self.user_agent is None:
+            self.user_agent = {
                 'User-Agent':
                     'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) '
-                    'Chrome/80.0.3987.100 Mobile Safari/537.36'}
-        self.session.headers.update(user_agent)
+                    'Chrome/81.0.4044.138 Mobile Safari/537.36'}
+        self.session.headers.update(self.user_agent)
 
         login_data = {'kid': '',
                       'language': 'en',
                       'autologin': 'false',
                       'credentials[email]': self.username,
                       'credentials[password]': self.password}
-        self.session.post('https://lobby.ogame.gameforge.com/api/users', data=login_data)
+        if self.session.post('https://lobby.ogame.gameforge.com/api/users', data=login_data).status_code is not 200:
+            raise Exception('Bad Login')
+
         servers = self.session.get('https://lobby.ogame.gameforge.com/api/servers').json()
         for server in servers:
             if server['name'] == self.universe:
@@ -46,13 +50,11 @@ class OGame(object):
             '&server[number]={}'
             '&clickedButton=account_list'
             .format(self.server_id, self.server_language, self.server_number)).json()
-
-        self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?'\
+        self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
             .format(self.server_number, self.server_language)
         self.landing_page = self.session.get(login_link['url']).text
         response = self.session.get(self.index_php + 'page=ingame').text
         self.landing_page = OGame.HTML(response)
-
         self.chat_token = None
         self.player = self.landing_page.find_all('class', 'overlaytextBeefy', 'value')
         self.player_id = self.landing_page.find_all('name', 'ogame-player-id', 'attribute', 'content')
@@ -92,6 +94,7 @@ class OGame(object):
                     val = line[result].replace(' ', '')
                     if val is not '':
                         attributes.append(val)
+
             for line in self.parsed.values():
                 try:
                     if attribute_tag in line['attribute']:
@@ -110,6 +113,10 @@ class OGame(object):
             import test
         empire = OGame(self.universe, self.username, self.password)
         test.pyogame(empire)
+
+    def version(self):
+        from pip._internal import main as pip
+        print(pip(['show', 'ogame']))
 
     def attacked(self):
         response = self.session.get(
@@ -135,6 +142,7 @@ class OGame(object):
         class speed:
             universe = int(self.landing_page.find_all('content', '', 'attribute')[6])
             fleet = int(self.landing_page.find_all('content', '', 'attribute')[7])
+
         return speed
 
     def planet_ids(self):
@@ -153,6 +161,12 @@ class OGame(object):
         moons = self.landing_page.find_all('class', 'moonlink', 'attribute', 'href')
         return [moon_id.split('cp')[1] for moon_id in moons]
 
+    def moon_names(self):
+        names = []
+        for name in self.landing_page.find_all('class', 'moonlink', 'attribute', 'title'):
+            names.append(name.split(';')[2].split('[')[0])
+        return names
+
     def celestial_coordinates(self, id):
         celestial = self.landing_page.find_all('title', 'componentgalaxy&amp;cp{}'.format(id), 'attribute')
         coordinates = celestial[0].split('componentgalaxy&amp;cp{}&amp;'.format(id))[1].split('&quot;')[0] \
@@ -168,7 +182,8 @@ class OGame(object):
         html = OGame.HTML(response)
 
         def to_int(string):
-            return int(string.replace('.', '').replace(',', '').replace('M', '000'))
+            string = string.split(',')[0]
+            return int(string.replace('.', '').replace(',', '').replace('M', '000').replace('n', ''))
 
         class resources:
             resources = [html.find_all('id', 'resources_metal', 'value')[0],
@@ -401,9 +416,8 @@ class OGame(object):
         biddings = []
         response = self.session.get(
             url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=fetchBuyingItems&ajax=1&'
-            'pagination%5Bpage%5D={}&cp={}'.format(page, id),
+                                 'pagination%5Bpage%5D={}&cp={}'.format(page, id),
             headers={'X-Requested-With': 'XMLHttpRequest'}).json()
-
         def item_type(item):
             type = None
             if 'sprite ship small ' in item:
@@ -469,7 +483,7 @@ class OGame(object):
     def buy_marketplace(self, market_id, id):
         self.session.get(
             url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=fetchBuyingItems&ajax=1&'
-            'pagination%5Bpage%5D={}&cp={}'.format(1, id),
+                                 'pagination%5Bpage%5D={}&cp={}'.format(1, id),
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         form_data = {'marketItemId': market_id}
@@ -531,7 +545,7 @@ class OGame(object):
         for page, action, collect in zip(history_pages, action, collect):
             response = self.session.get(
                 url=self.index_php + 'page=ingame&component=marketplace&tab={}&action={}&ajax=1&pagination%5Bpage%5D=1'
-                .format(page, action, OGame.planet_ids(self)[0]),
+                    .format(page, action, OGame.planet_ids(self)[0]),
                 headers={'X-Requested-With': 'XMLHttpRequest'}
             ).json()
             items = response['content']['marketplace/marketplace_items_history'].split('data-transactionid=')
@@ -607,7 +621,10 @@ class OGame(object):
             recycler = ships_amount[13]
             espionage_probe = ships_amount[14]
             solarSatellite = ships_amount[15]
-            crawler = ships_amount[16]
+            if id not in OGame.moon_ids(self):
+                crawler = ships_amount[16]
+            else:
+                crawler = 0
 
         return ships_class
 
@@ -692,6 +709,7 @@ class OGame(object):
                 else:
                     moon = False
                 list = [name, position, player, player_id, status, moon]
+
             planets.append(planet_class)
         return planets
 
@@ -907,10 +925,23 @@ class OGame(object):
 
     def collect_rubble_field(self, id):
         self.session.get(
-            url='{}page=ajax&component=repairlayer&component=repairlayer&ajax=1&action=startRepairs&asJson=1&cp={}'
-            .format(self.index_php, id),
+            url=self.index_php + 'page=ajax&component=repairlayer&component=repairlayer&ajax=1'
+                                 '&action=startRepairs&asJson=1&cp={}'.format(id),
             headers={'X-Requested-With': 'XMLHttpRequest'})
 
+    def is_logged_in(self):
+        response = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json()
+        if 'error' in response:
+            return False
+        else:
+            return True
+
+    def relogin(self, universe=None):
+        if universe is None:
+            universe = self.universe
+        OGame.__init__(self, universe, self.username, self.password, self.user_agent, self.proxy)
+        return OGame.is_logged_in(self)
+
     def logout(self):
-        self.session.get(self.index_php + 'page=logout')
-        return exit()
+        self.session.put('https://lobby.ogame.gameforge.com/api/users/me/logout')
+        return not OGame.is_logged_in(self)

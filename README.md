@@ -6,7 +6,7 @@ two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
 it supports ogame_version: `7.2.1`
-version `12`
+version `13`
 
 ## install
 <pre>
@@ -76,6 +76,8 @@ empire.planet_names()               returns list
 ### get moon id's
 <pre>
 empire.moon_ids()                   returns list
+
+empire.moon_names()                 returns list
 
 **keep in mind to prefer planets id's moon id dont works on every function**
 </pre>
@@ -510,7 +512,20 @@ this will collect your rubble field at the planet id.
 empire.collect_rubble_field(id)         returns None
 </pre>
 
+### im i still loged In?
+<pre>                 
+empire.is_logged_in()                   returns Bool
+</pre>
+
+### relogin
+<pre>                 
+empire.relogin()                        returns Bool
+
+switch universes with the same login
+empire.relogin('UNI')
+</pre>
+
 ### logout
 <pre>                 
-empire.logout()                         returns exit()
+empire.logout()                         returns Bool
 </pre>
