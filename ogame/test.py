@@ -52,10 +52,13 @@ def pyogame(empire):
     test(lambda: empire.build(what=buildings.solar_satellite(1), id=id))
     test(lambda: empire.do_research(research=research.graviton, id=id))
     test(lambda: empire.collect_rubble_field(id=id))
+    test(lambda: empire.is_logged_in(), True)
+    test(lambda: empire.logout(), True)
+    test(lambda: empire.relogin(), True)
+    test(lambda: empire.logout(), True)
 
     if succsess is True:
-        print('all test completed')
+        print('All test completed')
     else:
         raise BaseException('Test was not completed')
 
-    test(lambda: empire.logout())
