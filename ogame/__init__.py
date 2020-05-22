@@ -13,21 +13,25 @@ class OGame(object):
         self.universe = universe
         self.username = username
         self.password = password
+        self.user_agent = user_agent
+        self.proxy = proxy
         self.session = requests.Session()
-        self.session.proxies.update({'https': proxy})
-        if user_agent is None:
-            user_agent = {
+        self.session.proxies.update({'https': self.proxy})
+        if self.user_agent is None:
+            self.user_agent = {
                 'User-Agent':
                     'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) '
-                    'Chrome/80.0.3987.100 Mobile Safari/537.36'}
-        self.session.headers.update(user_agent)
+                    'Chrome/81.0.4044.138 Mobile Safari/537.36'}
+        self.session.headers.update(self.user_agent)
 
         login_data = {'kid': '',
                       'language': 'en',
                       'autologin': 'false',
                       'credentials[email]': self.username,
                       'credentials[password]': self.password}
-        self.session.post('https://lobby.ogame.gameforge.com/api/users', data=login_data)
+        if self.session.post('https://lobby.ogame.gameforge.com/api/users', data=login_data) is not 200:
+            raise Exception('Bad Login')
+
         servers = self.session.get('https://lobby.ogame.gameforge.com/api/servers').json()
         for server in servers:
             if server['name'] == self.universe:
@@ -46,13 +50,11 @@ class OGame(object):
             '&server[number]={}'
             '&clickedButton=account_list'
             .format(self.server_id, self.server_language, self.server_number)).json()
-
         self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
             .format(self.server_number, self.server_language)
         self.landing_page = self.session.get(login_link['url']).text
         response = self.session.get(self.index_php + 'page=ingame').text
         self.landing_page = OGame.HTML(response)
-
         self.chat_token = None
         self.player = self.landing_page.find_all('class', 'overlaytextBeefy', 'value')
         self.player_id = self.landing_page.find_all('name', 'ogame-player-id', 'attribute', 'content')
@@ -927,6 +929,19 @@ class OGame(object):
                                  '&action=startRepairs&asJson=1&cp={}'.format(id),
             headers={'X-Requested-With': 'XMLHttpRequest'})
 
+    def is_logged_in(self):
+        response = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json()
+        if 'error' in response:
+            return False
+        else:
+            return True
+
+    def relogin(self, universe=None):
+        if universe is None:
+            universe = self.universe
+        OGame.__init__(self, universe, self.username, self.password, self.user_agent, self.proxy)
+        return OGame.is_logged_in(self)
+
     def logout(self):
-        self.session.get(self.index_php + 'page=logout')
-        return True
+        self.session.put('https://lobby.ogame.gameforge.com/api/users/me/logout')
+        return not OGame.is_logged_in(self)

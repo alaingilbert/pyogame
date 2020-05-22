@@ -512,6 +512,19 @@ this will collect your rubble field at the planet id.
 empire.collect_rubble_field(id)         returns None
 </pre>
 
+### im i still loged In?
+<pre>                 
+empire.is_logged_in()                   returns Bool
+</pre>
+
+### relogin
+<pre>                 
+empire.relogin()                        returns Bool
+
+switch universes with the same login
+empire.relogin('UNI')
+</pre>
+
 ### logout
 <pre>                 
 empire.logout()                         returns Bool
