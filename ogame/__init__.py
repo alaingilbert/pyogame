@@ -29,7 +29,7 @@ class OGame(object):
                       'autologin': 'false',
                       'credentials[email]': self.username,
                       'credentials[password]': self.password}
-        if self.session.post('https://lobby.ogame.gameforge.com/api/users', data=login_data) is not 200:
+        if self.session.post('https://lobby.ogame.gameforge.com/api/users', data=login_data).status_code is not 200:
             raise Exception('Bad Login')
 
         servers = self.session.get('https://lobby.ogame.gameforge.com/api/servers').json()
