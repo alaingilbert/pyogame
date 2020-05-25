@@ -834,7 +834,10 @@ class OGame(object):
             spy_html = OGame.HTML(response)
             fright = spy_html.find_all('class', 'fright', 'value')
             fright.pop()
-            if len(fright) > 10:  # non Spyreports are less than 10
+            message_type = int(spy_html.find_all('data-message-type', '', 'attribute')[0])
+            if message_type == 10: # Sypreport on both others and the Player itself have 'data-message-type' of value '10'
+                if len(spy_html.find_all('class', 'espionageDefText', 'value')) > 0:
+                    continue
 
                 class spy_report_class:
                     id = message
