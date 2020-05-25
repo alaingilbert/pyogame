@@ -823,6 +823,10 @@ class OGame(object):
         else:
             return False
 
+    def delete_message(self, message_id):
+        # action '103' only moves the message to the "trash", not deleting it entirely
+        self.session.post( url=self.index_php + 'page=messages&messageId='+str(message_id)+'&action=103&ajax=1', headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+
     def spyreports(self):
         html = OGame.messages(self, const.messages.spy_reports, 1)
         spyreports = []
