@@ -167,6 +167,11 @@ class OGame(object):
             names.append(name.split(';')[2].split('[')[0])
         return names
 
+    def id_by_moon_name(self, name):
+        for moon_name, id in zip(OGame.moon_names(self), OGame.moon_ids(self)):
+            if moon_name == name:
+                return id
+
     def celestial_coordinates(self, id):
         celestial = self.landing_page.find_all('title', 'componentgalaxy&amp;cp{}'.format(id), 'attribute')
         coordinates = celestial[0].split('componentgalaxy&amp;cp{}&amp;'.format(id))[1].split('&quot;')[0] \
