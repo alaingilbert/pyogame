@@ -61,6 +61,7 @@ class OGame(object):
 
     class HTML:
         def __init__(self, response):
+            self.response = response
             self.parsed = {}
             for index, html in enumerate(response.split('<')):
                 element = html.replace('/', '').replace('\n', '')
@@ -868,6 +869,26 @@ class OGame(object):
 
                 spyreports.append(spy_report_class)
         return spyreports
+
+    def expedition_reports(self):
+        html = OGame.messages(self, const.messages.expedition_reports, 1)
+        expedition_reports = []
+        for message in html.find_all('data-msg-id', '', 'attribute'):
+            response = self.session.get(
+                url=self.index_php + 'page=messages&messageId={}&tabid={}&ajax=1'
+                .format(message, const.messages.expedition_reports)
+            ).text
+            expedition_html = OGame.HTML(response)
+            fright = expedition_html.find_all('class', 'fright', 'value')
+            fright.pop()
+            message_type = int(expedition_html.find_all('data-message-type', '', 'attribute')[0])
+            if message_type == 41: # Expedition reports have value 41
+                id = message
+                detail = str(expedition_html.response).split('detail_txt">')[1].split('</div>')[0]
+                time = expedition_html.find_all('class', 'msg_date', 'value')
+                coordinates = expedition_html.find_all('class', 'txt_link', 'value')[5]
+                expedition_reports.append( [id, coordinates, time, detail] )
+        return expedition_reports
 
     def send_fleet(self, mission, id, where, ships, resources=[0, 0, 0], speed=10, holdingtime=0):
         response = self.session.get(self.index_php + 'page=ingame&component=fleetdispatch&cp={}'.format(id)).text

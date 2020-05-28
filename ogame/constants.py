@@ -167,3 +167,11 @@ class status:
 
 class messages:
     spy_reports = 20
+    battle_reports = 21
+    expedition_reports = 22
+    transportation_reports = 23
+    other_reports = 24
+    deleted_reports = 25
+    buy_reports = 26
+    sell_reports = 27
+
