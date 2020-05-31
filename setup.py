@@ -11,7 +11,7 @@ setup(
     url='https://github.com/PiecePaperCode/pyogame2',
     download_url='https://github.com/PiecePaperCode/pyogame2.git',
     keywords=['OGame', 'lib', 'for bots', 'bot'],
-    install_requires=[''],
+    install_requires=['requests'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

@@ -111,7 +111,7 @@ class OGame(object):
             import ogame.test as test
         except ImportError:
             import test
-        empire = OGame(self.universe, self.username, self.password)
+        empire = OGame(self.universe, self.username, self.password, self.user_agent, self.proxy)
         test.pyogame(empire)
 
     def version(self):
@@ -186,9 +186,9 @@ class OGame(object):
             return int(string.replace('.', '').replace(',', '').replace('M', '000').replace('n', ''))
 
         class resources:
-            resources = [html.find_all('id', 'resources_metal', 'value')[0],
-                         html.find_all('id', 'resources_crystal', 'value')[0],
-                         html.find_all('id', 'resources_deuterium', 'value')[0]]
+            resources = [html.find_all('id', 'resources_metal', 'data-raw')[0],
+                         html.find_all('id', 'resources_crystal', 'data-raw')[0],
+                         html.find_all('id', 'resources_deuterium', 'data-raw')[0]]
             resources = [to_int(resource) for resource in resources]
             metal = resources[0]
             crystal = resources[1]
@@ -196,8 +196,8 @@ class OGame(object):
             production = html.find_all('class', 'tooltipCustom', 'value')
             production = [product for product in production]
             day_production = [to_int(production[67]), to_int(production[68]), to_int(production[69])]
-            darkmatter = to_int(html.find_all('id', 'resources_darkmatter', 'value')[0])
-            energy = to_int(html.find_all('id', 'resources_energy', 'value')[0])
+            darkmatter = to_int(html.find_all('id', 'resources_darkmatter', 'data-raw')[0])
+            energy = to_int(html.find_all('id', 'resources_energy', 'data-raw')[0])
 
         return resources
 
@@ -576,7 +576,8 @@ class OGame(object):
             url=self.index_php + 'page=ingame&component=research&cp={}'.format(OGame.planet_ids(self)[0])
         ).text
         html = OGame.HTML(response)
-        research_level = html.find_all('class', 'level', 'attribute', 'data-value', exact=True)
+        research_level = [int(level)
+                          for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
 
         class research_class:
             energy = research_level[0]
