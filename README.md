@@ -124,7 +124,7 @@ res = resources(metal=1, crystal=2, deuterium=3)
 
 ### get resources
 <pre>
-empire.resources(id)                returns class(object)
+empire.resources(id)                    returns class(object)
 
 res = empire.resources(id)
 res.resources                           returns resources
@@ -135,6 +135,20 @@ res.metal                               returns int
 res.crystal                             returns int
 res.deuterium                           returns int
 </pre>
+
+### get prices
+<pre>
+get prices of buildings or ships. Level is mandatory if you pass buildings that exist only once like mines.
+</pre>
+<pre>
+from ogame.constants import price
+
+price(technology, level)                return resources
+
+price(buildings.metal_mine, level=14))
+price(ships.deathstar(100))
+</pre>
+
 
 ### get supply
 <pre>

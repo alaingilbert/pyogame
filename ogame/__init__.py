@@ -223,56 +223,56 @@ class OGame(object):
             data = OGame.collect_status(status[0])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=60 * 1.5 ** level, crystal=15 * 1.5 ** level)
+            cost = const.price(const.buildings.metal_mine, level=level)
 
         class crystal_mine_class:
             level = levels[1]
             data = OGame.collect_status(status[1])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=48 * 1.6 ** level, crystal=24 * 1.6 ** level)
+            cost = const.price(const.buildings.crystal_mine, level=level)
 
         class deuterium_mine_class:
             level = levels[2]
             data = OGame.collect_status(status[2])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=225 * 1.5 ** level, crystal=75 * 1.5 ** level)
+            cost = const.price(const.buildings.deuterium_mine, level=level)
 
         class solar_plant_class:
             level = levels[3]
             data = OGame.collect_status(status[3])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=75 * 1.5 ** level, crystal=30 * 1.5 ** level)
+            cost = const.price(const.buildings.solar_plant, level=level)
 
         class fusion_plant_class:
             level = levels[4]
             data = OGame.collect_status(status[4])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=900 * 1.8 ** level, crystal=360 * 1.8 ** level, deuterium=180 * 1.8 ** level)
+            cost = const.price(const.buildings.fusion_plant, level=level)
 
         class metal_storage_class:
             level = levels[5]
-            data = OGame.collect_status(status[5])
-            is_possible = data[0]
-            in_construction = data[1]
-            cost = const.resources(metal=1000 * 2 ** level)
-
-        class crystal_storage_class:
-            level = levels[6]
-            data = OGame.collect_status(status[6])
-            is_possible = data[0]
-            in_construction = data[1]
-            cost = const.resources(metal=1000 * 2 ** level, crystal=500 * 2 ** level)
-
-        class deuterium_storage_class:
-            level = levels[7]
             data = OGame.collect_status(status[7])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=1000 * 2 ** level, crystal=1000 * 2 ** level)
+            cost = const.price(const.buildings.metal_storage, level=level)
+
+        class crystal_storage_class:
+            level = levels[6]
+            data = OGame.collect_status(status[8])
+            is_possible = data[0]
+            in_construction = data[1]
+            cost = const.price(const.buildings.crystal_storage, level=level)
+
+        class deuterium_storage_class:
+            level = levels[7]
+            data = OGame.collect_status(status[9])
+            is_possible = data[0]
+            in_construction = data[1]
+            cost = const.price(const.buildings.deuterium_storage, level=level)
 
         class supply_buildings(object):
             metal_mine = metal_mine_class
@@ -297,58 +297,56 @@ class OGame(object):
             data = OGame.collect_status(status[0])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=400 * 2 ** level, crystal=120 * 2 ** level, deuterium=200 * 2 ** level)
+            cost = const.price(const.buildings.robotics_factory, level=level)
 
         class shipyard_class:
             level = levels[1]
             data = OGame.collect_status(status[1])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=200 * 2 ** level, crystal=100 * 2 ** level, deuterium=50 * 2 ** level)
+            cost = const.price(const.buildings.shipyard, level=level)
 
         class research_laboratory_class:
             level = levels[2]
             data = OGame.collect_status(status[2])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=200 * 2 ** level, crystal=400 * 2 ** level, deuterium=200 * 2 ** level)
+            cost = const.price(const.buildings.research_laboratory, level=level)
 
         class alliance_depot_class:
             level = levels[3]
             data = OGame.collect_status(status[3])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=10000 * 2 ** level, crystal=20000 * 2 ** level)
+            cost = const.price(const.buildings.alliance_depot, level=level)
 
         class missile_silo_class:
             level = levels[4]
             data = OGame.collect_status(status[4])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=20000 * 2 ** level, crystal=20000 * 2 ** level, deuterium=1000 * 2 ** level)
+            cost = const.price(const.buildings.missile_silo, level=level)
 
         class nanite_factory_class:
             level = levels[5]
             data = OGame.collect_status(status[5])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=1000000 * 2 ** level, crystal=500000 * 2 ** level,
-                                   deuterium=100000 * 2 ** level)
+            cost = const.price(const.buildings.nanite_factory, level=level)
 
         class terraformer_class:
             level = levels[6]
             data = OGame.collect_status(status[6])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(crystal=50000 * 2 ** level, deuterium=100000 * 2 ** level)
+            cost = const.price(const.buildings.terraformer, level=level)
 
         class repair_dock_class:
             level = levels[7]
             data = OGame.collect_status(status[7])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=int(40 * 5 ** level),
-                                   deuterium=int(10 * 5 ** level))
+            cost = const.price(const.buildings.repair_dock, level=level)
 
         class facilities_buildings(object):
             robotics_factory = robotics_factory_class
@@ -373,35 +371,35 @@ class OGame(object):
             data = OGame.collect_status(status[0])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=400 * 2 ** level, crystal=120 * 2 ** level, deuterium=200 * 2 ** level)
+            cost = const.price(const.buildings.robotics_factory, level=level)
 
         class shipyard_class:
             level = levels[1]
             data = OGame.collect_status(status[1])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=200 * 2 ** level, crystal=100 * 2 ** level, deuterium=50 * 2 ** level)
+            cost = const.price(const.buildings.shipyard, level=level)
 
         class moon_base_class:
             level = levels[2]
             data = OGame.collect_status(status[2])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=10000 * 2 ** level, crystal=20000 * 2 ** level, deuterium=10000 * 2 ** level)
+            cost = const.price(const.buildings.moon_base, level=level)
 
         class sensor_phalanx_class:
             level = levels[3]
             data = OGame.collect_status(status[3])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=10000 * 2 ** level, crystal=20000 * 2 ** level, deuterium=10000 * 2 ** level)
+            cost = const.price(const.buildings.sensor_phalanx, level=level)
 
         class jump_gate_class:
             level = levels[4]
             data = OGame.collect_status(status[4])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=10000 * 2 ** level, crystal=20000 * 2 ** level, deuterium=10000 * 2 ** level)
+            cost = const.price(const.buildings.jump_gate, level=level)
 
         class moon_facilities_buildings(object):
             robotics_factory = robotics_factory_class
@@ -900,7 +898,8 @@ class OGame(object):
         response = self.session.post(
             url=self.index_php + 'page=ingame&component=fleetdispatch&action=sendFleet&ajax=1&asJson=1',
             data=form_data,
-            headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        ).json()
         return response['success']
 
     def return_fleet(self, fleet_id):
