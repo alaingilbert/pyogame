@@ -182,22 +182,18 @@ class OGame(object):
         html = OGame.HTML(response)
 
         def to_int(string):
-            string = string.split(',')[0]
-            return int(string.replace('.', '').replace(',', '').replace('M', '000').replace('n', ''))
+            return int(float(string.replace('M', '000').replace('n', '')))
 
         class resources:
-            resources = [html.find_all('id', 'resources_metal', 'data-raw')[0],
-                         html.find_all('id', 'resources_crystal', 'data-raw')[0],
-                         html.find_all('id', 'resources_deuterium', 'data-raw')[0]]
+            resources = [html.find_all('id', 'resources_metal', 'attribute', 'data-raw')[0],
+                         html.find_all('id', 'resources_crystal', 'attribute', 'data-raw')[0],
+                         html.find_all('id', 'resources_deuterium', 'attribute', 'data-raw')[0]]
             resources = [to_int(resource) for resource in resources]
             metal = resources[0]
             crystal = resources[1]
             deuterium = resources[2]
-            production = html.find_all('class', 'tooltipCustom', 'value')
-            production = [product for product in production]
-            day_production = [to_int(production[67]), to_int(production[68]), to_int(production[69])]
-            darkmatter = to_int(html.find_all('id', 'resources_darkmatter', 'data-raw')[0])
-            energy = to_int(html.find_all('id', 'resources_energy', 'data-raw')[0])
+            darkmatter = to_int(html.find_all('id', 'resources_darkmatter', 'attribute', 'data-raw')[0])
+            energy = to_int(html.find_all('id', 'resources_energy', 'attribute', 'data-raw')[0])
 
         return resources
 
