@@ -37,9 +37,13 @@ from ogame.constants import destination, coordinates, ships, mission, speed, bui
 empire = OGame(UNI, USER, PASSWORD)
 
 #optional
-empire = OGame(UNI, USER, PASSWORD, user_agent='NCSA_Mosaic/2.0 (Windows 3.1)', proxy='https://proxy.com:port')
+empire = OGame(UNI, USER, PASSWORD, 
+                                    user_agent='NCSA_Mosaic/2.0 (Windows 3.1)', 
+                                    proxy='https://proxy.com:port', 
+                                    language='us'
+)
 </pre>
-Want to use it with tor?
+
 
 ### test
 <pre>

@@ -9,12 +9,13 @@ except ImportError:
 
 
 class OGame(object):
-    def __init__(self, universe, username, password, user_agent=None, proxy=''):
+    def __init__(self, universe, username, password, user_agent=None, proxy='', language=None):
         self.universe = universe
         self.username = username
         self.password = password
         self.user_agent = user_agent
         self.proxy = proxy
+        self.language = language
         self.session = requests.Session()
         self.session.proxies.update({'https': self.proxy})
         if self.user_agent is None:
@@ -34,9 +35,14 @@ class OGame(object):
 
         servers = self.session.get('https://lobby.ogame.gameforge.com/api/servers').json()
         for server in servers:
-            if server['name'] == self.universe:
+            if server['name'] == self.universe and server['language'] == self.language:
                 self.server_number = server['number']
                 break
+            elif server['name'] == self.universe and self.language is None:
+                self.server_number = server['number']
+                break
+        if not hasattr(self, 'server_number'):
+            raise Exception('Bad Universe Name')
         accounts = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json()
         for account in accounts:
             if account['server']['number'] == self.server_number:
