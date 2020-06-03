@@ -35,29 +35,33 @@ class OGame(object):
 
         servers = self.session.get('https://lobby.ogame.gameforge.com/api/servers').json()
         for server in servers:
-            if server['name'] == self.universe and server['language'] == self.language:
+            if server['name'] == self.universe:
                 self.server_number = server['number']
                 break
             elif server['name'] == self.universe and self.language is None:
                 self.server_number = server['number']
                 break
-        if not hasattr(self, 'server_number'):
-            raise Exception('Bad Universe Name')
-        accounts = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json()
-        for account in accounts:
-            if account['server']['number'] == self.server_number:
-                self.server_id = account['id']
-                self.server_language = account['server']['language']
-                break
-        login_link = self.session.get(
-            'https://lobby.ogame.gameforge.com/api/users/me/loginLink?'
-            'id={}'
-            '&server[language]={}'
-            '&server[number]={}'
-            '&clickedButton=account_list'
-            .format(self.server_id, self.server_language, self.server_number)).json()
-        self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
-            .format(self.server_number, self.server_language)
+        try:
+            accounts = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json()
+            for account in accounts:
+                if account['server']['number'] == self.server_number and account['server']['language'] == self.language:
+                    self.server_id = account['id']
+                    break
+                elif account['server']['number'] == self.server_number and self.language == None:
+                    self.server_id = account['id']
+                    self.language = account['server']['language']
+                    break
+            login_link = self.session.get(
+                'https://lobby.ogame.gameforge.com/api/users/me/loginLink?'
+                'id={}'
+                '&server[language]={}'
+                '&server[number]={}'
+                '&clickedButton=account_list'
+                .format(self.server_id, self.language, self.server_number)).json()
+            self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
+                .format(self.server_number, self.language)
+        except AttributeError:
+            raise Exception("Universe not found")
         self.landing_page = self.session.get(login_link['url']).text
         response = self.session.get(self.index_php + 'page=ingame').text
         self.landing_page = OGame.HTML(response)
