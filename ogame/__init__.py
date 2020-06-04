@@ -18,6 +18,7 @@ class OGame(object):
         self.language = language
         self.session = requests.Session()
         self.session.proxies.update({'https': self.proxy})
+        self.chat_token = None
         if self.user_agent is None:
             self.user_agent = {
                 'User-Agent':
@@ -51,25 +52,25 @@ class OGame(object):
                 if account['server']['number'] == self.server_number and account['server']['language'] == self.language:
                     self.server_id = account['id']
                     break
-                elif account['server']['number'] == self.server_number and self.language == None:
+                elif account['server']['number'] == self.server_number and self.language is None:
                     self.server_id = account['id']
                     self.language = account['server']['language']
                     break
-            login_link = self.session.get(
-                'https://lobby.ogame.gameforge.com/api/users/me/loginLink?'
-                'id={}'
-                '&server[language]={}'
-                '&server[number]={}'
-                '&clickedButton=account_list'
-                .format(self.server_id, self.language, self.server_number)).json()
-            self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
-                .format(self.server_number, self.language)
         except AttributeError:
             raise Exception("Universe not found")
-        self.landing_page = self.session.get(login_link['url']).text
+
+        self.session.get(
+            'https://lobby.ogame.gameforge.com/api/users/me/loginLink?'
+            'id={}'
+            '&server[language]={}'
+            '&server[number]={}'
+            '&clickedButton=account_list'
+            .format(self.server_id, self.language, self.server_number))
+        self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
+            .format(self.server_number, self.language)
+
         response = self.session.get(self.index_php + 'page=ingame').text
         self.landing_page = OGame.HTML(response)
-        self.chat_token = None
         self.player = self.landing_page.find_all('class', 'overlaytextBeefy', 'value')
         self.player_id = self.landing_page.find_all('name', 'ogame-player-id', 'attribute', 'content')
 
