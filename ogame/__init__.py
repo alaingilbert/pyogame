@@ -22,16 +22,20 @@ class OGame(object):
             self.user_agent = {
                 'User-Agent':
                     'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) '
-                    'Chrome/81.0.4044.138 Mobile Safari/537.36'}
+                    'Chrome/83.0.4103.97 Mobile Safari/537.36'}
         self.session.headers.update(self.user_agent)
 
-        login_data = {'kid': '',
-                      'language': 'en',
-                      'autologin': 'false',
-                      'credentials[email]': self.username,
-                      'credentials[password]': self.password}
-        if self.session.post('https://lobby.ogame.gameforge.com/api/users', data=login_data).status_code is not 200:
+        login_data = {'identity': self.username,
+                      'password': self.password,
+                      'locale': 'en_EN',
+                      'gfLang': 'en',
+                      'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
+                      'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
+                      'autoGameAccountCreation': False}
+        response = self.session.post('https://gameforge.com/api/v1/auth/thin/sessions', json=login_data)
+        if response.status_code is not 201:
             raise Exception('Bad Login')
+        self.session.headers.update({'authorization': 'Bearer {}'.format(response.json()['token'])})
 
         servers = self.session.get('https://lobby.ogame.gameforge.com/api/servers').json()
         for server in servers:
