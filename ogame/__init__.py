@@ -59,18 +59,18 @@ class OGame(object):
         except AttributeError:
             raise Exception("Universe not found")
 
-        self.session.get(
+        login_link = self.session.get(
             'https://lobby.ogame.gameforge.com/api/users/me/loginLink?'
             'id={}'
             '&server[language]={}'
             '&server[number]={}'
             '&clickedButton=account_list'
-            .format(self.server_id, self.language, self.server_number))
+            .format(self.server_id, self.language, self.server_number)
+        ).json()
+        self.landing_page = self.session.get(login_link['url']).text
         self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
             .format(self.server_number, self.language)
-
-        response = self.session.get(self.index_php + 'page=ingame').text
-        self.landing_page = OGame.HTML(response)
+        self.landing_page = OGame.HTML(self.session.get(self.index_php + 'page=ingame').text)
         self.player = self.landing_page.find_all('class', 'overlaytextBeefy', 'value')
         self.player_id = self.landing_page.find_all('name', 'ogame-player-id', 'attribute', 'content')
 
