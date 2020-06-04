@@ -9,53 +9,68 @@ except ImportError:
 
 
 class OGame(object):
-    def __init__(self, universe, username, password, user_agent=None, proxy=''):
+    def __init__(self, universe, username, password, user_agent=None, proxy='', language=None):
         self.universe = universe
         self.username = username
         self.password = password
         self.user_agent = user_agent
         self.proxy = proxy
+        self.language = language
         self.session = requests.Session()
         self.session.proxies.update({'https': self.proxy})
+        self.chat_token = None
         if self.user_agent is None:
             self.user_agent = {
                 'User-Agent':
                     'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) '
-                    'Chrome/81.0.4044.138 Mobile Safari/537.36'}
+                    'Chrome/83.0.4103.97 Mobile Safari/537.36'}
         self.session.headers.update(self.user_agent)
 
-        login_data = {'kid': '',
-                      'language': 'en',
-                      'autologin': 'false',
-                      'credentials[email]': self.username,
-                      'credentials[password]': self.password}
-        if self.session.post('https://lobby.ogame.gameforge.com/api/users', data=login_data).status_code is not 200:
+        login_data = {'identity': self.username,
+                      'password': self.password,
+                      'locale': 'en_EN',
+                      'gfLang': 'en',
+                      'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
+                      'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
+                      'autoGameAccountCreation': False}
+        response = self.session.post('https://gameforge.com/api/v1/auth/thin/sessions', json=login_data)
+        if response.status_code is not 201:
             raise Exception('Bad Login')
+        self.session.headers.update({'authorization': 'Bearer {}'.format(response.json()['token'])})
 
         servers = self.session.get('https://lobby.ogame.gameforge.com/api/servers').json()
         for server in servers:
             if server['name'] == self.universe:
                 self.server_number = server['number']
                 break
-        accounts = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json()
-        for account in accounts:
-            if account['server']['number'] == self.server_number:
-                self.server_id = account['id']
-                self.server_language = account['server']['language']
+            elif server['name'] == self.universe and self.language is None:
+                self.server_number = server['number']
                 break
+        try:
+            accounts = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json()
+            for account in accounts:
+                if account['server']['number'] == self.server_number and account['server']['language'] == self.language:
+                    self.server_id = account['id']
+                    break
+                elif account['server']['number'] == self.server_number and self.language is None:
+                    self.server_id = account['id']
+                    self.language = account['server']['language']
+                    break
+        except AttributeError:
+            raise Exception("Universe not found")
+
         login_link = self.session.get(
             'https://lobby.ogame.gameforge.com/api/users/me/loginLink?'
             'id={}'
             '&server[language]={}'
             '&server[number]={}'
             '&clickedButton=account_list'
-            .format(self.server_id, self.server_language, self.server_number)).json()
-        self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
-            .format(self.server_number, self.server_language)
+            .format(self.server_id, self.language, self.server_number)
+        ).json()
         self.landing_page = self.session.get(login_link['url']).text
-        response = self.session.get(self.index_php + 'page=ingame').text
-        self.landing_page = OGame.HTML(response)
-        self.chat_token = None
+        self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
+            .format(self.server_number, self.language)
+        self.landing_page = OGame.HTML(self.session.get(self.index_php + 'page=ingame').text)
         self.player = self.landing_page.find_all('class', 'overlaytextBeefy', 'value')
         self.player_id = self.landing_page.find_all('name', 'ogame-player-id', 'attribute', 'content')
 
@@ -111,7 +126,7 @@ class OGame(object):
             import ogame.test as test
         except ImportError:
             import test
-        empire = OGame(self.universe, self.username, self.password)
+        empire = OGame(self.universe, self.username, self.password, self.user_agent, self.proxy)
         test.pyogame(empire)
 
     def version(self):
@@ -182,22 +197,18 @@ class OGame(object):
         html = OGame.HTML(response)
 
         def to_int(string):
-            string = string.split(',')[0]
-            return int(string.replace('.', '').replace(',', '').replace('M', '000').replace('n', ''))
+            return int(float(string.replace('M', '000').replace('n', '')))
 
         class resources:
-            resources = [html.find_all('id', 'resources_metal', 'value')[0],
-                         html.find_all('id', 'resources_crystal', 'value')[0],
-                         html.find_all('id', 'resources_deuterium', 'value')[0]]
+            resources = [html.find_all('id', 'resources_metal', 'attribute', 'data-raw')[0],
+                         html.find_all('id', 'resources_crystal', 'attribute', 'data-raw')[0],
+                         html.find_all('id', 'resources_deuterium', 'attribute', 'data-raw')[0]]
             resources = [to_int(resource) for resource in resources]
             metal = resources[0]
             crystal = resources[1]
             deuterium = resources[2]
-            production = html.find_all('class', 'tooltipCustom', 'value')
-            production = [product for product in production]
-            day_production = [to_int(production[67]), to_int(production[68]), to_int(production[69])]
-            darkmatter = to_int(html.find_all('id', 'resources_darkmatter', 'value')[0])
-            energy = to_int(html.find_all('id', 'resources_energy', 'value')[0])
+            darkmatter = to_int(html.find_all('id', 'resources_darkmatter', 'attribute', 'data-raw')[0])
+            energy = to_int(html.find_all('id', 'resources_energy', 'attribute', 'data-raw')[0])
 
         return resources
 
@@ -223,56 +234,56 @@ class OGame(object):
             data = OGame.collect_status(status[0])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=60 * 1.5 ** level, crystal=15 * 1.5 ** level)
+            cost = const.price(const.buildings.metal_mine, level=level)
 
         class crystal_mine_class:
             level = levels[1]
             data = OGame.collect_status(status[1])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=48 * 1.6 ** level, crystal=24 * 1.6 ** level)
+            cost = const.price(const.buildings.crystal_mine, level=level)
 
         class deuterium_mine_class:
             level = levels[2]
             data = OGame.collect_status(status[2])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=225 * 1.5 ** level, crystal=75 * 1.5 ** level)
+            cost = const.price(const.buildings.deuterium_mine, level=level)
 
         class solar_plant_class:
             level = levels[3]
             data = OGame.collect_status(status[3])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=75 * 1.5 ** level, crystal=30 * 1.5 ** level)
+            cost = const.price(const.buildings.solar_plant, level=level)
 
         class fusion_plant_class:
             level = levels[4]
             data = OGame.collect_status(status[4])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=900 * 1.8 ** level, crystal=360 * 1.8 ** level, deuterium=180 * 1.8 ** level)
+            cost = const.price(const.buildings.fusion_plant, level=level)
 
         class metal_storage_class:
             level = levels[5]
-            data = OGame.collect_status(status[5])
-            is_possible = data[0]
-            in_construction = data[1]
-            cost = const.resources(metal=1000 * 2 ** level)
-
-        class crystal_storage_class:
-            level = levels[6]
-            data = OGame.collect_status(status[6])
-            is_possible = data[0]
-            in_construction = data[1]
-            cost = const.resources(metal=1000 * 2 ** level, crystal=500 * 2 ** level)
-
-        class deuterium_storage_class:
-            level = levels[7]
             data = OGame.collect_status(status[7])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=1000 * 2 ** level, crystal=1000 * 2 ** level)
+            cost = const.price(const.buildings.metal_storage, level=level)
+
+        class crystal_storage_class:
+            level = levels[6]
+            data = OGame.collect_status(status[8])
+            is_possible = data[0]
+            in_construction = data[1]
+            cost = const.price(const.buildings.crystal_storage, level=level)
+
+        class deuterium_storage_class:
+            level = levels[7]
+            data = OGame.collect_status(status[9])
+            is_possible = data[0]
+            in_construction = data[1]
+            cost = const.price(const.buildings.deuterium_storage, level=level)
 
         class supply_buildings(object):
             metal_mine = metal_mine_class
@@ -297,58 +308,56 @@ class OGame(object):
             data = OGame.collect_status(status[0])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=400 * 2 ** level, crystal=120 * 2 ** level, deuterium=200 * 2 ** level)
+            cost = const.price(const.buildings.robotics_factory, level=level)
 
         class shipyard_class:
             level = levels[1]
             data = OGame.collect_status(status[1])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=200 * 2 ** level, crystal=100 * 2 ** level, deuterium=50 * 2 ** level)
+            cost = const.price(const.buildings.shipyard, level=level)
 
         class research_laboratory_class:
             level = levels[2]
             data = OGame.collect_status(status[2])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=200 * 2 ** level, crystal=400 * 2 ** level, deuterium=200 * 2 ** level)
+            cost = const.price(const.buildings.research_laboratory, level=level)
 
         class alliance_depot_class:
             level = levels[3]
             data = OGame.collect_status(status[3])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=10000 * 2 ** level, crystal=20000 * 2 ** level)
+            cost = const.price(const.buildings.alliance_depot, level=level)
 
         class missile_silo_class:
             level = levels[4]
             data = OGame.collect_status(status[4])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=20000 * 2 ** level, crystal=20000 * 2 ** level, deuterium=1000 * 2 ** level)
+            cost = const.price(const.buildings.missile_silo, level=level)
 
         class nanite_factory_class:
             level = levels[5]
             data = OGame.collect_status(status[5])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=1000000 * 2 ** level, crystal=500000 * 2 ** level,
-                                   deuterium=100000 * 2 ** level)
+            cost = const.price(const.buildings.nanite_factory, level=level)
 
         class terraformer_class:
             level = levels[6]
             data = OGame.collect_status(status[6])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(crystal=50000 * 2 ** level, deuterium=100000 * 2 ** level)
+            cost = const.price(const.buildings.terraformer, level=level)
 
         class repair_dock_class:
             level = levels[7]
             data = OGame.collect_status(status[7])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=int(40 * 5 ** level),
-                                   deuterium=int(10 * 5 ** level))
+            cost = const.price(const.buildings.repair_dock, level=level)
 
         class facilities_buildings(object):
             robotics_factory = robotics_factory_class
@@ -373,35 +382,35 @@ class OGame(object):
             data = OGame.collect_status(status[0])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=400 * 2 ** level, crystal=120 * 2 ** level, deuterium=200 * 2 ** level)
+            cost = const.price(const.buildings.robotics_factory, level=level)
 
         class shipyard_class:
             level = levels[1]
             data = OGame.collect_status(status[1])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=200 * 2 ** level, crystal=100 * 2 ** level, deuterium=50 * 2 ** level)
+            cost = const.price(const.buildings.shipyard, level=level)
 
         class moon_base_class:
             level = levels[2]
             data = OGame.collect_status(status[2])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=10000 * 2 ** level, crystal=20000 * 2 ** level, deuterium=10000 * 2 ** level)
+            cost = const.price(const.buildings.moon_base, level=level)
 
         class sensor_phalanx_class:
             level = levels[3]
             data = OGame.collect_status(status[3])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=10000 * 2 ** level, crystal=20000 * 2 ** level, deuterium=10000 * 2 ** level)
+            cost = const.price(const.buildings.sensor_phalanx, level=level)
 
         class jump_gate_class:
             level = levels[4]
             data = OGame.collect_status(status[4])
             is_possible = data[0]
             in_construction = data[1]
-            cost = const.resources(metal=10000 * 2 ** level, crystal=20000 * 2 ** level, deuterium=10000 * 2 ** level)
+            cost = const.price(const.buildings.jump_gate, level=level)
 
         class moon_facilities_buildings(object):
             robotics_factory = robotics_factory_class
@@ -576,7 +585,8 @@ class OGame(object):
             url=self.index_php + 'page=ingame&component=research&cp={}'.format(OGame.planet_ids(self)[0])
         ).text
         html = OGame.HTML(response)
-        research_level = html.find_all('class', 'level', 'attribute', 'data-value', exact=True)
+        research_level = [int(level)
+                          for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
 
         class research_class:
             energy = research_level[0]
@@ -899,7 +909,8 @@ class OGame(object):
         response = self.session.post(
             url=self.index_php + 'page=ingame&component=fleetdispatch&action=sendFleet&ajax=1&asJson=1',
             data=form_data,
-            headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        ).json()
         return response['success']
 
     def return_fleet(self, fleet_id):

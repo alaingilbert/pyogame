@@ -5,8 +5,8 @@ OGame is a browser-based, money-management and space-war themed massively multip
 two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
-it supports ogame_version: `7.2.1`
-version `13`
+it supports ogame_version: `7.3.0`
+version `14`
 
 ## install
 <pre>
@@ -28,6 +28,9 @@ pip install git+https://github.com/alaingilbert/pyogame.git@develop
 ## Discord
 [Join Discord](https://discord.gg/CeBDgnR)
 
+## You wanna try a finished bot
+[pyogame.net](https://pyogame.net)
+
 ## functions
 ### login
 <pre>
@@ -37,9 +40,12 @@ from ogame.constants import destination, coordinates, ships, mission, speed, bui
 empire = OGame(UNI, USER, PASSWORD)
 
 #optional
-empire = OGame(UNI, USER, PASSWORD, user_agent='NCSA_Mosaic/2.0 (Windows 3.1)', proxy='https://proxy.com:port')
+empire = OGame(UNI, USER, PASSWORD, 
+                                    user_agent='NCSA_Mosaic/2.0 (Windows 3.1)', 
+                                    proxy='https://proxy.com:port', 
+                                    language='us'
+)
 </pre>
-Want to use it with tor?
 
 ### test
 <pre>
@@ -124,7 +130,7 @@ res = resources(metal=1, crystal=2, deuterium=3)
 
 ### get resources
 <pre>
-empire.resources(id)                returns class(object)
+empire.resources(id)                    returns class(object)
 
 res = empire.resources(id)
 res.resources                           returns resources
@@ -135,6 +141,20 @@ res.metal                               returns int
 res.crystal                             returns int
 res.deuterium                           returns int
 </pre>
+
+### get prices
+<pre>
+get prices of buildings or ships. Level is mandatory if you pass buildings that exist only once like mines.
+</pre>
+<pre>
+from ogame.constants import price
+
+price(technology, level)                return resources
+
+price(buildings.metal_mine, level=14))
+price(ships.deathstar(100))
+</pre>
+
 
 ### get supply
 <pre>

@@ -30,7 +30,8 @@ def pyogame(empire):
     test(lambda: empire.resources(id))
     test(lambda: empire.supply(id))
     test(lambda: empire.facilities(id))
-    test(lambda: empire.moon_facilities(empire.moon_ids()[0]))
+    if empire.moon_ids():
+        test(lambda: empire.moon_facilities(empire.moon_ids()[0]))
     test(lambda: empire.marketplace(id, 1))
     test(lambda: empire.buy_marketplace(12345, id))
     test(lambda: empire.submit_marketplace(resources(metal=100), resources(crystal=60), 10, id))
