@@ -9,7 +9,7 @@ except ImportError:
 
 
 class OGame(object):
-    def __init__(self, universe, username, password, user_agent=None, proxy='', language=None):
+    def __init__(self, universe, username, password, token=None, user_agent=None, proxy='', language=None):
         self.universe = universe
         self.username = username
         self.password = password
@@ -18,6 +18,7 @@ class OGame(object):
         self.language = language
         self.session = requests.Session()
         self.session.proxies.update({'https': self.proxy})
+        self.token = token
         self.chat_token = None
         if self.user_agent is None:
             self.user_agent = {
@@ -26,17 +27,28 @@ class OGame(object):
                     'Chrome/83.0.4103.97 Mobile Safari/537.36'}
         self.session.headers.update(self.user_agent)
 
-        login_data = {'identity': self.username,
-                      'password': self.password,
-                      'locale': 'en_EN',
-                      'gfLang': 'en',
-                      'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
-                      'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
-                      'autoGameAccountCreation': False}
-        response = self.session.post('https://gameforge.com/api/v1/auth/thin/sessions', json=login_data)
-        if response.status_code is not 201:
-            raise Exception('Bad Login')
-        self.session.headers.update({'authorization': 'Bearer {}'.format(response.json()['token'])})
+        def login():
+            self.session.get('https://lobby.ogame.gameforge.com/')
+            login_data = {'identity': self.username,
+                          'password': self.password,
+                          'locale': 'en_EN',
+                          'gfLang': 'en',
+                          'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
+                          'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
+                          'autoGameAccountCreation': False}
+            response = self.session.post('https://gameforge.com/api/v1/auth/thin/sessions', json=login_data)
+            if response.status_code is not 201:
+                raise Exception('Bad Login')
+            self.token = response.json()['token']
+            self.session.headers.update({'authorization': 'Bearer {}'.format(self.token)})
+
+        if token is None:
+            login()
+        else:
+            self.session.headers.update({'authorization': 'Bearer {}'.format(token)})
+            if 'error' in self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json():
+                del self.session.headers['authorization']
+                login()
 
         servers = self.session.get('https://lobby.ogame.gameforge.com/api/servers').json()
         for server in servers:
@@ -48,6 +60,7 @@ class OGame(object):
                 break
         try:
             accounts = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json()
+            self.accounts = accounts
             for account in accounts:
                 if account['server']['number'] == self.server_number and account['server']['language'] == self.language:
                     self.server_id = account['id']
@@ -65,7 +78,7 @@ class OGame(object):
             '&server[language]={}'
             '&server[number]={}'
             '&clickedButton=account_list'
-            .format(self.server_id, self.language, self.server_number)
+                .format(self.server_id, self.language, self.server_number)
         ).json()
         self.landing_page = self.session.get(login_link['url']).text
         self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
