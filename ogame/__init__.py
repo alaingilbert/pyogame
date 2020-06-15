@@ -687,7 +687,7 @@ class OGame(object):
             player_ids_count = 0
             allys = html.find_all('rel', 'alliance', 'value')
             for name in html.find_all('class', 'status_abbr_', 'value'):
-                if name not in ['A', 's', 'n', 'o', 'u', 'g', 'i', 'I', 'ep', ''] and name not in allys:
+                if name not in ['A', 's', 'n', 'o', 'u', 'g', 'i', 'I', 'ep', '', 'z', 'b', 'bo'] and name not in allys:
                     player_names.append(name)
                     if self.player != name:
                         player_ids.append(int(html.find_all('id', 'player', 'attribute')
