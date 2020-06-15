@@ -84,7 +84,7 @@ class OGame(object):
         self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
             .format(self.server_number, self.language)
         self.landing_page = OGame.HTML(self.session.get(self.index_php + 'page=ingame').text)
-        self.player = self.landing_page.find_all('class', 'overlaytextBeefy', 'value')
+        self.player = self.landing_page.find_all('class', 'overlaytextBeefy', 'value')[0]
         self.player_id = self.landing_page.find_all('name', 'ogame-player-id', 'attribute', 'content')
 
     class HTML:
