@@ -686,7 +686,7 @@ class OGame(object):
             player_ids = []
             player_ids_count = 0
             allys = html.find_all('rel', 'alliance', 'value')
-            moderatorTags = ['A', 's', 'n', 'o', 'u', 'g', 'i', 'I', 'ep', '', 'd', 'v', 'ph', 'f', 'b', 'hp']
+            moderatorTags = ['A', 's', 'n', 'o', 'u', 'g', 'i', 'I', 'ep', '', 'd', 'v', 'ph', 'f', 'b', 'hp', 'sek.']
             for name in html.find_all('class', 'status_abbr_', 'value'):
                 if name not in moderatorTags and 2 < len(name) and name not in allys:
                     player_names.append(name)
@@ -875,8 +875,10 @@ class OGame(object):
                     fleets = spy_html.find_all('class', 'tech', 'attribute')
                     for fleet in fleets:
                         tech.append(const.convert_tech(int(fleet.replace('tech', '')), 'shipyard'))
-                    defences = spy_html.find_all('class', 'defense', 'attribute')
+                    defences = spy_html.find_all('class', 'fright', 'value')
                     for defence in defences:
+                        print(defence)
+                        continue
                         if defence != 'defense_imagefloat_left':
                             tech.append(const.convert_tech(int(defence.replace('defense', '')), 'defenses'))
                     buildings = spy_html.find_all('class', 'building', 'attribute')
