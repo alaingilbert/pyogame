@@ -69,7 +69,13 @@ empire.speed()                      returns class
 empire.speed().universe
 empire.speed().fleet
 </pre>
- 
+
+### get characterclass
+<pre>
+Get the class of your Ogame Account['miner', 'explorer', 'warrior']
+empire.characterclass()             return string
+</pre>
+
 ### get planet id's
 <pre>
 empire.planet_ids()                 returns list 

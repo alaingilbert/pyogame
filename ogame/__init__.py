@@ -170,8 +170,12 @@ class OGame(object):
         class speed:
             universe = int(self.landing_page.find_all('content', '', 'attribute')[6])
             fleet = int(self.landing_page.find_all('content', '', 'attribute')[7])
-
         return speed
+
+    def characterclass(self):
+        character = self.landing_page.find_all('class', 'spritecharacterclassmedium', 'attribute')[0]
+        character = character.replace('spritecharacterclassmedium', '')
+        return character
 
     def planet_ids(self):
         planets = self.landing_page.find_all('id', 'planet-', 'attribute')
