@@ -762,21 +762,21 @@ class OGame(object):
         missions = len(html.find_all('id', 'fleet', 'attribute'))
         fleets = []
         for fleet_id, fleet_mission, fleet_returns, fleet_arrival, fleet_origin, fleet_destination in zip(
-                html.find_all('id', 'fleet', 'attribute'),
+                [int(fleet_id.replace('fleet', '')) for fleet_id in html.find_all('id', 'fleet', 'attribute')],
                 html.find_all('data-mission-type', '', 'attribute')[-missions:],
                 html.find_all('data-return-flight', '', 'attribute')[-missions:],
-                html.find_all('data-arrival-time', '', 'attribute')[0:missions],
+                html.find_all('class', 'timertooltip', 'attribute', 'title'),
                 [html.find_all('href', '&componentgalaxy&galaxy', 'value')[i] for i in range(0, missions * 2, 2)],
                 [html.find_all('href', '&componentgalaxy&galaxy', 'value')[i] for i in range(1, missions * 2, 2)]):
 
             class fleets_class:
-                id = int(fleet_id.replace('fleet', ''))
+                id = fleet_id
                 mission = int(fleet_mission)
                 if fleet_returns == '1':
                     returns = True
                 else:
                     returns = False
-                arrival = datetime.fromtimestamp(int(fleet_arrival))
+                arrival = datetime.strptime(fleet_arrival, '%d.%m.%Y%H:%M:%S')
                 origin = const.convert_to_coordinates(fleet_origin)
                 destination = const.convert_to_coordinates(fleet_destination)
                 list = [id, mission, returns, arrival, origin, destination]
