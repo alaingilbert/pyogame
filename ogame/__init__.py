@@ -693,8 +693,9 @@ class OGame(object):
             moderatorTags = ['A', 's', 'n', 'o', 'u', 'g', 'i', 'I', 'ep', '', 'd', 'v', 'ph', 'f', 'b', 'hp', 'sek.']
             for name in html.find_all('class', 'status_abbr_', 'value'):
                 if name not in moderatorTags and 2 < len(name) and name not in allys:
+                    name = name.replace('...', '')
                     player_names.append(name)
-                    if self.player != name:
+                    if name in self.player:
                         player_ids.append(int(html.find_all('id', 'player', 'attribute')
                                               [player_ids_count].replace('player', '')))
                         player_ids_count += 1
@@ -718,12 +719,24 @@ class OGame(object):
                     stati.append(activitys)
             return stati
 
+        def collect_online_status():
+            online_status = []
+            for i, planet in enumerate(response['galaxy'].split('rel="planet')[1:]):
+                if 'activity minute15' in planet:
+                    online_status.append(const.status.online)
+                elif 'activity' in planet:
+                    online_status.append(const.status.recently)
+                else:
+                    online_status.append(const.status.offline)
+            return online_status
+
         planets = []
-        for planet_pos, planet_name, planet_player, planet_player_id, planet_status in zip(
+        for planet_pos, planet_name, planet_player, planet_player_id, player_status, planet_status in zip(
                 [int(pos.replace('planet', '')) for pos in html.find_all('rel', 'planet', 'attribute')],
                 html.find_all('class', 'planetname', 'value'),
                 collect_player()[0],
                 collect_player()[1],
+                collect_online_status(),
                 collect_status()):
 
             class planet_class:
@@ -732,6 +745,7 @@ class OGame(object):
                 player = planet_player
                 player_id = planet_player_id
                 status = planet_status
+                status.append(player_status)
                 if planet_pos in moons:
                     moon = True
                 else:
