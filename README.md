@@ -377,6 +377,7 @@ empire.shop()                       returns Exception("function not implemented 
 ### get fleet
 <pre>
 empire.fleet()                      returns list of class(object)
+empire.hostile_fleet()              returns list of class(object)
 </pre>
 
 ```python

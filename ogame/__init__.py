@@ -203,6 +203,7 @@ class OGame(object):
         celestial = self.landing_page.find_all('title', 'componentgalaxy&amp;cp{}'.format(id), 'attribute')
         coordinates = celestial[0].split('componentgalaxy&amp;cp{}&amp;'.format(id))[1].split('&quot;')[0] \
             .replace('&amp', '').replace('galaxy', '').replace('system', '').replace('position', '').split(';')
+        coordinates = [int(coords) for coords in coordinates]
         if 'moon' in self.landing_page.find_all('title', 'galaxy&amp;cp{}'.format(id), 'attribute', 'class')[0]:
             coordinates.append(const.destination.moon)
         else:
@@ -719,7 +720,7 @@ class OGame(object):
                     stati.append(activitys)
             return stati
 
-        def collect_online_status():
+        def collect_online():
             online_status = []
             for i, planet in enumerate(response['galaxy'].split('rel="planet')[1:]):
                 if 'activity minute15' in planet:
@@ -736,7 +737,7 @@ class OGame(object):
                 html.find_all('class', 'planetname', 'value'),
                 collect_player()[0],
                 collect_player()[1],
-                collect_online_status(),
+                collect_online(),
                 collect_status()):
 
             class planet_class:
@@ -796,6 +797,41 @@ class OGame(object):
                 list = [id, mission, returns, arrival, origin, destination]
 
             fleets.append(fleets_class)
+        return fleets
+
+    def hostile_fleet(self):
+        response = self.session.get(
+            url=self.index_php + 'index.php?page=componentOnly&component=eventList'
+        ).text
+        html = OGame.HTML(response)
+        missions = len(html.find_all('id', 'eventRow-', 'attribute'))
+        coordinates = [self.celestial_coordinates(id) for id in self.planet_ids() + self.moon_ids()]
+        coordinates = [coords[:-1] for coords in coordinates]
+
+        fleets = []
+        for fleet_id, fleet_mission, fleet_returns, fleet_arrival, fleet_origin, fleet_destination in zip(
+                [int(fleet_id.replace('eventRow-', '')) for fleet_id in html.find_all('id', 'eventRow-', 'attribute')],
+                html.find_all('data-mission-type', '', 'attribute'),
+                html.find_all('data-return-flight', '', 'attribute'),
+                html.find_all('data-arrival-time', '', 'attribute'),
+                [html.find_all('target', '_top', 'value')[i] for i in range(0, missions * 2, 2)],
+                [html.find_all('target', '_top', 'value')[i] for i in range(1, missions * 2, 2)]):
+
+            if const.convert_to_coordinates(fleet_destination) in coordinates:
+
+                class fleets_class:
+                    id = fleet_id
+                    mission = int(fleet_mission)
+                    if fleet_returns == '1':
+                        returns = True
+                    else:
+                        returns = False
+                    arrival = datetime.fromtimestamp(int(fleet_arrival))
+                    origin = const.convert_to_coordinates(fleet_origin)
+                    destination = const.convert_to_coordinates(fleet_destination)
+                    list = [id, mission, returns, arrival, origin, destination]
+
+                fleets.append(fleets_class)
         return fleets
 
     def phalanx(self, coordinates, id):
