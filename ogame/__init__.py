@@ -170,6 +170,7 @@ class OGame(object):
         class speed:
             universe = int(self.landing_page.find_all('content', '', 'attribute')[6])
             fleet = int(self.landing_page.find_all('content', '', 'attribute')[7])
+
         return speed
 
     def characterclass(self):
@@ -445,6 +446,7 @@ class OGame(object):
             url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=fetchBuyingItems&ajax=1&'
                                  'pagination%5Bpage%5D={}&cp={}'.format(page, id),
             headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+
         def item_type(item):
             type = None
             if 'sprite ship small ' in item:
@@ -801,35 +803,28 @@ class OGame(object):
 
     def hostile_fleet(self):
         response = self.session.get(
-            url=self.index_php + 'index.php?page=componentOnly&component=eventList'
+            url=self.index_php + 'page=componentOnly&component=eventList'
         ).text
         html = OGame.HTML(response)
         missions = len(html.find_all('id', 'eventRow-', 'attribute'))
         coordinates = [self.celestial_coordinates(id) for id in self.planet_ids() + self.moon_ids()]
         coordinates = [coords[:-1] for coords in coordinates]
-
         fleets = []
-        for fleet_id, fleet_mission, fleet_returns, fleet_arrival, fleet_origin, fleet_destination in zip(
+        for player_id, event_id, fleet_arrival, fleet_origin, fleet_destination in zip(
+                html.find_all('class', 'sendMail', 'attribute', 'data-playerId'),
                 [int(fleet_id.replace('eventRow-', '')) for fleet_id in html.find_all('id', 'eventRow-', 'attribute')],
-                html.find_all('data-mission-type', '', 'attribute'),
-                html.find_all('data-return-flight', '', 'attribute'),
                 html.find_all('data-arrival-time', '', 'attribute'),
                 [html.find_all('target', '_top', 'value')[i] for i in range(0, missions * 2, 2)],
                 [html.find_all('target', '_top', 'value')[i] for i in range(1, missions * 2, 2)]):
 
             if const.convert_to_coordinates(fleet_destination) in coordinates:
-
                 class fleets_class:
-                    id = fleet_id
-                    mission = int(fleet_mission)
-                    if fleet_returns == '1':
-                        returns = True
-                    else:
-                        returns = False
+                    event = event_id
+                    player = int(player_id)
                     arrival = datetime.fromtimestamp(int(fleet_arrival))
                     origin = const.convert_to_coordinates(fleet_origin)
                     destination = const.convert_to_coordinates(fleet_destination)
-                    list = [id, mission, returns, arrival, origin, destination]
+                    list = [event, player, arrival, origin, destination]
 
                 fleets.append(fleets_class)
         return fleets
@@ -837,7 +832,7 @@ class OGame(object):
     def phalanx(self, coordinates, id):
         response = self.session.get(
             url=self.index_php + 'page=phalanx&galaxy={}&system={}&position={}&ajax=1&cp={}'
-            .format(coordinates[0], coordinates[1], coordinates[2], id)
+                .format(coordinates[0], coordinates[1], coordinates[2], id)
         ).text
         html = OGame.HTML(response)
         missions = len(html.find_all('id', 'eventRow-', 'attribute'))
@@ -907,7 +902,7 @@ class OGame(object):
         for message in html.find_all('data-msg-id', '', 'attribute'):
             response = self.session.get(
                 url=self.index_php + 'page=messages&messageId={}&tabid={}&ajax=1'
-                .format(message, const.messages.spy_reports)
+                    .format(message, const.messages.spy_reports)
             ).text
             spy_html = OGame.HTML(response)
             fright = spy_html.find_all('class', 'fright', 'value')
@@ -931,10 +926,8 @@ class OGame(object):
                         tech.append(const.convert_tech(int(fleet.replace('tech', '')), 'shipyard'))
                     defences = spy_html.find_all('class', 'fright', 'value')
                     for defence in defences:
-                        print(defence)
-                        continue
-                        if defence != 'defense_imagefloat_left':
-                            tech.append(const.convert_tech(int(defence.replace('defense', '')), 'defenses'))
+                        if not defence.isdigit():
+                            defence = defences.remove(defence)
                     buildings = spy_html.find_all('class', 'building', 'attribute')
                     for building in buildings:
                         if building != 'building_imagefloat_left':

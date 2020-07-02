@@ -377,7 +377,6 @@ empire.shop()                       returns Exception("function not implemented 
 ### get fleet
 <pre>
 empire.fleet()                      returns list of class(object)
-empire.hostile_fleet()              returns list of class(object)
 </pre>
 
 ```python
@@ -385,6 +384,17 @@ for fleet in empire.fleet():
     if fleet.mission == mission.expedition:
         print(fleet.list)
         print(fleet.id, fleet.mission, fleet.returns, fleet.arrival, fleet.origin, fleet.destination)
+```
+
+### get hostile fleet
+<pre>
+empire.hostile_fleet()              returns list of class(object)
+</pre>
+
+```python
+for fleet in empire.hostile_fleet():
+    print(fleet.list)
+    print(fleet.event, fleet.player, fleet.arrival, fleet.origin, fleet.destination)
 ```
 
 ### get phalanx
