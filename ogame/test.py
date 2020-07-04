@@ -29,6 +29,7 @@ def pyogame(empire):
     test(lambda: empire.planet_names())
     test(lambda: empire.id_by_planet_name(empire.planet_names()[0]))
     test(lambda: empire.moon_ids())
+    test(lambda: empire.celestial(id))
     test(lambda: empire.celestial_coordinates(id))
     test(lambda: empire.resources(id))
     test(lambda: empire.supply(id))

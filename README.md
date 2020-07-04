@@ -117,10 +117,23 @@ coordinates(1, 2, 12, destination.moon)
 coordinates(1, 2, 12, destination.debris)
 coordinates(1, 2, 12, destination.planet) or coordinates(1, 2, 12)
 ```
+
+### get celestial data
+works with planet's and moon's
+<pre>
+celestial = empire.celestial(id)        returns class
+celestial.temperature                   returns list
+celestial.diameter                      returns int
+celestial.coordinates                   returns list
+celestial.fields.used                   return int
+celestial.fields.total                  return int
+celestial.fields.free                   return int
+</pre>
+
 ### get celestial coordinates
 works with planet's and moon's
 <pre>
-empire.celestial_coordinates(id)    returns list
+empire.celestial_coordinates(id)        returns list
 </pre>
 
 ### resources

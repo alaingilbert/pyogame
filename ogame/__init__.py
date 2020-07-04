@@ -200,6 +200,24 @@ class OGame(object):
             names.append(name.split(';')[2].split('[')[0])
         return names
 
+    def celestial(self, id):
+        response = self.session.get(self.index_php + 'page=ingame&component=overview&cp={}'.format(id)).text
+        textContent1 = response.split('textContent[1] = "')[1]
+
+        class celestial:
+            diameter = int(textContent1.split(' ')[0].replace('.', '').replace('km', ''))
+
+            class fields:
+                used = int(textContent1.split('<span>')[1].split('<')[0])
+                total = int(textContent1.split('<span>')[2].split('<')[0])
+                free = total - used
+
+            temperature = response.split('textContent[3] = "')[1].split('"')[0].replace('\\u00b0C', '').split(' ')
+            temperature = [int(temperature[0]), int(temperature[3])]
+            coordinates = OGame.celestial_coordinates(self, id)
+
+        return celestial
+
     def celestial_coordinates(self, id):
         celestial = self.landing_page.find_all('title', 'componentgalaxy&amp;cp{}'.format(id), 'attribute')
         coordinates = celestial[0].split('componentgalaxy&amp;cp{}&amp;'.format(id))[1].split('&quot;')[0] \
