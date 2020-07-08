@@ -582,29 +582,129 @@ class OGame(object):
 
     def research(self):
         response = self.session.get(
-            url=self.index_php + 'page=ingame&component=research&cp={}'.format(OGame.planet_ids(self)[0])
+            url=self.index_php +
+            'page=ingame&component=research&cp={}'.format(
+                OGame.planet_ids(self)[0])
         ).text
         html = OGame.HTML(response)
         research_level = [int(level)
                           for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
+        status = html.find_all('data-technology', '',
+                               'attribute', 'data-status')
 
-        class research_class:
-            energy = research_level[0]
-            laser = research_level[1]
-            ion = research_level[2]
-            hyperspace = research_level[3]
-            plasma = research_level[4]
-            combustion_drive = research_level[5]
-            impulse_drive = research_level[6]
-            hyperspace_drive = research_level[7]
-            espionage = research_level[8]
-            computer = research_level[9]
-            astrophysics = research_level[10]
-            research_network = research_level[11]
-            graviton = research_level[12]
-            weapons = research_level[13]
-            shielding = research_level[14]
-            armor = research_level[15]
+        class research_energy_class:
+            level = research_level[0]
+            data = OGame.collect_status(status[0])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_laser_class:
+            level = research_level[1]
+            data = OGame.collect_status(status[1])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_ion_class:
+            level = research_level[2]
+            data = OGame.collect_status(status[2])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_hyperspace_class:
+            level = research_level[3]
+            data = OGame.collect_status(status[3])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_plasma_class:
+            level = research_level[4]
+            data = OGame.collect_status(status[4])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_combustion_drive_class:
+            level = research_level[5]
+            data = OGame.collect_status(status[5])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_impulse_drive_class:
+            level = research_level[6]
+            data = OGame.collect_status(status[6])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_hyperspace_drive_class:
+            level = research_level[7]
+            data = OGame.collect_status(status[7])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_espionage_class:
+            level = research_level[8]
+            data = OGame.collect_status(status[8])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_computer_class:
+            level = research_level[9]
+            data = OGame.collect_status(status[9])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_astrophysics_class:
+            level = research_level[10]
+            data = OGame.collect_status(status[10])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_research_network_class:
+            level = research_level[11]
+            data = OGame.collect_status(status[11])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_graviton_class:
+            level = research_level[12]
+            data = OGame.collect_status(status[12])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_weapons_class:
+            level = research_level[13]
+            data = OGame.collect_status(status[13])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_shielding_class:
+            level = research_level[14]
+            data = OGame.collect_status(status[14])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_armor_class:
+            level = research_level[15]
+            data = OGame.collect_status(status[15])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_class(object):
+            energy = research_energy_class
+            laser = research_laser_class
+            ion = research_ion_class
+            hyperspace = research_hyperspace_class
+            plasma = research_plasma_class
+            combustion_drive = research_combustion_drive_class
+            impulse_drive = research_impulse_drive_class
+            hyperspace_drive = research_hyperspace_drive_class
+            espionage = research_espionage_class
+            computer = research_computer_class
+            astrophysics = research_astrophysics_class
+            research_network = research_research_network_class
+            graviton = research_graviton_class
+            weapons = research_weapons_class
+            shielding = research_shielding_class
+            armor = research_armor_class
 
         return research_class
 
