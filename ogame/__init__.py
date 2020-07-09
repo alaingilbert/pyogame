@@ -1031,9 +1031,6 @@ class OGame(object):
             .format(component, build_token, type, amount)
         self.session.get(build_url)
 
-    def do_research(self, research, id):
-        OGame.build(self, research, id)
-
     def collect_rubble_field(self, id):
         self.session.get(
             url=self.index_php + 'page=ajax&component=repairlayer&component=repairlayer&ajax=1'
