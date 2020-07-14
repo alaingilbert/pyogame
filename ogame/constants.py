@@ -176,9 +176,9 @@ class status:
     vacation = 'vacation'
     noob = 'newbie'
     honorableTarget = 'strong'
-    offline = 'offline'
-    recently = 'recently'
     online = 'online'
+    recently = 'recently'
+    offline = 'offline'
 
 
 class messages:
