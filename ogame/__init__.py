@@ -620,79 +620,351 @@ class OGame(object):
 
     def research(self):
         response = self.session.get(
-            url=self.index_php + 'page=ingame&component=research&cp={}'.format(OGame.planet_ids(self)[0])
+            url=self.index_php +
+            'page=ingame&component=research&cp={}'.format(
+                OGame.planet_ids(self)[0])
         ).text
         html = OGame.HTML(response)
         research_level = [int(level)
                           for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
+        status = html.find_all('data-technology', '',
+                               'attribute', 'data-status')
 
-        class research_class:
-            energy = research_level[0]
-            laser = research_level[1]
-            ion = research_level[2]
-            hyperspace = research_level[3]
-            plasma = research_level[4]
-            combustion_drive = research_level[5]
-            impulse_drive = research_level[6]
-            hyperspace_drive = research_level[7]
-            espionage = research_level[8]
-            computer = research_level[9]
-            astrophysics = research_level[10]
-            research_network = research_level[11]
-            graviton = research_level[12]
-            weapons = research_level[13]
-            shielding = research_level[14]
-            armor = research_level[15]
+        class research_energy_class:
+            level = research_level[0]
+            data = OGame.collect_status(status[0])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_laser_class:
+            level = research_level[1]
+            data = OGame.collect_status(status[1])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_ion_class:
+            level = research_level[2]
+            data = OGame.collect_status(status[2])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_hyperspace_class:
+            level = research_level[3]
+            data = OGame.collect_status(status[3])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_plasma_class:
+            level = research_level[4]
+            data = OGame.collect_status(status[4])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_combustion_drive_class:
+            level = research_level[5]
+            data = OGame.collect_status(status[5])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_impulse_drive_class:
+            level = research_level[6]
+            data = OGame.collect_status(status[6])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_hyperspace_drive_class:
+            level = research_level[7]
+            data = OGame.collect_status(status[7])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_espionage_class:
+            level = research_level[8]
+            data = OGame.collect_status(status[8])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_computer_class:
+            level = research_level[9]
+            data = OGame.collect_status(status[9])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_astrophysics_class:
+            level = research_level[10]
+            data = OGame.collect_status(status[10])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_research_network_class:
+            level = research_level[11]
+            data = OGame.collect_status(status[11])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_graviton_class:
+            level = research_level[12]
+            data = OGame.collect_status(status[12])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_weapons_class:
+            level = research_level[13]
+            data = OGame.collect_status(status[13])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_shielding_class:
+            level = research_level[14]
+            data = OGame.collect_status(status[14])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_armor_class:
+            level = research_level[15]
+            data = OGame.collect_status(status[15])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_class(object):
+            energy = research_energy_class
+            laser = research_laser_class
+            ion = research_ion_class
+            hyperspace = research_hyperspace_class
+            plasma = research_plasma_class
+            combustion_drive = research_combustion_drive_class
+            impulse_drive = research_impulse_drive_class
+            hyperspace_drive = research_hyperspace_drive_class
+            espionage = research_espionage_class
+            computer = research_computer_class
+            astrophysics = research_astrophysics_class
+            research_network = research_research_network_class
+            graviton = research_graviton_class
+            weapons = research_weapons_class
+            shielding = research_shielding_class
+            armor = research_armor_class
 
         return research_class
 
     def ships(self, id):
-        response = self.session.get(self.index_php + 'page=ingame&component=shipyard&cp={}'.format(id)).text
+        response = self.session.get(
+            self.index_php + 'page=ingame&component=shipyard&cp={}'.format(id)).text
         html = OGame.HTML(response)
-        ships_amount = html.find_all('class', 'amount', 'attribute', 'data-value', exact=True)
+        ships_amount = html.find_all(
+            'class', 'amount', 'attribute', 'data-value', exact=True)
         ships_amount = [int(ship) for ship in ships_amount]
+        status = html.find_all('data-technology', '',
+                               'attribute', 'data-status')
+
+        class light_fighter_class:
+            amount = ships_amount[0]
+            data = OGame.collect_status(status[0])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class heavy_fighter_class:
+            amount = ships_amount[1]
+            data = OGame.collect_status(status[1])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class cruiser_class:
+            amount = ships_amount[2]
+            data = OGame.collect_status(status[2])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class battleship_class:
+            amount = ships_amount[3]
+            data = OGame.collect_status(status[3])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class interceptor_class:
+            amount = ships_amount[4]
+            data = OGame.collect_status(status[4])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class bomber_class:
+            amount = ships_amount[5]
+            data = OGame.collect_status(status[5])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class destroyer_class:
+            amount = ships_amount[6]
+            data = OGame.collect_status(status[6])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class deathstar_class:
+            amount = ships_amount[7]
+            data = OGame.collect_status(status[7])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class reaper_class:
+            amount = ships_amount[8]
+            data = OGame.collect_status(status[8])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class explorer_class:
+            amount = ships_amount[9]
+            data = OGame.collect_status(status[9])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class small_transporter_class:
+            amount = ships_amount[10]
+            data = OGame.collect_status(status[10])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class large_transporter_class:
+            amount = ships_amount[11]
+            data = OGame.collect_status(status[11])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class colonyShip_class:
+            amount = ships_amount[12]
+            data = OGame.collect_status(status[12])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class recycler_class:
+            amount = ships_amount[13]
+            data = OGame.collect_status(status[13])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class espionage_probe_class:
+            amount = ships_amount[14]
+            data = OGame.collect_status(status[14])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class solarSatellite_class:
+            amount = ships_amount[15]
+            data = OGame.collect_status(status[15])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class crawler_class:
+            if id not in OGame.moon_ids(self):
+                amount = ships_amount[16]
+            else:
+                amount = 0
+            data = OGame.collect_status(status[16])
+            is_possible = data[0]
+            in_construction = data[1]
 
         class ships_class(object):
-            light_fighter = ships_amount[0]
-            heavy_fighter = ships_amount[1]
-            cruiser = ships_amount[2]
-            battleship = ships_amount[3]
-            interceptor = ships_amount[4]
-            bomber = ships_amount[5]
-            destroyer = ships_amount[6]
-            deathstar = ships_amount[7]
-            reaper = ships_amount[8]
-            explorer = ships_amount[9]
-            small_transporter = ships_amount[10]
-            large_transporter = ships_amount[11]
-            colonyShip = ships_amount[12]
-            recycler = ships_amount[13]
-            espionage_probe = ships_amount[14]
-            solarSatellite = ships_amount[15]
-            if id not in OGame.moon_ids(self):
-                crawler = ships_amount[16]
-            else:
-                crawler = 0
+            light_fighter = light_fighter_class
+            heavy_fighter = heavy_fighter_class
+            cruiser = cruiser_class
+            battleship = battleship_class
+            interceptor = interceptor_class
+            bomber = bomber_class
+            destroyer = destroyer_class
+            deathstar = deathstar_class
+            reaper = reaper_class
+            explorer = explorer_class
+            small_transporter = small_transporter_class
+            large_transporter = large_transporter_class
+            colonyShip = colonyShip_class
+            recycler = recycler_class
+            espionage_probe = espionage_probe_class
+            solarSatellite = solarSatellite_class
+            crawler = crawler_class
+            state = status
 
         return ships_class
 
     def defences(self, id):
-        response = self.session.get(self.index_php + 'page=ingame&component=defenses&cp={}'.format(id)).text
+        response = self.session.get(
+            self.index_php + 'page=ingame&component=defenses&cp={}'.format(id)).text
         html = OGame.HTML(response)
-        defences_amount = html.find_all('class', 'amount', 'attribute', 'data-value', exact=True)
+        defences_amount = html.find_all(
+            'class', 'amount', 'attribute', 'data-value', exact=True)
         defences_amount = [int(ship) for ship in defences_amount]
+        status = html.find_all('data-technology', '',
+                               'attribute', 'data-status')
+
+        class rocket_class:
+            amount = defences_amount[0]
+            data = OGame.collect_status(status[0])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class light_lc_class:
+            amount = defences_amount[1]
+            data = OGame.collect_status(status[1])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class heavy_lc_class:
+            amount = defences_amount[2]
+            data = OGame.collect_status(status[2])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class gauss_class:
+            amount = defences_amount[3]
+            data = OGame.collect_status(status[3])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class ion_class:
+            amount = defences_amount[4]
+            data = OGame.collect_status(status[4])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class plasma_class:
+            amount = defences_amount[5]
+            data = OGame.collect_status(status[5])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class shield_small_class:
+            amount = defences_amount[6]
+            data = OGame.collect_status(status[6])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class shield_large_class:
+            amount = defences_amount[7]
+            data = OGame.collect_status(status[7])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class interceptor_class:
+            amount = defences_amount[8]
+            data = OGame.collect_status(status[8])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class interplanetary_class:
+            amount = defences_amount[9]
+            data = OGame.collect_status(status[9])
+            is_possible = data[0]
+            in_construction = data[1]
 
         class defences_class(object):
-            rocket_launcher = defences_amount[0]
-            laser_cannon_light = defences_amount[1]
-            laser_cannon_heavy = defences_amount[2]
-            gauss_cannon = defences_amount[3]
-            ion_cannon = defences_amount[4]
-            plasma_cannon = defences_amount[5]
-            shield_dome_small = defences_amount[6]
-            shield_dome_large = defences_amount[7]
-            missile_interceptor = defences_amount[8]
-            missile_interplanetary = defences_amount[9]
+            rocket_launcher = rocket_class
+            laser_cannon_light = light_lc_class
+            laser_cannon_heavy = heavy_lc_class
+            gauss_cannon = gauss_class
+            ion_cannon = ion_class
+            plasma_cannon = plasma_class
+            shield_dome_small = shield_small_class
+            shield_dome_large = shield_large_class
+            missile_interceptor = interceptor_class
+            missile_interplanetary = interplanetary_class
+            state = status
 
         return defences_class
 
@@ -1011,9 +1283,6 @@ class OGame(object):
         build_url = self.index_php + 'page=ingame&component={}&modus=1&token={}&type={}&menge={}' \
             .format(component, build_token, type, amount)
         self.session.get(build_url)
-
-    def do_research(self, research, id):
-        OGame.build(self, research, id)
 
     def collect_rubble_field(self, id):
         self.session.get(
