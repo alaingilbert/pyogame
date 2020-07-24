@@ -190,6 +190,15 @@ class OGame(object):
             if planet_name == name:
                 return id
 
+    def name_by_planet_id(self, planet_id):
+        for id, planet_name in zip(OGame.planet_ids(self), OGame.planet_names(self)):
+            if id == planet_id:
+
+    def id_by_planet_coords(self, coords):
+        for id in OGame.planet_ids(self):
+            if (OGame.celestial_coordinates(self, id) == coords):
+                return id
+
     def moon_ids(self):
         moons = self.landing_page.find_all('class', 'moonlink', 'attribute', 'href')
         return [moon_id.split('cp')[1] for moon_id in moons]
@@ -199,6 +208,16 @@ class OGame(object):
         for name in self.landing_page.find_all('class', 'moonlink', 'attribute', 'title'):
             names.append(name.split(';')[2].split('[')[0])
         return names
+
+    def id_by_moon_name(self, name):
+        for moon_name, id in zip(OGame.moon_names(self), OGame.moon_ids(self)):
+            if moon_name == name:
+                return id
+
+    def id_by_moon_coords(self, coords):
+        for id in OGame.moon_ids():
+            if (OGame.celestial_coordinates(self, id) == coords):
+                return id
 
     def celestial(self, id):
         response = self.session.get(self.index_php + 'page=ingame&component=overview&cp={}'.format(id)).text
@@ -248,6 +267,10 @@ class OGame(object):
             energy = to_int(html.find_all('id', 'resources_energy', 'attribute', 'data-raw')[0])
 
         return resources
+
+    def build_time(self, id, resources):
+        fac = OGame.facilities(self, id)
+        return round((((resources.metal + resources.crystal) * 1.44) / (1 + fac.robotics_factory.level) / ( 2 ** fac.nanite_factory.level) / OGame.speed(self).universe))
 
     def collect_status(self):
         if self == 'on':
