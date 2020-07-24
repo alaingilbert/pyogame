@@ -301,7 +301,11 @@ empire.traider(id)                  returns Exception("function not implemented 
 empire.research()                   returns class(object) 
 
 res = empire.research()
-res.energy
+
+res.energy.level
+res.energy.is_possible
+res.energy.in_construction
+
 res.laser
 res.ion
 res.hyperspace
@@ -324,7 +328,11 @@ res.armor
 empire.ships(id)                    returns class(object) 
 
 shi = empire.ships(id)
-shi.light_fighter
+
+shi.light_fighter.amount
+shi.light_fighter.is_possible
+shi.light_fighter.in_construction
+
 shi.heavy_fighter
 shi.cruiser
 shi.battleship
@@ -348,7 +356,11 @@ shi.crawler
 empire.defences(id)                 returns class(object) 
 
 def = empire.defences(id)
-def.rocket_launcher
+
+def.rocket_launcher.amount
+def.rocket_launcher.is_possible
+def.rocket_launcher.in_construction
+
 def.laser_cannon_light
 def.laser_cannon_heavy
 def.gauss_cannon
