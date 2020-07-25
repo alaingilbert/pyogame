@@ -1100,8 +1100,9 @@ class OGame(object):
         coordinates = [self.celestial_coordinates(id) for id in self.planet_ids() + self.moon_ids()]
         coordinates = [coords[:-1] for coords in coordinates]
         fleets = []
-        for player_id, event_id, fleet_arrival, fleet_origin, fleet_destination in zip(
+        for player_id, fleet_mission, event_id, fleet_arrival, fleet_origin, fleet_destination in zip(
                 html.find_all('class', 'sendMail', 'attribute', 'data-playerId'),
+                html.find_all('data-mission-type', '', 'attribute')[-missions:],
                 [int(fleet_id.replace('eventRow-', '')) for fleet_id in html.find_all('id', 'eventRow-', 'attribute')],
                 html.find_all('data-arrival-time', '', 'attribute'),
                 [html.find_all('target', '_top', 'value')[i] for i in range(0, missions * 2, 2)],
@@ -1110,11 +1111,12 @@ class OGame(object):
             if const.convert_to_coordinates(fleet_destination) in coordinates:
                 class fleets_class:
                     event = event_id
+                    mission = int(fleet_mission)
                     player = int(player_id)
                     arrival = datetime.fromtimestamp(int(fleet_arrival))
                     origin = const.convert_to_coordinates(fleet_origin)
                     destination = const.convert_to_coordinates(fleet_destination)
-                    list = [event, player, arrival, origin, destination]
+                    list = [event, mission, player, arrival, origin, destination]
 
                 fleets.append(fleets_class)
         return fleets
