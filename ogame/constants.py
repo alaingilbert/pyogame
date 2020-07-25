@@ -125,6 +125,8 @@ class ships(object):
     def colonyShip(self=1): return 208, self, 'shipyard'
     def recycler(self=1): return 209, self, 'shipyard'
     def espionage_probe(self=1): return 210, self, 'shipyard'
+    def crawler(self=1): return 217, self, 'shipyard'
+
 
     def is_ship(ship):
         if ship[2] == 'shipyard':
@@ -174,6 +176,9 @@ class status:
     vacation = 'vacation'
     noob = 'newbie'
     honorableTarget = 'strong'
+    online = 'online'
+    recently = 'recently'
+    offline = 'offline'
 
 
 class messages:

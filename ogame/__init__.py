@@ -9,7 +9,7 @@ except ImportError:
 
 
 class OGame(object):
-    def __init__(self, universe, username, password, user_agent=None, proxy='', language=None):
+    def __init__(self, universe, username, password, token=None, user_agent=None, proxy='', language=None):
         self.universe = universe
         self.username = username
         self.password = password
@@ -18,6 +18,7 @@ class OGame(object):
         self.language = language
         self.session = requests.Session()
         self.session.proxies.update({'https': self.proxy})
+        self.token = token
         self.chat_token = None
         if self.user_agent is None:
             self.user_agent = {
@@ -26,17 +27,28 @@ class OGame(object):
                     'Chrome/83.0.4103.97 Mobile Safari/537.36'}
         self.session.headers.update(self.user_agent)
 
-        login_data = {'identity': self.username,
-                      'password': self.password,
-                      'locale': 'en_EN',
-                      'gfLang': 'en',
-                      'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
-                      'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
-                      'autoGameAccountCreation': False}
-        response = self.session.post('https://gameforge.com/api/v1/auth/thin/sessions', json=login_data)
-        if response.status_code is not 201:
-            raise Exception('Bad Login')
-        self.session.headers.update({'authorization': 'Bearer {}'.format(response.json()['token'])})
+        def login():
+            self.session.get('https://lobby.ogame.gameforge.com/')
+            login_data = {'identity': self.username,
+                          'password': self.password,
+                          'locale': 'en_EN',
+                          'gfLang': 'en',
+                          'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
+                          'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
+                          'autoGameAccountCreation': False}
+            response = self.session.post('https://gameforge.com/api/v1/auth/thin/sessions', json=login_data)
+            if response.status_code is not 201:
+                raise Exception('Bad Login')
+            self.token = response.json()['token']
+            self.session.headers.update({'authorization': 'Bearer {}'.format(self.token)})
+
+        if token is None:
+            login()
+        else:
+            self.session.headers.update({'authorization': 'Bearer {}'.format(token)})
+            if 'error' in self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json():
+                del self.session.headers['authorization']
+                login()
 
         servers = self.session.get('https://lobby.ogame.gameforge.com/api/servers').json()
         for server in servers:
@@ -48,6 +60,7 @@ class OGame(object):
                 break
         try:
             accounts = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json()
+            self.accounts = accounts
             for account in accounts:
                 if account['server']['number'] == self.server_number and account['server']['language'] == self.language:
                     self.server_id = account['id']
@@ -65,13 +78,13 @@ class OGame(object):
             '&server[language]={}'
             '&server[number]={}'
             '&clickedButton=account_list'
-            .format(self.server_id, self.language, self.server_number)
+                .format(self.server_id, self.language, self.server_number)
         ).json()
         self.landing_page = self.session.get(login_link['url']).text
         self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
             .format(self.server_number, self.language)
         self.landing_page = OGame.HTML(self.session.get(self.index_php + 'page=ingame').text)
-        self.player = self.landing_page.find_all('class', 'overlaytextBeefy', 'value')
+        self.player = self.landing_page.find_all('class', 'overlaytextBeefy', 'value')[0]
         self.player_id = self.landing_page.find_all('name', 'ogame-player-id', 'attribute', 'content')
 
     class HTML:
@@ -160,6 +173,11 @@ class OGame(object):
 
         return speed
 
+    def characterclass(self):
+        character = self.landing_page.find_all('class', 'spritecharacterclassmedium', 'attribute')[0]
+        character = character.replace('spritecharacterclassmedium', '')
+        return character
+
     def planet_ids(self):
         planets = self.landing_page.find_all('id', 'planet-', 'attribute')
         return [int(planet.replace('planet-', '')) for planet in planets]
@@ -182,10 +200,29 @@ class OGame(object):
             names.append(name.split(';')[2].split('[')[0])
         return names
 
+    def celestial(self, id):
+        response = self.session.get(self.index_php + 'page=ingame&component=overview&cp={}'.format(id)).text
+        textContent1 = response.split('textContent[1] = "')[1]
+
+        class celestial:
+            diameter = int(textContent1.split(' ')[0].replace('.', '').replace('km', ''))
+
+            class fields:
+                used = int(textContent1.split('<span>')[1].split('<')[0])
+                total = int(textContent1.split('<span>')[2].split('<')[0])
+                free = total - used
+
+            temperature = response.split('textContent[3] = "')[1].split('"')[0].replace('\\u00b0C', '').split(' ')
+            temperature = [int(temperature[0]), int(temperature[3])]
+            coordinates = OGame.celestial_coordinates(self, id)
+
+        return celestial
+
     def celestial_coordinates(self, id):
         celestial = self.landing_page.find_all('title', 'componentgalaxy&amp;cp{}'.format(id), 'attribute')
         coordinates = celestial[0].split('componentgalaxy&amp;cp{}&amp;'.format(id))[1].split('&quot;')[0] \
             .replace('&amp', '').replace('galaxy', '').replace('system', '').replace('position', '').split(';')
+        coordinates = [int(coords) for coords in coordinates]
         if 'moon' in self.landing_page.find_all('title', 'galaxy&amp;cp{}'.format(id), 'attribute', 'class')[0]:
             coordinates.append(const.destination.moon)
         else:
@@ -427,6 +464,7 @@ class OGame(object):
             url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=fetchBuyingItems&ajax=1&'
                                  'pagination%5Bpage%5D={}&cp={}'.format(page, id),
             headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+
         def item_type(item):
             type = None
             if 'sprite ship small ' in item:
@@ -582,79 +620,351 @@ class OGame(object):
 
     def research(self):
         response = self.session.get(
-            url=self.index_php + 'page=ingame&component=research&cp={}'.format(OGame.planet_ids(self)[0])
+            url=self.index_php +
+            'page=ingame&component=research&cp={}'.format(
+                OGame.planet_ids(self)[0])
         ).text
         html = OGame.HTML(response)
         research_level = [int(level)
                           for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
+        status = html.find_all('data-technology', '',
+                               'attribute', 'data-status')
 
-        class research_class:
-            energy = research_level[0]
-            laser = research_level[1]
-            ion = research_level[2]
-            hyperspace = research_level[3]
-            plasma = research_level[4]
-            combustion_drive = research_level[5]
-            impulse_drive = research_level[6]
-            hyperspace_drive = research_level[7]
-            espionage = research_level[8]
-            computer = research_level[9]
-            astrophysics = research_level[10]
-            research_network = research_level[11]
-            graviton = research_level[12]
-            weapons = research_level[13]
-            shielding = research_level[14]
-            armor = research_level[15]
+        class research_energy_class:
+            level = research_level[0]
+            data = OGame.collect_status(status[0])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_laser_class:
+            level = research_level[1]
+            data = OGame.collect_status(status[1])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_ion_class:
+            level = research_level[2]
+            data = OGame.collect_status(status[2])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_hyperspace_class:
+            level = research_level[3]
+            data = OGame.collect_status(status[3])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_plasma_class:
+            level = research_level[4]
+            data = OGame.collect_status(status[4])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_combustion_drive_class:
+            level = research_level[5]
+            data = OGame.collect_status(status[5])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_impulse_drive_class:
+            level = research_level[6]
+            data = OGame.collect_status(status[6])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_hyperspace_drive_class:
+            level = research_level[7]
+            data = OGame.collect_status(status[7])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_espionage_class:
+            level = research_level[8]
+            data = OGame.collect_status(status[8])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_computer_class:
+            level = research_level[9]
+            data = OGame.collect_status(status[9])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_astrophysics_class:
+            level = research_level[10]
+            data = OGame.collect_status(status[10])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_research_network_class:
+            level = research_level[11]
+            data = OGame.collect_status(status[11])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_graviton_class:
+            level = research_level[12]
+            data = OGame.collect_status(status[12])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_weapons_class:
+            level = research_level[13]
+            data = OGame.collect_status(status[13])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_shielding_class:
+            level = research_level[14]
+            data = OGame.collect_status(status[14])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_armor_class:
+            level = research_level[15]
+            data = OGame.collect_status(status[15])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class research_class(object):
+            energy = research_energy_class
+            laser = research_laser_class
+            ion = research_ion_class
+            hyperspace = research_hyperspace_class
+            plasma = research_plasma_class
+            combustion_drive = research_combustion_drive_class
+            impulse_drive = research_impulse_drive_class
+            hyperspace_drive = research_hyperspace_drive_class
+            espionage = research_espionage_class
+            computer = research_computer_class
+            astrophysics = research_astrophysics_class
+            research_network = research_research_network_class
+            graviton = research_graviton_class
+            weapons = research_weapons_class
+            shielding = research_shielding_class
+            armor = research_armor_class
 
         return research_class
 
     def ships(self, id):
-        response = self.session.get(self.index_php + 'page=ingame&component=shipyard&cp={}'.format(id)).text
+        response = self.session.get(
+            self.index_php + 'page=ingame&component=shipyard&cp={}'.format(id)).text
         html = OGame.HTML(response)
-        ships_amount = html.find_all('class', 'amount', 'attribute', 'data-value', exact=True)
+        ships_amount = html.find_all(
+            'class', 'amount', 'attribute', 'data-value', exact=True)
         ships_amount = [int(ship) for ship in ships_amount]
+        status = html.find_all('data-technology', '',
+                               'attribute', 'data-status')
+
+        class light_fighter_class:
+            amount = ships_amount[0]
+            data = OGame.collect_status(status[0])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class heavy_fighter_class:
+            amount = ships_amount[1]
+            data = OGame.collect_status(status[1])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class cruiser_class:
+            amount = ships_amount[2]
+            data = OGame.collect_status(status[2])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class battleship_class:
+            amount = ships_amount[3]
+            data = OGame.collect_status(status[3])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class interceptor_class:
+            amount = ships_amount[4]
+            data = OGame.collect_status(status[4])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class bomber_class:
+            amount = ships_amount[5]
+            data = OGame.collect_status(status[5])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class destroyer_class:
+            amount = ships_amount[6]
+            data = OGame.collect_status(status[6])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class deathstar_class:
+            amount = ships_amount[7]
+            data = OGame.collect_status(status[7])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class reaper_class:
+            amount = ships_amount[8]
+            data = OGame.collect_status(status[8])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class explorer_class:
+            amount = ships_amount[9]
+            data = OGame.collect_status(status[9])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class small_transporter_class:
+            amount = ships_amount[10]
+            data = OGame.collect_status(status[10])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class large_transporter_class:
+            amount = ships_amount[11]
+            data = OGame.collect_status(status[11])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class colonyShip_class:
+            amount = ships_amount[12]
+            data = OGame.collect_status(status[12])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class recycler_class:
+            amount = ships_amount[13]
+            data = OGame.collect_status(status[13])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class espionage_probe_class:
+            amount = ships_amount[14]
+            data = OGame.collect_status(status[14])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class solarSatellite_class:
+            amount = ships_amount[15]
+            data = OGame.collect_status(status[15])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class crawler_class:
+            if id not in OGame.moon_ids(self):
+                amount = ships_amount[16]
+            else:
+                amount = 0
+            data = OGame.collect_status(status[16])
+            is_possible = data[0]
+            in_construction = data[1]
 
         class ships_class(object):
-            light_fighter = ships_amount[0]
-            heavy_fighter = ships_amount[1]
-            cruiser = ships_amount[2]
-            battleship = ships_amount[3]
-            interceptor = ships_amount[4]
-            bomber = ships_amount[5]
-            destroyer = ships_amount[6]
-            deathstar = ships_amount[7]
-            reaper = ships_amount[8]
-            explorer = ships_amount[9]
-            small_transporter = ships_amount[10]
-            large_transporter = ships_amount[11]
-            colonyShip = ships_amount[12]
-            recycler = ships_amount[13]
-            espionage_probe = ships_amount[14]
-            solarSatellite = ships_amount[15]
-            if id not in OGame.moon_ids(self):
-                crawler = ships_amount[16]
-            else:
-                crawler = 0
+            light_fighter = light_fighter_class
+            heavy_fighter = heavy_fighter_class
+            cruiser = cruiser_class
+            battleship = battleship_class
+            interceptor = interceptor_class
+            bomber = bomber_class
+            destroyer = destroyer_class
+            deathstar = deathstar_class
+            reaper = reaper_class
+            explorer = explorer_class
+            small_transporter = small_transporter_class
+            large_transporter = large_transporter_class
+            colonyShip = colonyShip_class
+            recycler = recycler_class
+            espionage_probe = espionage_probe_class
+            solarSatellite = solarSatellite_class
+            crawler = crawler_class
+            state = status
 
         return ships_class
 
     def defences(self, id):
-        response = self.session.get(self.index_php + 'page=ingame&component=defenses&cp={}'.format(id)).text
+        response = self.session.get(
+            self.index_php + 'page=ingame&component=defenses&cp={}'.format(id)).text
         html = OGame.HTML(response)
-        defences_amount = html.find_all('class', 'amount', 'attribute', 'data-value', exact=True)
+        defences_amount = html.find_all(
+            'class', 'amount', 'attribute', 'data-value', exact=True)
         defences_amount = [int(ship) for ship in defences_amount]
+        status = html.find_all('data-technology', '',
+                               'attribute', 'data-status')
+
+        class rocket_class:
+            amount = defences_amount[0]
+            data = OGame.collect_status(status[0])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class light_lc_class:
+            amount = defences_amount[1]
+            data = OGame.collect_status(status[1])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class heavy_lc_class:
+            amount = defences_amount[2]
+            data = OGame.collect_status(status[2])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class gauss_class:
+            amount = defences_amount[3]
+            data = OGame.collect_status(status[3])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class ion_class:
+            amount = defences_amount[4]
+            data = OGame.collect_status(status[4])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class plasma_class:
+            amount = defences_amount[5]
+            data = OGame.collect_status(status[5])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class shield_small_class:
+            amount = defences_amount[6]
+            data = OGame.collect_status(status[6])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class shield_large_class:
+            amount = defences_amount[7]
+            data = OGame.collect_status(status[7])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class interceptor_class:
+            amount = defences_amount[8]
+            data = OGame.collect_status(status[8])
+            is_possible = data[0]
+            in_construction = data[1]
+
+        class interplanetary_class:
+            amount = defences_amount[9]
+            data = OGame.collect_status(status[9])
+            is_possible = data[0]
+            in_construction = data[1]
 
         class defences_class(object):
-            rocket_launcher = defences_amount[0]
-            laser_cannon_light = defences_amount[1]
-            laser_cannon_heavy = defences_amount[2]
-            gauss_cannon = defences_amount[3]
-            ion_cannon = defences_amount[4]
-            plasma_cannon = defences_amount[5]
-            shield_dome_small = defences_amount[6]
-            shield_dome_large = defences_amount[7]
-            missile_interceptor = defences_amount[8]
-            missile_interplanetary = defences_amount[9]
+            rocket_launcher = rocket_class
+            laser_cannon_light = light_lc_class
+            laser_cannon_heavy = heavy_lc_class
+            gauss_cannon = gauss_class
+            ion_cannon = ion_class
+            plasma_cannon = plasma_class
+            shield_dome_small = shield_small_class
+            shield_dome_large = shield_large_class
+            missile_interceptor = interceptor_class
+            missile_interplanetary = interplanetary_class
+            state = status
 
         return defences_class
 
@@ -673,10 +983,12 @@ class OGame(object):
             player_ids = []
             player_ids_count = 0
             allys = html.find_all('rel', 'alliance', 'value')
+            moderatorTags = ['A', 's', 'n', 'o', 'u', 'g', 'i', 'I', 'ep', '', 'd', 'v', 'ph', 'f', 'b', 'hp', 'sek.']
             for name in html.find_all('class', 'status_abbr_', 'value'):
-                if name not in ['A', 's', 'n', 'o', 'u', 'g', 'i', 'I', 'ep', ''] and name not in allys:
+                if name not in moderatorTags and 2 < len(name) and name not in allys:
+                    name = name.replace('...', '')
                     player_names.append(name)
-                    if self.player != name:
+                    if name in self.player:
                         player_ids.append(int(html.find_all('id', 'player', 'attribute')
                                               [player_ids_count].replace('player', '')))
                         player_ids_count += 1
@@ -700,12 +1012,24 @@ class OGame(object):
                     stati.append(activitys)
             return stati
 
+        def collect_online():
+            online_status = []
+            for i, planet in enumerate(response['galaxy'].split('rel="planet')[1:]):
+                if 'activity minute15' in planet:
+                    online_status.append(const.status.online)
+                elif 'activity' in planet:
+                    online_status.append(const.status.recently)
+                else:
+                    online_status.append(const.status.offline)
+            return online_status
+
         planets = []
-        for planet_pos, planet_name, planet_player, planet_player_id, planet_status in zip(
+        for planet_pos, planet_name, planet_player, planet_player_id, player_status, planet_status in zip(
                 [int(pos.replace('planet', '')) for pos in html.find_all('rel', 'planet', 'attribute')],
                 html.find_all('class', 'planetname', 'value'),
                 collect_player()[0],
                 collect_player()[1],
+                collect_online(),
                 collect_status()):
 
             class planet_class:
@@ -714,6 +1038,7 @@ class OGame(object):
                 player = planet_player
                 player_id = planet_player_id
                 status = planet_status
+                status.append(player_status)
                 if planet_pos in moons:
                     moon = True
                 else:
@@ -744,21 +1069,21 @@ class OGame(object):
         missions = len(html.find_all('id', 'fleet', 'attribute'))
         fleets = []
         for fleet_id, fleet_mission, fleet_returns, fleet_arrival, fleet_origin, fleet_destination in zip(
-                html.find_all('id', 'fleet', 'attribute'),
+                [int(fleet_id.replace('fleet', '')) for fleet_id in html.find_all('id', 'fleet', 'attribute')],
                 html.find_all('data-mission-type', '', 'attribute')[-missions:],
                 html.find_all('data-return-flight', '', 'attribute')[-missions:],
-                html.find_all('data-arrival-time', '', 'attribute')[0:missions],
+                html.find_all('class', 'timertooltip', 'attribute', 'title'),
                 [html.find_all('href', '&componentgalaxy&galaxy', 'value')[i] for i in range(0, missions * 2, 2)],
                 [html.find_all('href', '&componentgalaxy&galaxy', 'value')[i] for i in range(1, missions * 2, 2)]):
 
             class fleets_class:
-                id = int(fleet_id.replace('fleet', ''))
+                id = fleet_id
                 mission = int(fleet_mission)
                 if fleet_returns == '1':
                     returns = True
                 else:
                     returns = False
-                arrival = datetime.fromtimestamp(int(fleet_arrival))
+                arrival = datetime.strptime(fleet_arrival, '%d.%m.%Y%H:%M:%S')
                 origin = const.convert_to_coordinates(fleet_origin)
                 destination = const.convert_to_coordinates(fleet_destination)
                 list = [id, mission, returns, arrival, origin, destination]
@@ -766,10 +1091,40 @@ class OGame(object):
             fleets.append(fleets_class)
         return fleets
 
+    def hostile_fleet(self):
+        response = self.session.get(
+            url=self.index_php + 'page=componentOnly&component=eventList'
+        ).text
+        html = OGame.HTML(response)
+        missions = len(html.find_all('id', 'eventRow-', 'attribute'))
+        coordinates = [self.celestial_coordinates(id) for id in self.planet_ids() + self.moon_ids()]
+        coordinates = [coords[:-1] for coords in coordinates]
+        fleets = []
+        for player_id, fleet_mission, event_id, fleet_arrival, fleet_origin, fleet_destination in zip(
+                html.find_all('class', 'sendMail', 'attribute', 'data-playerId'),
+                html.find_all('data-mission-type', '', 'attribute')[-missions:],
+                [int(fleet_id.replace('eventRow-', '')) for fleet_id in html.find_all('id', 'eventRow-', 'attribute')],
+                html.find_all('data-arrival-time', '', 'attribute'),
+                [html.find_all('target', '_top', 'value')[i] for i in range(0, missions * 2, 2)],
+                [html.find_all('target', '_top', 'value')[i] for i in range(1, missions * 2, 2)]):
+
+            if const.convert_to_coordinates(fleet_destination) in coordinates:
+                class fleets_class:
+                    event = event_id
+                    mission = int(fleet_mission)
+                    player = int(player_id)
+                    arrival = datetime.fromtimestamp(int(fleet_arrival))
+                    origin = const.convert_to_coordinates(fleet_origin)
+                    destination = const.convert_to_coordinates(fleet_destination)
+                    list = [event, mission, player, arrival, origin, destination]
+
+                fleets.append(fleets_class)
+        return fleets
+
     def phalanx(self, coordinates, id):
         response = self.session.get(
             url=self.index_php + 'page=phalanx&galaxy={}&system={}&position={}&ajax=1&cp={}'
-            .format(coordinates[0], coordinates[1], coordinates[2], id)
+                .format(coordinates[0], coordinates[1], coordinates[2], id)
         ).text
         html = OGame.HTML(response)
         missions = len(html.find_all('id', 'eventRow-', 'attribute'))
@@ -839,7 +1194,7 @@ class OGame(object):
         for message in html.find_all('data-msg-id', '', 'attribute'):
             response = self.session.get(
                 url=self.index_php + 'page=messages&messageId={}&tabid={}&ajax=1'
-                .format(message, const.messages.spy_reports)
+                    .format(message, const.messages.spy_reports)
             ).text
             spy_html = OGame.HTML(response)
             fright = spy_html.find_all('class', 'fright', 'value')
@@ -861,10 +1216,10 @@ class OGame(object):
                     fleets = spy_html.find_all('class', 'tech', 'attribute')
                     for fleet in fleets:
                         tech.append(const.convert_tech(int(fleet.replace('tech', '')), 'shipyard'))
-                    defences = spy_html.find_all('class', 'defense', 'attribute')
+                    defences = spy_html.find_all('class', 'fright', 'value')
                     for defence in defences:
-                        if defence != 'defense_imagefloat_left':
-                            tech.append(const.convert_tech(int(defence.replace('defense', '')), 'defenses'))
+                        if not defence.isdigit():
+                            defence = defences.remove(defence)
                     buildings = spy_html.find_all('class', 'building', 'attribute')
                     for building in buildings:
                         if building != 'building_imagefloat_left':
@@ -930,9 +1285,6 @@ class OGame(object):
         build_url = self.index_php + 'page=ingame&component={}&modus=1&token={}&type={}&menge={}' \
             .format(component, build_token, type, amount)
         self.session.get(build_url)
-
-    def do_research(self, research, id):
-        OGame.build(self, research, id)
 
     def collect_rubble_field(self, id):
         self.session.get(

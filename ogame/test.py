@@ -1,14 +1,17 @@
 from ogame.constants import destination, coordinates, ships, mission, speed, buildings, resources, status, research
 
-print('\033[1;34;40m TEST OGAME FUNCTIONS')
+print('TEST OGAME FUNCTIONS')
 
 
 def test(function, mandatory=False):
     if mandatory is not True:
-        print('\033[1;34;40m was returned on an non mandatory function', function())
+        try:
+            print(vars(function()))
+        except TypeError:
+            print(function())
     else:
         if function() is True:
-            print('\033[1;34;40m mandatory function succses')
+            print(function())
         else:
             global succsess
             succsess = False
@@ -26,6 +29,7 @@ def pyogame(empire):
     test(lambda: empire.planet_names())
     test(lambda: empire.id_by_planet_name(empire.planet_names()[0]))
     test(lambda: empire.moon_ids())
+    test(lambda: empire.celestial(id))
     test(lambda: empire.celestial_coordinates(id))
     test(lambda: empire.resources(id))
     test(lambda: empire.supply(id))
@@ -53,10 +57,10 @@ def pyogame(empire):
     test(lambda: empire.build(what=buildings.solar_satellite(1), id=id))
     test(lambda: empire.do_research(research=research.graviton, id=id))
     test(lambda: empire.collect_rubble_field(id=id))
-    test(lambda: empire.is_logged_in(), True)
-    test(lambda: empire.logout(), True)
-    test(lambda: empire.relogin(), True)
-    test(lambda: empire.logout(), True)
+    test(lambda: empire.is_logged_in())
+    test(lambda: empire.logout())
+    test(lambda: empire.relogin())
+    test(lambda: empire.logout())
 
     if succsess is True:
         print('All test completed')

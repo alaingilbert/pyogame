@@ -1,12 +1,12 @@
 # pyogame
-![picture](ogame_icon.png)
+<img src="https://github.com/alaingilbert/pyogame/blob/develop/logo.png?raw=true" width="300" alt="logo">
 
 OGame is a browser-based, money-management and space-war themed massively multiplayer online browser game with over 
 two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
 it supports ogame_version: `7.3.0`
-version `14`
+version `15`
 
 ## install
 <pre>
@@ -69,7 +69,13 @@ empire.speed()                      returns class
 empire.speed().universe
 empire.speed().fleet
 </pre>
- 
+
+### get characterclass
+<pre>
+Get the class of your Ogame Account['miner', 'explorer', 'warrior']
+empire.characterclass()             return string
+</pre>
+
 ### get planet id's
 <pre>
 empire.planet_ids()                 returns list 
@@ -111,10 +117,23 @@ coordinates(1, 2, 12, destination.moon)
 coordinates(1, 2, 12, destination.debris)
 coordinates(1, 2, 12, destination.planet) or coordinates(1, 2, 12)
 ```
+
+### get celestial data
+works with planet's and moon's
+<pre>
+celestial = empire.celestial(id)        returns class
+celestial.temperature                   returns list
+celestial.diameter                      returns int
+celestial.coordinates                   returns list
+celestial.fields.used                   return int
+celestial.fields.total                  return int
+celestial.fields.free                   return int
+</pre>
+
 ### get celestial coordinates
 works with planet's and moon's
 <pre>
-empire.celestial_coordinates(id)    returns list
+empire.celestial_coordinates(id)        returns list
 </pre>
 
 ### resources
@@ -282,7 +301,11 @@ empire.traider(id)                  returns Exception("function not implemented 
 empire.research()                   returns class(object) 
 
 res = empire.research()
-res.energy
+
+res.energy.level
+res.energy.is_possible
+res.energy.in_construction
+
 res.laser
 res.ion
 res.hyperspace
@@ -305,7 +328,11 @@ res.armor
 empire.ships(id)                    returns class(object) 
 
 shi = empire.ships(id)
-shi.light_fighter
+
+shi.light_fighter.amount
+shi.light_fighter.is_possible
+shi.light_fighter.in_construction
+
 shi.heavy_fighter
 shi.cruiser
 shi.battleship
@@ -329,7 +356,11 @@ shi.crawler
 empire.defences(id)                 returns class(object) 
 
 def = empire.defences(id)
-def.rocket_launcher
+
+def.rocket_launcher.amount
+def.rocket_launcher.is_possible
+def.rocket_launcher.in_construction
+
 def.laser_cannon_light
 def.laser_cannon_heavy
 def.gauss_cannon
@@ -378,6 +409,17 @@ for fleet in empire.fleet():
     if fleet.mission == mission.expedition:
         print(fleet.list)
         print(fleet.id, fleet.mission, fleet.returns, fleet.arrival, fleet.origin, fleet.destination)
+```
+
+### get hostile fleet
+<pre>
+empire.hostile_fleet()              returns list of class(object)
+</pre>
+
+```python
+for fleet in empire.hostile_fleet():
+    print(fleet.list)
+    print(fleet.event, fleet.player, fleet.arrival, fleet.origin, fleet.destination)
 ```
 
 ### get phalanx
@@ -502,7 +544,7 @@ ships.espionage_probe(int)
 ### do research
 ```python
 from ogame.constants import research
-empire.do_research(research=research.energy, id=id)
+empire.build(what=research.energy, id=id)
 
 research.energy
 research.laser
