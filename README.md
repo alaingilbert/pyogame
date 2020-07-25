@@ -544,7 +544,7 @@ ships.espionage_probe(int)
 ### do research
 ```python
 from ogame.constants import research
-empire.do_research(research=research.energy, id=id)
+empire.build(what=research.energy, id=id)
 
 research.energy
 research.laser
