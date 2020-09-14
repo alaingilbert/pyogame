@@ -3,19 +3,11 @@ from ogame.constants import destination, coordinates, ships, mission, speed, bui
 print('TEST OGAME FUNCTIONS')
 
 
-def test(function, mandatory=False):
-    if mandatory is not True:
-        try:
-            print(vars(function()))
-        except TypeError:
-            print(function())
-    else:
-        if function() is True:
-            print(function())
-        else:
-            global succsess
-            succsess = False
-            raise Warning('funktion broke')
+def test(function):
+    try:
+        print(vars(function()))
+    except TypeError:
+        print(function())
 
 
 def pyogame(empire):
@@ -55,7 +47,7 @@ def pyogame(empire):
                                    ships=[ships.large_transporter(1)]))
     test(lambda: empire.return_fleet(12345))
     test(lambda: empire.build(what=buildings.solar_satellite(1), id=id))
-    test(lambda: empire.build(research=research.graviton, id=id))
+    test(lambda: empire.build(what=research.graviton, id=id))
     test(lambda: empire.collect_rubble_field(id=id))
     test(lambda: empire.is_logged_in())
     test(lambda: empire.logout())
