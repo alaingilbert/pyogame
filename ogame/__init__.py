@@ -139,7 +139,8 @@ class OGame(object):
             import ogame.test as test
         except ImportError:
             import test
-        empire = OGame(self.universe, self.username, self.password, self.user_agent, self.proxy)
+        empire = OGame(self.universe, self.username, self.password,
+                       token=self.token, user_agent=self.user_agent, proxy=self.proxy, language=self.language)
         test.pyogame(empire)
 
     def version(self):
