@@ -408,7 +408,16 @@ empire.fleet()                      returns list of class(object)
 for fleet in empire.fleet():
     if fleet.mission == mission.expedition:
         print(fleet.list)
-        print(fleet.id, fleet.mission, fleet.returns, fleet.arrival, fleet.origin, fleet.destination)
+        print(  
+                fleet.id, 
+                fleet.mission, 
+                fleet.diplomacy, 
+                fleet.player, 
+                fleet.returns, 
+                fleet.arrival, 
+                fleet.origin, 
+                fleet.destination
+            )
 ```
 
 ### get hostile fleet
@@ -419,7 +428,36 @@ empire.hostile_fleet()              returns list of class(object)
 ```python
 for fleet in empire.hostile_fleet():
     print(fleet.list)
-    print(fleet.event, fleet.player, fleet.arrival, fleet.origin, fleet.destination)
+    print(  
+            fleet.id, 
+            fleet.mission, 
+            fleet.diplomacy, 
+            fleet.player, 
+            fleet.returns, 
+            fleet.arrival, 
+            fleet.origin, 
+            fleet.destination
+        )
+```
+
+### get friendly fleet
+<pre>
+empire.hostile_fleet()              returns list of class(object)
+</pre>
+
+```python
+for fleet in empire.friendly_fleet():
+    print(fleet.list)
+    print(  
+            fleet.id, 
+            fleet.mission, 
+            fleet.diplomacy, 
+            fleet.player, 
+            fleet.returns, 
+            fleet.arrival, 
+            fleet.origin, 
+            fleet.destination
+        )
 ```
 
 ### get phalanx
@@ -463,6 +501,14 @@ empire.send_fleet(mission=mission.expedition,
 <pre>                 
                                         returns bool
 </pre>
+
+### return fleet
+<pre>
+empire.return_fleet(fleet_id):          returns None
+
+You can't return hostile Fleets :p use the friendly fleet function to avoid confusion
+</pre>
+
 
 ### send message
 <pre>

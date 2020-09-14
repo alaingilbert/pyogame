@@ -181,6 +181,12 @@ class status:
     offline = 'offline'
 
 
+class diplomacy:
+    hostile = 'hostile'
+    neutral = 'neutral'
+    friendly = 'friendly'
+
+
 class messages:
     spy_reports = 20
 

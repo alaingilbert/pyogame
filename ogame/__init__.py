@@ -85,7 +85,7 @@ class OGame(object):
             .format(self.server_number, self.language)
         self.landing_page = OGame.HTML(self.session.get(self.index_php + 'page=ingame').text)
         self.player = self.landing_page.find_all('class', 'overlaytextBeefy', 'value')[0]
-        self.player_id = self.landing_page.find_all('name', 'ogame-player-id', 'attribute', 'content')
+        self.player_id = self.landing_page.find_all('name', 'ogame-player-id', 'attribute', 'content')[0]
 
     class HTML:
         def __init__(self, response):
@@ -1058,7 +1058,7 @@ class OGame(object):
     def shop(self):
         raise Exception("function not implemented yet PLS contribute")
 
-    def fleet(self):
+    def friendly_fleet(self):
         response = self.session.get(
             url=self.index_php + 'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
             headers={'X-Requested-With': 'XMLHttpRequest'}
@@ -1080,6 +1080,8 @@ class OGame(object):
             class fleets_class:
                 id = fleet_id
                 mission = int(fleet_mission)
+                diplomacy = const.diplomacy.friendly
+                player = self.player_id
                 if fleet_returns == '1':
                     returns = True
                 else:
@@ -1087,7 +1089,7 @@ class OGame(object):
                 arrival = datetime.strptime(fleet_arrival, '%d.%m.%Y%H:%M:%S')
                 origin = const.convert_to_coordinates(fleet_origin)
                 destination = const.convert_to_coordinates(fleet_destination)
-                list = [id, mission, returns, arrival, origin, destination]
+                list = [id, mission, diplomacy, player, returns, arrival, origin, destination]
 
             fleets.append(fleets_class)
         return fleets
@@ -1111,15 +1113,23 @@ class OGame(object):
 
             if const.convert_to_coordinates(fleet_destination) in coordinates:
                 class fleets_class:
-                    event = event_id
+                    id = event_id
                     mission = int(fleet_mission)
+                    diplomacy = const.diplomacy.hostile
                     player = int(player_id)
+                    returns = False
                     arrival = datetime.fromtimestamp(int(fleet_arrival))
                     origin = const.convert_to_coordinates(fleet_origin)
                     destination = const.convert_to_coordinates(fleet_destination)
-                    list = [event, mission, player, arrival, origin, destination]
+                    list = [id, mission, diplomacy, player, returns, arrival, origin, destination]
 
                 fleets.append(fleets_class)
+        return fleets
+
+    def fleet(self):
+        fleets = []
+        fleets.extend(self.hostile_fleet())
+        fleets.extend(self.friendly_fleet())
         return fleets
 
     def phalanx(self, coordinates, id):
