@@ -193,7 +193,7 @@ class OGame(object):
 
     def moon_ids(self):
         moons = self.landing_page.find_all('class', 'moonlink', 'attribute', 'href')
-        return [moon_id.split('cp')[1] for moon_id in moons]
+        return [int(moon_id.split('cp')[1]) for moon_id in moons]
 
     def moon_names(self):
         names = []
@@ -856,11 +856,14 @@ class OGame(object):
         class crawler_class:
             if id not in OGame.moon_ids(self):
                 amount = ships_amount[16]
+                data = OGame.collect_status(status[16])
+                is_possible = data[0]
+                in_construction = data[1]
             else:
                 amount = 0
-            data = OGame.collect_status(status[16])
-            is_possible = data[0]
-            in_construction = data[1]
+                is_possible = False
+                in_construction = False
+
 
         class ships_class(object):
             light_fighter = light_fighter_class
