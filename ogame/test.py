@@ -130,12 +130,13 @@ class UnittestOgame(unittest.TestCase):
         Super_Dangereous_TO_test = 'You will get Banned'
 
     def test_send_message(self):
-        while True:
+        send_message = False
+        while not send_message:
             for position in self.empire.galaxy(coordinates=coordinates(randint(1, 6), randint(1, 499))):
-                if status.inactive in position.status and status.vacation not in position.status:
-                    send_message = self.empire.send_message(position.player_id, 'Hello')
-                    self.assertEqual(send_message, True)
+                if send_message:
                     break
+                send_message = self.empire.send_message(position.player_id, 'Hello')
+        self.assertEqual(send_message, True)
 
     def test_spyreports(self):
         for report in self.empire.spyreports():
