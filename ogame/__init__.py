@@ -550,11 +550,11 @@ class OGame(object):
         quantity = None
         priceType = None
         price_form = None
-        resp = self.session.get(
+        response = self.session.get(
             self.index_php
             + "page=ingame&component=marketplace&tab=overview&cp={}".format(id)
         )
-        token_matches = re.findall(r'var token = "(.*)"', resp.text)
+        token_matches = re.findall(r'var token = "(.*)"', response.text)
         if len(token_matches) == 0:
             return False
         token = token_matches[0]
