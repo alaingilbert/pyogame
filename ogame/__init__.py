@@ -550,7 +550,14 @@ class OGame(object):
         quantity = None
         priceType = None
         price_form = None
-        self.session.get(self.index_php + 'page=ingame&component=marketplace&tab=overview&cp={}'.format(id))
+        response = self.session.get(
+            self.index_php
+            + "page=ingame&component=marketplace&tab=overview&cp={}".format(id)
+        )
+        token_matches = re.findall(r'var token = "(.*)"', response.text)
+        if len(token_matches) == 0:
+            return False
+        token = token_matches[0]
         if const.ships.is_ship(offer):
             itemType = 1
             ItemId = const.ships.ship_id(offer)
@@ -573,7 +580,9 @@ class OGame(object):
                      'quantity': quantity,
                      'priceType': priceType,
                      'price': price_form,
-                     'priceRange': range}
+                     'priceRange': range,
+                     'token': token,
+                     }
         response = self.session.post(
             url=self.index_php + 'page=ingame&component=marketplace&tab=create_offer&action=submitOffer&asJson=1',
             data=form_data,
