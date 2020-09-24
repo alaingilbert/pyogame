@@ -1,5 +1,6 @@
 import re
 import requests
+import unittest
 from datetime import datetime
 
 try:
@@ -136,12 +137,12 @@ class OGame(object):
 
     def test(self):
         try:
-            import ogame.test as test
-        except ImportError:
             import test
-        empire = OGame(self.universe, self.username, self.password,
-                       token=self.token, user_agent=self.user_agent, proxy=self.proxy, language=self.language)
-        test.pyogame(empire)
+        except ImportError:
+            import ogame.test as test
+        test.UnittestOgame.empire = self
+        suite = unittest.TestLoader().loadTestsFromModule(test)
+        unittest.TextTestRunner(verbosity=2).run(suite)
 
     def version(self):
         from pip._internal import main as pip
@@ -1001,7 +1002,7 @@ class OGame(object):
                 if name not in moderatorTags and 2 < len(name) and name not in allys:
                     name = name.replace('...', '')
                     player_names.append(name)
-                    if name in self.player:
+                    if name not in self.player:
                         player_ids.append(int(html.find_all('id', 'player', 'attribute')
                                               [player_ids_count].replace('player', '')))
                         player_ids_count += 1
@@ -1062,7 +1063,7 @@ class OGame(object):
         return planets
 
     def ally(self):
-        return self.landing_page.find_all('name', 'ogame-alliance-name', 'attribute', 'content')
+        return self.landing_page.find_all('name', 'ogame-alliance-name', 'attribute', 'content')[0]
 
     def officers(self):
         raise Exception("function not implemented yet PLS contribute")
@@ -1329,5 +1330,8 @@ class OGame(object):
         return OGame.is_logged_in(self)
 
     def logout(self):
+        self.session.get(self.index_php + 'page=logout')
         self.session.put('https://lobby.ogame.gameforge.com/api/users/me/logout')
+        self.token = None
+        self.session = requests.Session()
         return not OGame.is_logged_in(self)
