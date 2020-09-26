@@ -600,14 +600,25 @@ class OGame(object):
         collect = ['collectItem', 'collectPrice']
         response = False
         for page, action, collect in zip(history_pages, action, collect):
+            # Getting first token
             response = self.session.get(
-                url=self.index_php + 'page=ingame&component=marketplace&tab={}&action={}&ajax=1&pagination%5Bpage%5D=1'
-                    .format(page, action, OGame.planet_ids(self)[0]),
+                url=self.index.php + f'page=ingame&component=marketplace&tab={page}'
+            )
+            token_matches = re.findall(r'var token = ".*?"', response.text)
+            if len(token_matches) == 0:
+                # We couldn't find the first token, failure
+                return False
+            first_token = token_matches[0]
+            response = self.session.get(
+                url=self.index_php + f'page=ingame&component=marketplace&tab={page}&action={action}&ajax=1&pagination%5Bpage%5D=1&token={first_token}',
                 headers={'X-Requested-With': 'XMLHttpRequest'}
             ).json()
+            items_html_content = response['content']['marketplace/marketplace_items_history']
+            # We extract a list of tuples (item_id, token)
+            # item_ids_and_tokens = re.findall(r'data-transactionid="(\d*)"\s+data-token="(.*?)"', items_html_content)
             items = response['content']['marketplace/marketplace_items_history'].split('data-transactionid=')
             del items[0]
-            for item in items:
+            for item_id, token in item_ids_and_tokens:
                 if 'buttons small enabled' in item:
                     to_collect_market_ids.append(int(item[1:10].split('"')[0]))
             for id in to_collect_market_ids:
