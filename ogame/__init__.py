@@ -602,7 +602,12 @@ class OGame(object):
         for page, action, collect in zip(history_pages, action, collect):
             # Getting first token
             response = self.session.get(
-                url=self.index.php + f'page=ingame&component=marketplace&tab={page}'
+                url=self.index.php,
+                params={
+                    "page": "ingame",
+                    "component": "marketplace",
+                    "tab": page
+                },
             )
             token_matches = re.findall(r'var token = ".*?"', response.text)
             first_token = token_matches[0] if token_matches else ""
