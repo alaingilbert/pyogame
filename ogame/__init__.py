@@ -605,26 +605,39 @@ class OGame(object):
                 url=self.index.php + f'page=ingame&component=marketplace&tab={page}'
             )
             token_matches = re.findall(r'var token = ".*?"', response.text)
-            if len(token_matches) == 0:
-                # We couldn't find the first token, failure
-                return False
-            first_token = token_matches[0]
+            first_token = token_matches[0] if token_matches else ""
             response = self.session.get(
-                url=self.index_php + f'page=ingame&component=marketplace&tab={page}&action={action}&ajax=1&pagination%5Bpage%5D=1&token={first_token}',
+                url=self.index_php,
+                params={
+                    "page": "ingame",
+                    "component": "marketplace",
+                    "tab": page,
+                    "action": action,
+                    "ajax": "1",
+                    "pagination[page]": "1",
+                    "sorting[date]": "desc",
+                    "token": first_token,
+                },
                 headers={'X-Requested-With': 'XMLHttpRequest'}
             ).json()
-            items_html_content = response['content']['marketplace/marketplace_items_history']
-            # We extract a list of tuples (item_id, token)
-            # item_ids_and_tokens = re.findall(r'data-transactionid="(\d*)"\s+data-token="(.*?)"', items_html_content)
-            items = response['content']['marketplace/marketplace_items_history'].split('data-transactionid=')
+            content = response["content"]["marketplace/marketplace_items_history"]
+            collect_token_matches = re.findall(r'data-token="(.*?)"', content)
+            collect_token = collect_token_matches[0] if collect_token_matches else ""
+            items = content.split('data-transactionid=')
             del items[0]
-            for item_id, token in item_ids_and_tokens:
+            for item in items:
                 if 'buttons small enabled' in item:
                     to_collect_market_ids.append(int(item[1:10].split('"')[0]))
             for id in to_collect_market_ids:
-                form_data = {'marketTransactionId': id}
+                form_data = {'marketTransactionId': id, 'token': collect_token}
                 response = self.session.post(
-                    url=self.index_php + 'page=componentOnly&component=marketplace&action={}&asJson=1'.format(collect),
+                    url=self.index_php,
+                    params={
+                        "page": "componentOnly",
+                        "component": "marketplace",
+                        "action": collect,
+                        "asJson": "1"
+                    },
                     data=form_data,
                     headers={'X-Requested-With': 'XMLHttpRequest'}
                 ).json()
