@@ -460,11 +460,11 @@ class OGame(object):
 
         return moon_facilities_buildings
 
-    def marketplace(self, id, page):
+    def marketplace(self, page):
         biddings = []
         response = self.session.get(
             url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=fetchBuyingItems&ajax=1&'
-                                 'pagination%5Bpage%5D={}&cp={}'.format(page, id),
+                                 'pagination%5Bpage%5D={}&cp={}'.format(page, self.planet_ids()[0]),
             headers={'X-Requested-With': 'XMLHttpRequest'}).json()
 
         def item_type(item):
@@ -575,18 +575,16 @@ class OGame(object):
                 priceType = i + 1
                 price_form = res
                 break
-        form_data = {'marketItemType': 4,
-                     'itemType': itemType,
-                     'itemId': ItemId,
-                     'quantity': quantity,
-                     'priceType': priceType,
-                     'price': price_form,
-                     'priceRange': range,
-                     'token': token,
-                     }
         response = self.session.post(
             url=self.index_php + 'page=ingame&component=marketplace&tab=create_offer&action=submitOffer&asJson=1',
-            data=form_data,
+            data={'marketItemType': 4,
+                  'itemType': itemType,
+                  'itemId': ItemId,
+                  'quantity': quantity,
+                  'priceType': priceType,
+                  'price': price_form,
+                  'priceRange': range,
+                  'token': token},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         if response['status'] == 'success':
@@ -595,36 +593,52 @@ class OGame(object):
             return False
 
     def collect_marketplace(self):
-        to_collect_market_ids = []
-        history_pages = ['history_buying', 'history_selling']
-        action = ['fetchHistoryBuyingItems', 'fetchHistorySellingItems']
-        collect = ['collectItem', 'collectPrice']
-        response = False
-        for page, action, collect in zip(history_pages, action, collect):
+
+        def collectItems(tab, action, collect):
             response = self.session.get(
-                url=self.index_php + 'page=ingame&component=marketplace&tab={}&action={}&ajax=1&pagination%5Bpage%5D=1'
-                    .format(page, action, OGame.planet_ids(self)[0]),
+                url=self.index_php,
+                params={'page': 'ingame',
+                        'component': 'marketplace',
+                        'tab': 'history_{}'.format(tab)}
+            ).text
+            html = self.HTML(response)
+            javascript = html.find_all('type', 'javascript', 'value')
+            token = re.search('collectItem&token=(.*)&asJson=1', javascript[11]).group(1)
+            response = self.session.get(
+                url=self.index_php,
+                params={'page': 'ingame',
+                        'component': 'marketplace',
+                        'tab': 'history_{}'.format(tab),
+                        'action': 'fetchHistory{}'.format(action),
+                        'ajax': 1,
+                        'token': token},
                 headers={'X-Requested-With': 'XMLHttpRequest'}
             ).json()
-            items = response['content']['marketplace/marketplace_items_history'].split('data-transactionid=')
-            del items[0]
-            for item in items:
-                if 'buttons small enabled' in item:
-                    to_collect_market_ids.append(int(item[1:10].split('"')[0]))
-            for id in to_collect_market_ids:
-                form_data = {'marketTransactionId': id}
+            html = self.HTML(response['content']['marketplace/marketplace_items_history'])
+            transactionIds = set(html.find_all('data-transactionid', '', 'attribute'))
+            token = set(html.find_all('data-token', '', 'attribute'))
+            for id in transactionIds:
                 response = self.session.post(
-                    url=self.index_php + 'page=componentOnly&component=marketplace&action={}&asJson=1'.format(collect),
-                    data=form_data,
+                    url=self.index_php,
+                    params={'page': 'componentOnly',
+                            'component': 'marketplace',
+                            'action': 'collect{}'.format(collect),
+                            'token': token,
+                            'asJson': 1},
+                    data={'marketTransactionId': id,
+                          'token': token},
                     headers={'X-Requested-With': 'XMLHttpRequest'}
-                ).json()
+                )
 
-        if not to_collect_market_ids:
-            return False
-        elif response['status'] == 'success':
-            return True
-        else:
-            return False
+        def buying():
+            collectItems(tab='buying', action='BuyingItems', collect='Item')
+
+        buying()
+
+        def selling():
+            collectItems(tab='selling', action='SellingItems', collect='Price')
+
+        selling()
 
     def traider(self, id):
         raise Exception("function not implemented yet PLS contribute")

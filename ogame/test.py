@@ -4,7 +4,6 @@ from random import randint
 from constants import *
 
 
-
 class UnittestOgame(unittest.TestCase):
     empire = None
     ids = []
