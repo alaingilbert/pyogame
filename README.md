@@ -5,8 +5,8 @@ OGame is a browser-based, money-management and space-war themed massively multip
 two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
-it supports ogame_version: `7.3.0`
-version `15`
+it supports ogame_version: `7.5.1`
+version `16`
 
 ## install
 <pre>
@@ -49,8 +49,15 @@ empire = OGame(UNI, USER, PASSWORD,
 
 ### test
 <pre>
-This is a command that will try to run all functions with parameters. I suggest creating your own testing model.
-empire.test()
+This is a command that will try to run all functions with parameters. 
+empire.test()                       returns bool
+
+If this lib is running for long time it is recommended to test it during run time. 
+If it fails you can set up a telegram message. A test creates alot of traffic
+
+if not empire.test():
+    raise RuntimeWarning("Pyogame test failed, there are functions that dont work anymore. Be Careful")
+    # warn the User
 </pre>
 
 ### get attacked
@@ -204,7 +211,6 @@ fac = empire.facilities(id)
 fac.robotics_factory.level              returns int
 fac.robotics_factory.is_possible        returns bool (possible to build)
 fac.robotics_factory.in_construction    returns bool
-fac.robotics_factory.cost               returns resources
 
 fac.shipyard
 fac.research_laboratory
@@ -223,7 +229,6 @@ fac = empire.moon_facilities(id)
 fac.robotics_factory.level              returns int
 fac.robotics_factory.is_possible        returns bool (possible to build)
 fac.robotics_factory.in_construction    returns bool
-fac.robotics_factory.cost               returns resources
 
 fac.shipyard
 fac.moon_base
@@ -238,7 +243,7 @@ resourses will be returned in the resourse's format
 ships will be returned in the ship's format
 </pre>
 ```python
-for bid in empire.marketplace(id, page_nr):
+for bid in empire.marketplace():
     if bid.is_ships:
         print(bid.id, bid.offer, bid.price)
         print(ships.ship_name(bid.offer), ships.ship_amount(bid.offer))
@@ -386,7 +391,7 @@ for planet in empire.galaxy(coordinates(randint(1,6), randint(1,499))):
 
 ### get ally
 <pre>
-empire.ally()                       returns string
+empire.ally()                       returns list
 </pre>
 
 ### get officers
@@ -408,7 +413,16 @@ empire.fleet()                      returns list of class(object)
 for fleet in empire.fleet():
     if fleet.mission == mission.expedition:
         print(fleet.list)
-        print(fleet.id, fleet.mission, fleet.returns, fleet.arrival, fleet.origin, fleet.destination)
+        print(  
+                fleet.id, 
+                fleet.mission, 
+                fleet.diplomacy, 
+                fleet.player, 
+                fleet.returns, 
+                fleet.arrival, 
+                fleet.origin, 
+                fleet.destination
+            )
 ```
 
 ### get hostile fleet
@@ -419,11 +433,41 @@ empire.hostile_fleet()              returns list of class(object)
 ```python
 for fleet in empire.hostile_fleet():
     print(fleet.list)
-    print(fleet.event, fleet.player, fleet.arrival, fleet.origin, fleet.destination)
+    print(  
+            fleet.id, 
+            fleet.mission, 
+            fleet.diplomacy, 
+            fleet.player, 
+            fleet.returns, 
+            fleet.arrival, 
+            fleet.origin, 
+            fleet.destination
+        )
+```
+
+### get friendly fleet
+<pre>
+empire.hostile_fleet()              returns list of class(object)
+</pre>
+
+```python
+for fleet in empire.friendly_fleet():
+    print(fleet.list)
+    print(  
+            fleet.id, 
+            fleet.mission, 
+            fleet.diplomacy, 
+            fleet.player, 
+            fleet.returns, 
+            fleet.arrival, 
+            fleet.origin, 
+            fleet.destination
+        )
 ```
 
 ### get phalanx
 <pre>
+Dangereous!!! it gets you banned when not valid
 empire.phalanx(coordinates, id)     returns list of class(object)
 </pre>
 
@@ -463,6 +507,14 @@ empire.send_fleet(mission=mission.expedition,
 <pre>                 
                                         returns bool
 </pre>
+
+### return fleet
+<pre>
+empire.return_fleet(fleet_id):          returns None
+
+You can't return hostile Fleets :p use the friendly fleet function to avoid confusion
+</pre>
+
 
 ### send message
 <pre>
