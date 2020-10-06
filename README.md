@@ -49,8 +49,15 @@ empire = OGame(UNI, USER, PASSWORD,
 
 ### test
 <pre>
-This is a command that will try to run all functions with parameters. I suggest creating your own testing model.
-empire.test()
+This is a command that will try to run all functions with parameters. 
+empire.test()                       returns bool
+
+If this lib is running for long time it is recommended to test it during run time. 
+If it fails you can set up a telegram message. A test creates alot of traffic
+
+if not empire.test():
+    raise RuntimeWarning("Pyogame test failed, there are functions that dont work anymore. Be Careful")
+    # warn the User
 </pre>
 
 ### get attacked
@@ -204,7 +211,6 @@ fac = empire.facilities(id)
 fac.robotics_factory.level              returns int
 fac.robotics_factory.is_possible        returns bool (possible to build)
 fac.robotics_factory.in_construction    returns bool
-fac.robotics_factory.cost               returns resources
 
 fac.shipyard
 fac.research_laboratory
@@ -223,7 +229,6 @@ fac = empire.moon_facilities(id)
 fac.robotics_factory.level              returns int
 fac.robotics_factory.is_possible        returns bool (possible to build)
 fac.robotics_factory.in_construction    returns bool
-fac.robotics_factory.cost               returns resources
 
 fac.shipyard
 fac.moon_base
@@ -386,7 +391,7 @@ for planet in empire.galaxy(coordinates(randint(1,6), randint(1,499))):
 
 ### get ally
 <pre>
-empire.ally()                       returns string
+empire.ally()                       returns list
 </pre>
 
 ### get officers
@@ -462,6 +467,7 @@ for fleet in empire.friendly_fleet():
 
 ### get phalanx
 <pre>
+Dangereous!!! it gets you banned when not valid
 empire.phalanx(coordinates, id)     returns list of class(object)
 </pre>
 
