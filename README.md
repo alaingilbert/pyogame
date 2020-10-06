@@ -5,7 +5,7 @@ OGame is a browser-based, money-management and space-war themed massively multip
 two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
-it supports ogame_version: `7.5.0`
+it supports ogame_version: `7.5.1`
 version `16`
 
 ## install
