@@ -238,7 +238,7 @@ resourses will be returned in the resourse's format
 ships will be returned in the ship's format
 </pre>
 ```python
-for bid in empire.marketplace(id, page_nr):
+for bid in empire.marketplace():
     if bid.is_ships:
         print(bid.id, bid.offer, bid.price)
         print(ships.ship_name(bid.offer), ships.ship_amount(bid.offer))

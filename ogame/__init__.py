@@ -460,74 +460,75 @@ class OGame(object):
 
         return moon_facilities_buildings
 
-    def marketplace(self, page):
-        biddings = []
+    def marketplace(self):
         response = self.session.get(
-            url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=fetchBuyingItems&ajax=1&'
-                                 'pagination%5Bpage%5D={}&cp={}'.format(page, self.planet_ids()[0]),
-            headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+            url=self.index_php,
+            params={'page': 'ingame',
+                    'component': 'marketplace'},
+        ).text
+        token = re.search('var token = "(.*)"', response).group(1)
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame',
+                    'component': 'marketplace',
+                    'tab': 'buying',
+                    'action': 'fetchBuyingItems',
+                    'token': token,
+                    'ajax': 1},
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        ).json()
+        html = OGame.HTML(response['content']['marketplace/marketplace_items_buying'])
 
-        def item_type(item):
-            type = None
-            if 'sprite ship small ' in item:
-                type = 'ship', int(item[29:32])
-            elif 'metal' in item:
-                type = 'resources', 'metal'
-            elif 'crystal' in item:
-                type = 'resources', 'crystal'
-            elif 'deuterium' in item:
-                type = 'resources', 'deuterium'
-            return type
-
-        items = response['content']['marketplace/marketplace_items_buying'].split('<div class="row item og-hline">')
-        del items[0]
-        for item in items:
-            id_int = item.find('<a data-itemid=')
-            ships_resources_marker_string = 'class="sprite '
-            class_sprite = []
-            for re_obj in re.finditer(ships_resources_marker_string, item):
-                class_sprite.append(item[re_obj.start(): re_obj.end() + 40])
-            to_buy_item_type = item_type(class_sprite[0])
-            to_pay_item_type = item_type(class_sprite[1])
-
-            quantity_marker_string = 'text quantity'
-            text_quantity = []
-            for re_obj in re.finditer(quantity_marker_string, item):
-                text_quantity.append(item[re_obj.start(): re_obj.end() + 40])
-            to_buy_item_amount = text_quantity[0].split('>')[1].split('<')[0].replace('.', '')
-            to_pay_item_amount = text_quantity[1].split('>')[1].split('<')[0].replace('.', '')
-
-            class bid:
-                id = item[id_int + 16: id_int + 25].split('"')[0]
-                offer = None
-                price = None
-                is_ships = False
-                is_resources = False
-                is_possible = False
-                if to_buy_item_type[0] == 'ship':
-                    is_ships = True
-                    offer = to_buy_item_type[1], to_buy_item_amount, 'shipyard'
+        def convert(sprites, quantity):
+            bids = []
+            for sprite, amount in zip(sprites, quantity):
+                amount = amount.replace('.', '')
+                if 'metal' in sprite:
+                    bids.append(const.resources(metal=amount))
+                elif 'crystal' in sprite:
+                    bids.append(const.resources(crystal=amount))
+                elif 'deuterium' in sprite:
+                    bids.append(const.resources(deuterium=amount))
+                elif 'ship' in sprite:
+                    shipId = int(sprite.replace('spriteshipsmallship', ''))
+                    bids.append([shipId, amount, 'shipyard'])
                 else:
+                    continue
+            return bids
+
+        ids = [int(i) for i in html.find_all('data-itemid', '', 'attribute')]
+        sums = len(ids)
+        quantity = html.find_all('class', 'textquantity', 'value')
+        sprites = html.find_all('class', 'sprite', 'attribute')
+        offers = convert(sprites=[sprites[i] for i in range(0, sums * 3, 3)],
+                         quantity=[quantity[i] for i in range(0, sums * 2, 2)])
+        prices = convert(sprites=[sprites[i] for i in range(1, sums * 3, 3)],
+                         quantity=[quantity[i] for i in range(1, sums * 2, 2)])
+        possibles = []
+        for button in html.find_all('class', 'spritebutton', 'attribute'):
+            if 'disabled' in button:
+                possibles.append(False)
+            else:
+                possibles.append(True)
+
+        bids = []
+        for i in range(sums):
+
+            class Bids:
+                id = ids[i]
+                offer = offers[i]
+                price = prices[i]
+                is_possible = possibles[i]
+                if const.ships.is_ship(offer):
+                    is_ships = True
+                    is_resources = False
+                else:
+                    is_ships = False
                     is_resources = True
-                    if 'metal' in to_buy_item_type[1]:
-                        offer = const.resources(metal=to_buy_item_amount)
-                    elif 'crystal' in to_buy_item_type[1]:
-                        offer = const.resources(crystal=to_buy_item_amount)
-                    elif 'deuterium' in to_buy_item_type[1]:
-                        offer = const.resources(deuterium=to_buy_item_amount)
+                list = [id, offer, price, is_possible]
 
-                if 'metal' in to_pay_item_type[1]:
-                    price = const.resources(metal=to_pay_item_amount)
-                elif 'crystal' in to_pay_item_type[1]:
-                    price = const.resources(crystal=to_pay_item_amount)
-                elif 'deuterium' in to_pay_item_type[1]:
-                    price = const.resources(deuterium=to_pay_item_amount)
-
-                if 'enabled' in class_sprite[2]:
-                    is_possible = True
-
-            biddings.append(bid)
-        return biddings
+            bids.append(Bids)
+        return bids
 
     def buy_marketplace(self, market_id, id):
         self.session.get(
@@ -547,44 +548,39 @@ class OGame(object):
             return False
 
     def submit_marketplace(self, offer, price, range, id):
-        ItemId = None
-        quantity = None
-        priceType = None
-        price_form = None
-        response = self.session.get(
-            self.index_php
-            + "page=ingame&component=marketplace&tab=overview&cp={}".format(id)
-        )
-        token_matches = re.findall(r'var token = "(.*)"', response.text)
-        if len(token_matches) == 0:
-            return False
-        token = token_matches[0]
         if const.ships.is_ship(offer):
             itemType = 1
             ItemId = const.ships.ship_id(offer)
             quantity = const.ships.ship_amount(offer)
         else:
             itemType = 2
-            for i, res in enumerate(offer):
-                if res != 0:
-                    ItemId = i + 1
-                    quantity = res
-                    break
-        for i, res in enumerate(price):
-            if res != 0:
-                priceType = i + 1
-                price_form = res
-                break
+            ItemId = offer.index(max(offer)) + 1  # ItemId 1 = Metall ...
+            quantity = max(offer)
+        priceType = price.index(max(price)) + 1
+        price_form = max(price)
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame',
+                    'component': 'marketplace',
+                    'tab': 'overview',
+                    'cp': id}
+        ).text
+        token = re.search('var token = "(.*)"', response).group(1)
         response = self.session.post(
-            url=self.index_php + 'page=ingame&component=marketplace&tab=create_offer&action=submitOffer&asJson=1',
+            url=self.index_php,
+            params={'page': 'ingame',
+                    'component': 'marketplace',
+                    'tab': 'create_offer',
+                    'action': 'submitOffer',
+                    'asJson': 1},
             data={'marketItemType': 4,
                   'itemType': itemType,
                   'itemId': ItemId,
                   'quantity': quantity,
                   'priceType': priceType,
                   'price': price_form,
-                  'priceRange': range,
-                  'token': token},
+                  'token': token,
+                  'priceRange': range},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         if response['status'] == 'success':
@@ -594,22 +590,22 @@ class OGame(object):
 
     def collect_marketplace(self):
 
-        def collectItems(tab, action, collect):
+        def collectItems(tab, action):
             response = self.session.get(
                 url=self.index_php,
                 params={'page': 'ingame',
                         'component': 'marketplace',
-                        'tab': 'history_{}'.format(tab)}
+                        'tab': tab}
             ).text
             html = self.HTML(response)
             javascript = html.find_all('type', 'javascript', 'value')
-            token = re.search('collectItem&token=(.*)&asJson=1', javascript[11]).group(1)
+            token = re.search('vartoken="(.*)"', javascript[11]).group(1)
             response = self.session.get(
                 url=self.index_php,
                 params={'page': 'ingame',
                         'component': 'marketplace',
-                        'tab': 'history_{}'.format(tab),
-                        'action': 'fetchHistory{}'.format(action),
+                        'tab': tab,
+                        'action': action,
                         'ajax': 1,
                         'token': token},
                 headers={'X-Requested-With': 'XMLHttpRequest'}
@@ -617,28 +613,30 @@ class OGame(object):
             html = self.HTML(response['content']['marketplace/marketplace_items_history'])
             transactionIds = set(html.find_all('data-transactionid', '', 'attribute'))
             token = set(html.find_all('data-token', '', 'attribute'))
+            result = []
             for id in transactionIds:
                 response = self.session.post(
                     url=self.index_php,
                     params={'page': 'componentOnly',
                             'component': 'marketplace',
-                            'action': 'collect{}'.format(collect),
+                            'action': 'collectItem',
                             'token': token,
                             'asJson': 1},
                     data={'marketTransactionId': id,
                           'token': token},
                     headers={'X-Requested-With': 'XMLHttpRequest'}
-                )
+                ).json()
+                token = response['newToken']
+                result.append(response['status'])
+            return result
 
-        def buying():
-            collectItems(tab='buying', action='BuyingItems', collect='Item')
-
-        buying()
-
-        def selling():
-            collectItems(tab='selling', action='SellingItems', collect='Price')
-
-        selling()
+        result = []
+        result.extend([collectItems(tab='history_buying', action='fetchHistoryBuyingItems')])
+        result.extend(collectItems(tab='history_selling', action='fetchHistorySellingItems'))
+        if 'success' in result:
+            return True
+        else:
+            return False
 
     def traider(self, id):
         raise Exception("function not implemented yet PLS contribute")
@@ -646,8 +644,8 @@ class OGame(object):
     def research(self):
         response = self.session.get(
             url=self.index_php +
-            'page=ingame&component=research&cp={}'.format(
-                OGame.planet_ids(self)[0])
+                'page=ingame&component=research&cp={}'.format(
+                    OGame.planet_ids(self)[0])
         ).text
         html = OGame.HTML(response)
         research_level = [int(level)
@@ -888,7 +886,6 @@ class OGame(object):
                 is_possible = False
                 in_construction = False
 
-
         class ships_class(object):
             light_fighter = light_fighter_class
             heavy_fighter = heavy_fighter_class
@@ -1077,7 +1074,7 @@ class OGame(object):
         return planets
 
     def ally(self):
-        return self.landing_page.find_all('name', 'ogame-alliance-name', 'attribute', 'content')[0]
+        return self.landing_page.find_all('name', 'ogame-alliance-name', 'attribute', 'content')
 
     def officers(self):
         raise Exception("function not implemented yet PLS contribute")

@@ -71,7 +71,7 @@ class UnittestOgame(unittest.TestCase):
             self.assertGreater(fac.robotics_factory.level, -1)
 
     def test_marketplace(self):
-        for bid in self.empire.marketplace(self.ids[0], 1):
+        for bid in self.empire.marketplace():
             if bid.is_ships:
                 self.assertIsInstance(bid.id, int)
             elif bid.is_resources:
@@ -109,21 +109,24 @@ class UnittestOgame(unittest.TestCase):
             self.assertIsInstance(position.moon, bool)
 
     def test_ally(self):
-        self.assertIsInstance(self.empire.ally(), str)
+        self.assertIsInstance(self.empire.ally(), list)
 
     def test_fleet(self):
         for fleet in self.empire.fleet():
             self.assertIsInstance(fleet.id, int)
 
     def test_build(self):
-        id = self.ids[0]
-        defences = self.empire.defences(id)
-        rocket_before = defences.rocket_launcher.amount
-        self.empire.build(buildings.rocket_launcher(1), id)
-        time.sleep(1)
-        defences = self.empire.defences(id)
-        rocket_after = defences.rocket_launcher.amount
-        self.assertGreater(rocket_after, rocket_before)
+        for id in self.ids:
+            defences = self.empire.defences(id)
+            rocket_before = defences.rocket_launcher.amount
+            self.empire.build(buildings.rocket_launcher(1), id)
+            time.sleep(1)
+            defences = self.empire.defences(id)
+            rocket_after = defences.rocket_launcher.amount
+            if rocket_before < rocket_after:
+                self.assertTrue(rocket_before < rocket_after)
+                return
+        self.assertTrue(False)
 
     def test_phalanx(self):
         Super_Dangereous_TO_test = 'You will get Banned'
