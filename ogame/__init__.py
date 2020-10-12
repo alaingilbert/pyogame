@@ -471,9 +471,7 @@ class OGame(object):
                         'component': 'marketplace',
                         'tab': tab}
             ).text
-            html = self.HTML(response)
-            javascript = html.find_all('type', 'javascript', 'value')
-            token = re.search('vartoken="(.*)"', javascript[11]).group(1)
+            token = re.search('var token = "(.*)"', response).group(1)
             response = self.session.get(
                 url=self.index_php,
                 params={'page': 'ingame',
