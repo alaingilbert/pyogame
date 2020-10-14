@@ -20,7 +20,7 @@ class UnittestOgame(unittest.TestCase):
         self.assertIsInstance(self.empire.neutral(), bool)
 
     def test_Constants(self):
-        speed = self.empire.speed()
+        speed = self.empire.ogame().Speed
         self.assertGreater(speed.universe, 0)
         self.assertGreater(speed.fleet, 0)
 
@@ -40,7 +40,7 @@ class UnittestOgame(unittest.TestCase):
         for id in self.ids:
             celestial = self.empire.celestial(id)
             self.assertGreater(celestial.diameter, 0)
-            self.assertGreater(celestial.fields.free, -1)
+            self.assertGreater(celestial.free, -1)
             self.assertIsInstance(celestial.temperature, list)
 
     def test_celestial_coordinates(self):

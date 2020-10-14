@@ -1,6 +1,7 @@
 import re
 import requests
 import unittest
+from bs4 import BeautifulSoup
 from datetime import datetime
 
 try:
@@ -11,6 +12,7 @@ except ImportError:
 
 class OGame(object):
     def __init__(self, universe, username, password, token=None, user_agent=None, proxy='', language=None):
+        self.forOgameVersion = [7, 5, 1]
         self.universe = universe
         self.username = username
         self.password = password
@@ -20,7 +22,6 @@ class OGame(object):
         self.session = requests.Session()
         self.session.proxies.update({'https': self.proxy})
         self.token = token
-        self.chat_token = None
         if self.user_agent is None:
             self.user_agent = {
                 'User-Agent':
@@ -28,28 +29,13 @@ class OGame(object):
                     'Chrome/83.0.4103.97 Mobile Safari/537.36'}
         self.session.headers.update(self.user_agent)
 
-        def login():
-            self.session.get('https://lobby.ogame.gameforge.com/')
-            login_data = {'identity': self.username,
-                          'password': self.password,
-                          'locale': 'en_EN',
-                          'gfLang': 'en',
-                          'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
-                          'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
-                          'autoGameAccountCreation': False}
-            response = self.session.post('https://gameforge.com/api/v1/auth/thin/sessions', json=login_data)
-            if response.status_code is not 201:
-                raise Exception('Bad Login')
-            self.token = response.json()['token']
-            self.session.headers.update({'authorization': 'Bearer {}'.format(self.token)})
-
         if token is None:
-            login()
+            self.login()
         else:
             self.session.headers.update({'authorization': 'Bearer {}'.format(token)})
             if 'error' in self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json():
                 del self.session.headers['authorization']
-                login()
+                self.login()
 
         servers = self.session.get('https://lobby.ogame.gameforge.com/api/servers').json()
         for server in servers:
@@ -70,70 +56,57 @@ class OGame(object):
                     self.server_id = account['id']
                     self.language = account['server']['language']
                     break
+            self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?'.format(self.server_number,
+                                                                                         self.language)
         except AttributeError:
             raise Exception("Universe not found")
 
         login_link = self.session.get(
-            'https://lobby.ogame.gameforge.com/api/users/me/loginLink?'
-            'id={}'
-            '&server[language]={}'
-            '&server[number]={}'
-            '&clickedButton=account_list'
-                .format(self.server_id, self.language, self.server_number)
+            url='https://lobby.ogame.gameforge.com/api/users/me/loginLink?',
+            params={'id': self.server_id,
+                    'server[language]': self.language,
+                    'server[number]': self.server_number,
+                    'clickedButton': 'account_list'}
         ).json()
         self.landing_page = self.session.get(login_link['url']).text
-        self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
-            .format(self.server_number, self.language)
-        self.landing_page = OGame.HTML(self.session.get(self.index_php + 'page=ingame').text)
-        self.player = self.landing_page.find_all('class', 'overlaytextBeefy', 'value')[0]
-        self.player_id = self.landing_page.find_all('name', 'ogame-player-id', 'attribute', 'content')[0]
+        self.landing_page_text = self.session.get(self.index_php + 'page=ingame').text
+        self.landing_page = self.BS4(self.landing_page_text)
 
-    class HTML:
-        def __init__(self, response):
-            self.parsed = {}
-            for index, html in enumerate(response.split('<')):
-                element = html.replace('/', '').replace('\n', '')
-                tag = element.split('>')[0]
-                attribute = tag.split(' ')
-                if ' ' in tag:
-                    tag = tag.split(' ')[0]
-                del attribute[0]
-                attribute = ' '.join(attribute).replace('=', '').replace(' ', '').split('"')
-                attributes = {}
-                for i in range(0, len(attribute), 2):
-                    try:
-                        attributes.update({attribute[i]: attribute[i + 1]})
-                    except IndexError:
-                        break
-                if len(element.split('>')) > 1:
-                    value = element.split('>')[1]
-                else:
-                    value = None
-                self.parsed.update({index: {'tag': tag, 'attribute': attributes, 'value': value}})
+        self.player = self.landing_page.find('meta', {'name': 'ogame-planet-name'})['content']
+        self.player_id = int(self.landing_page.find('meta', {'name': 'ogame-planet-id'})['content'])
 
-        def find_all(self, attribute_tag, value, result, same_element_attribute=None, exact=False):
-            attributes = []
+    def BS4(self, response):
+        parsed = BeautifulSoup(response, features="html5lib")
 
-            def append_attributes():
-                if result == 'attribute' and same_element_attribute is None:
-                    attributes.append(line[result][attribute_tag])
-                elif result == 'attribute':
-                    attributes.append(line[result][same_element_attribute])
-                else:
-                    val = line[result].replace(' ', '')
-                    if val is not '':
-                        attributes.append(val)
+        def find_partial(**kwargs):
+            for key, value in kwargs.items():
+                kwargs[key] = re.compile(value)
+            return parsed.find(**kwargs)
 
-            for line in self.parsed.values():
-                try:
-                    if attribute_tag in line['attribute']:
-                        if value in line['attribute'][attribute_tag] and exact is False:
-                            append_attributes()
-                        elif value == line['attribute'][attribute_tag] and exact is True:
-                            append_attributes()
-                except KeyError:
-                    continue
-            return attributes
+        def find_all_partial(**kwargs):
+            for key, value in kwargs.items():
+                kwargs[key] = re.compile(value)
+            return parsed.find_all(**kwargs)
+
+        parsed.find_partial = find_partial
+        parsed.find_all_partial = find_all_partial
+        return parsed
+
+    def login(self):
+        self.session.get('https://lobby.ogame.gameforge.com/')
+        login_data = {'identity': self.username,
+                      'password': self.password,
+                      'locale': 'en_EN',
+                      'gfLang': 'en',
+                      'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
+                      'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
+                      'autoGameAccountCreation': False}
+        response = self.session.post('https://gameforge.com/api/v1/auth/thin/sessions', json=login_data)
+        if response.status_code is not 201:
+            raise Exception('Bad Login')
+        else:
+            self.token = response.json()['token']
+            self.session.headers.update({'authorization': 'Bearer {}'.format(self.token)})
 
     def test(self):
         try:
@@ -144,9 +117,37 @@ class OGame(object):
         suite = unittest.TestLoader().loadTestsFromModule(test)
         return unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful()
 
-    def version(self):
-        from pip._internal import main as pip
-        print(pip(['show', 'ogame']))
+    def ogame(self):
+
+        class Ogame:
+            version = self.landing_page.find('meta', {'name': 'ogame-version'})
+            version = list(re.split(r"\.|-", version['content']))
+            for i in range(0, 2):
+                version[i] = int(version[i])
+
+            class Speed:
+                universe = self.landing_page.find('meta', {'name': 'ogame-universe-speed'})
+                universe = int(universe['content'])
+                fleet = self.landing_page.find('meta', {'name': 'ogame-universe-speed-fleet'})
+                fleet = int(fleet['content'])
+
+            class Donut:
+                if 1 == int(self.landing_page.find('meta', {'name': 'ogame-donut-galaxy'})['content']):
+                    galaxy = True
+                else:
+                    galaxy = False
+                if 1 == int(self.landing_page.find('meta', {'name': 'ogame-donut-system'})['content']):
+                    system = True
+                else:
+                    system = False
+
+        return Ogame
+
+    def upToDate(self):
+        if all(version in self.forOgameVersion for version in self.ogame().version):
+            return True
+        else:
+            return False
 
     def attacked(self):
         response = self.session.get(
@@ -168,24 +169,18 @@ class OGame(object):
         else:
             return False
 
-    def speed(self):
-        class speed:
-            universe = int(self.landing_page.find_all('content', '', 'attribute')[6])
-            fleet = int(self.landing_page.find_all('content', '', 'attribute')[7])
-
-        return speed
-
     def characterclass(self):
-        character = self.landing_page.find_all('class', 'spritecharacterclassmedium', 'attribute')[0]
-        character = character.replace('spritecharacterclassmedium', '')
-        return character
+        character = self.landing_page.find_partial(class_='sprite characterclass medium')
+        return character['class'][3]
 
     def planet_ids(self):
-        planets = self.landing_page.find_all('id', 'planet-', 'attribute')
-        return [int(planet.replace('planet-', '')) for planet in planets]
+        ids = []
+        for celestial in self.landing_page.find_all(class_='smallplanet'):
+            ids.append(int(celestial['id'].replace('planet-', '')))
+        return ids
 
     def planet_names(self):
-        return self.landing_page.find_all('class', 'planet-name', 'value')
+        return [planet.text for planet in self.landing_page.find_all(class_='planet-name')]
 
     def id_by_planet_name(self, name):
         for planet_name, id in zip(OGame.planet_names(self), OGame.planet_ids(self)):
@@ -193,63 +188,74 @@ class OGame(object):
                 return id
 
     def moon_ids(self):
-        moons = self.landing_page.find_all('class', 'moonlink', 'attribute', 'href')
-        return [int(moon_id.split('cp')[1]) for moon_id in moons]
+        moons = []
+        for moon in self.landing_page.find_all(class_='moonlink'):
+            moon = moon['href']
+            moon = re.search('cp=(.*)', moon).group(1)
+            moons.append(int(moon))
+        return moons
 
     def moon_names(self):
         names = []
-        for name in self.landing_page.find_all('class', 'moonlink', 'attribute', 'title'):
-            names.append(name.split(';')[2].split('[')[0])
+        for name in self.landing_page.find_all(class_='moonlink'):
+            name = name['title']
+            names.append(re.search('<b>(.*) \[', name).group(1))
         return names
 
     def celestial(self, id):
-        response = self.session.get(self.index_php + 'page=ingame&component=overview&cp={}'.format(id)).text
-        textContent1 = response.split('textContent[1] = "')[1]
+        response = self.session.get(
+            url=self.index_php + 'page=ingame&component=overview',
+            params={'cp': id}
+        ).text
+        bs4 = self.BS4(response)
+        javascript = bs4.find_all('script', {'type': 'text/javascript'})[14].text
+        textContent1 = re.search('textContent\[1] = "(.*)km \(<span>(.*)<(.*)<span>(.*)<', javascript)
+        textContent3 = re.search('textContent\[3] = "(.*) \\\\u00b0C bis (.*) \\\\u00b0C";', javascript)
 
-        class celestial:
-            diameter = int(textContent1.split(' ')[0].replace('.', '').replace('km', ''))
-
-            class fields:
-                used = int(textContent1.split('<span>')[1].split('<')[0])
-                total = int(textContent1.split('<span>')[2].split('<')[0])
-                free = total - used
-
-            temperature = response.split('textContent[3] = "')[1].split('"')[0].replace('\\u00b0C', '').split(' ')
-            temperature = [int(temperature[0]), int(temperature[3])]
+        class Celestial:
+            diameter = int(textContent1.group(1).replace('.', ''))
+            used = int(textContent1.group(2))
+            total = int(textContent1.group(4))
+            free = total - used
+            temperature = [int(textContent3.group(1)), int(textContent3.group(2))]
             coordinates = OGame.celestial_coordinates(self, id)
 
-        return celestial
+        return Celestial
 
     def celestial_coordinates(self, id):
-        celestial = self.landing_page.find_all('title', 'componentgalaxy&amp;cp{}'.format(id), 'attribute')
-        coordinates = celestial[0].split('componentgalaxy&amp;cp{}&amp;'.format(id))[1].split('&quot;')[0] \
-            .replace('&amp', '').replace('galaxy', '').replace('system', '').replace('position', '').split(';')
-        coordinates = [int(coords) for coords in coordinates]
-        if 'moon' in self.landing_page.find_all('title', 'galaxy&amp;cp{}'.format(id), 'attribute', 'class')[0]:
-            coordinates.append(const.destination.moon)
-        else:
-            coordinates.append(const.destination.planet)
-        return coordinates
+        for celestial in self.landing_page.find_all(class_='smallplanet'):
+            planet = celestial.find(class_='planetlink')
+            if str(id) in planet['href']:
+                coordinates = re.search(r'\[(.*)]', planet['title']).group(1)
+                coordinates = [int(coords) for coords in coordinates.split(':')]
+                coordinates.append(const.destination.planet)
+                return coordinates
+            moon = celestial.find(class_='moonlink')
+            if str(id) in moon['href']:
+                coordinates = re.search(r'\[(.*)]', moon['title']).group(1)
+                coordinates = [int(coords) for coords in coordinates.split(':')]
+                coordinates.append(const.destination.moon)
+                return coordinates
 
     def resources(self, id):
         response = self.session.get(self.index_php + 'page=resourceSettings&cp={}'.format(id)).text
-        html = OGame.HTML(response)
+        bs4 = self.BS4(response)
 
         def to_int(string):
             return int(float(string.replace('M', '000').replace('n', '')))
 
-        class resources:
-            resources = [html.find_all('id', 'resources_metal', 'attribute', 'data-raw')[0],
-                         html.find_all('id', 'resources_crystal', 'attribute', 'data-raw')[0],
-                         html.find_all('id', 'resources_deuterium', 'attribute', 'data-raw')[0]]
+        class Resources:
+            resources = [bs4.find(id='resources_metal')['data-raw'],
+                         bs4.find(id='resources_crystal')['data-raw'],
+                         bs4.find(id='resources_deuterium')['data-raw']]
             resources = [to_int(resource) for resource in resources]
             metal = resources[0]
             crystal = resources[1]
             deuterium = resources[2]
-            darkmatter = to_int(html.find_all('id', 'resources_darkmatter', 'attribute', 'data-raw')[0])
-            energy = to_int(html.find_all('id', 'resources_energy', 'attribute', 'data-raw')[0])
+            darkmatter = to_int(bs4.find(id='resources_darkmatter')['data-raw'])
+            energy = to_int(bs4.find(id='resources_energy')['data-raw'])
 
-        return resources
+        return Resources
 
     def collect_status(self):
         if self == 'on':
@@ -264,9 +270,9 @@ class OGame(object):
 
     def supply(self, id):
         response = self.session.get(self.index_php + 'page=ingame&component=supplies&cp={}'.format(id)).text
-        html = OGame.HTML(response)
-        levels = [int(level) for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
-        status = html.find_all('data-technology', '', 'attribute', 'data-status')
+        bs4 = self.BS4(response)
+        levels = [int(level['data-value']) for level in bs4.find_all(class_='level')]
+        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Supply:
             def __init__(self, i):
@@ -289,9 +295,9 @@ class OGame(object):
 
     def facilities(self, id):
         response = self.session.get(self.index_php + 'page=ingame&component=facilities&cp={}'.format(id)).text
-        html = OGame.HTML(response)
-        levels = [int(level) for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
-        status = html.find_all('data-technology', '', 'attribute', 'data-status')
+        bs4 = self.BS4(response)
+        levels = [int(level['data-value']) for level in bs4.find_all(class_='level')]
+        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Facility:
             def __init__(self, i):
@@ -314,9 +320,9 @@ class OGame(object):
 
     def moon_facilities(self, id):
         response = self.session.get('{}page=ingame&component=facilities&cp={}'.format(self.index_php, id)).text
-        html = OGame.HTML(response)
-        levels = [int(level) for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
-        status = html.find_all('data-technology', '', 'attribute', 'data-status')
+        bs4 = self.BS4(response)
+        levels = [int(level['data-value']) for level in bs4.find_all(class_='level')]
+        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Facility:
             def __init__(self, i):
@@ -351,7 +357,8 @@ class OGame(object):
                     'ajax': 1},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
-        html = OGame.HTML(response['content']['marketplace/marketplace_items_buying'])
+        print(response['content']['marketplace/marketplace_items_buying'])
+        bs4 = self.BS4(response['content']['marketplace/marketplace_items_buying'])
 
         def convert(sprites, quantity):
             bids = []
@@ -364,27 +371,26 @@ class OGame(object):
                 elif 'deuterium' in sprite:
                     bids.append(const.resources(deuterium=amount))
                 elif 'ship' in sprite:
-                    shipId = int(sprite.replace('spriteshipsmallship', ''))
+                    shipId = int(sprite.replace('ship', ''))
                     bids.append([shipId, amount, 'shipyard'])
                 else:
                     continue
             return bids
 
-        ids = [int(i) for i in html.find_all('data-itemid', '', 'attribute')]
+        ids = [int(id['data-itemid']) for id in bs4.find_all('a', {'data-itemid': True})]
         sums = len(ids)
-        quantity = html.find_all('class', 'textquantity', 'value')
-        sprites = html.find_all('class', 'sprite', 'attribute')
+        quantity = [quant.text for quant in bs4.find_all(class_='text quantity')]
+        sprites = [sprite['class'][3] for sprite in bs4.find_all(class_='sprite')]
         offers = convert(sprites=[sprites[i] for i in range(0, sums * 3, 3)],
-                         quantity=[quantity[i] for i in range(0, sums * 2, 2)])
+                         quantity=[quantity[i] for i in range(0, sums * 3, 3)])
         prices = convert(sprites=[sprites[i] for i in range(1, sums * 3, 3)],
-                         quantity=[quantity[i] for i in range(1, sums * 2, 2)])
+                         quantity=[quantity[i] for i in range(1, sums * 3, 3)])
         possibles = []
-        for button in html.find_all('class', 'spritebutton', 'attribute'):
-            if 'disabled' in button:
+        for button in bs4.find_all_partial(class_='sprite buttons'):
+            if 'disabled' in button['class']:
                 possibles.append(False)
             else:
                 possibles.append(True)
-
         bids = []
         for i in range(sums):
 
@@ -464,7 +470,7 @@ class OGame(object):
 
     def collect_marketplace(self):
 
-        def collectItems(tab, action):
+        def collectItems(self, tab, action):
             response = self.session.get(
                 url=self.index_php,
                 params={'page': 'ingame',
@@ -482,9 +488,10 @@ class OGame(object):
                         'token': token},
                 headers={'X-Requested-With': 'XMLHttpRequest'}
             ).json()
-            html = self.HTML(response['content']['marketplace/marketplace_items_history'])
-            transactionIds = set(html.find_all('data-transactionid', '', 'attribute'))
-            token = set(html.find_all('data-token', '', 'attribute'))
+            bs4 = self.BS4(response['content']['marketplace/marketplace_items_history'])
+            transactionIds = bs4.find_all('div', {'data-transactionid': True})
+            transactionIds = set([int(id['data-transactionid']) for id in transactionIds])
+            token = set(bs4.find('div', {'data-token': True}))
             result = []
             for id in transactionIds:
                 response = self.session.post(
@@ -503,8 +510,8 @@ class OGame(object):
             return result
 
         result = []
-        result.extend([collectItems(tab='history_buying', action='fetchHistoryBuyingItems')])
-        result.extend(collectItems(tab='history_selling', action='fetchHistorySellingItems'))
+        result.extend([collectItems(self, tab='history_buying', action='fetchHistoryBuyingItems')])
+        result.extend(collectItems(self, tab='history_selling', action='fetchHistorySellingItems'))
         if 'success' in result:
             return True
         else:
@@ -518,14 +525,13 @@ class OGame(object):
             url=self.index_php,
             params={'page': 'ingame', 'component': 'research', 'cp': OGame.planet_ids(self)[0]}
         ).text
-        html = OGame.HTML(response)
-        research_level = [int(level)
-                          for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
-        status = html.find_all('data-technology', '', 'attribute', 'data-status')
+        bs4 = self.BS4(response)
+        levels = [int(level['data-value']) for level in bs4.find_all(class_='level')]
+        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Research:
             def __init__(self, i):
-                self.level = research_level[i]
+                self.level = levels[i]
                 self.data = OGame.collect_status(status[i])
                 self.is_possible = self.data[0]
                 self.in_construction = self.data[1]
@@ -552,10 +558,9 @@ class OGame(object):
 
     def ships(self, id):
         response = self.session.get(self.index_php + 'page=ingame&component=shipyard&cp={}'.format(id)).text
-        html = OGame.HTML(response)
-        ships_amount = html.find_all('class', 'amount', 'attribute', 'data-value', exact=True)
-        ships_amount = [int(ship) for ship in ships_amount]
-        status = html.find_all('data-technology', '', 'attribute', 'data-status')
+        bs4 = self.BS4(response)
+        ships_amount = [int(level['data-value']) for level in bs4.find_all(class_='amount')]
+        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Ship:
             def __init__(self, i):
@@ -598,10 +603,9 @@ class OGame(object):
 
     def defences(self, id):
         response = self.session.get(self.index_php + 'page=ingame&component=defenses&cp={}'.format(id)).text
-        html = OGame.HTML(response)
-        defences_amount = html.find_all('class', 'amount', 'attribute', 'data-value', exact=True)
-        defences_amount = [int(ship) for ship in defences_amount]
-        status = html.find_all('data-technology', '', 'attribute', 'data-status')
+        bs4 = self.BS4(response)
+        defences_amount = [int(level['data-value']) for level in bs4.find_all(class_='amount')]
+        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Defence:
             def __init__(self, i):
