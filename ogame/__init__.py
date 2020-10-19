@@ -838,7 +838,21 @@ class OGame(object):
                     'ajax': 1}
         ).text
         bs4 = self.BS4(response)
-        print(response)
+        report_links = [link['href'] for link in bs4.find_all_partial(href='page=messages&messageId')]
+
+        reports = []
+        for link in report_links:
+            response = self.session.get(link).text
+            bs4 = self.BS4(response)
+            technologys = [tech['class'][0] for tech in bs4.find_all('img')]
+            amounts = [tech.parent.parent.find_all('span')[1].text for tech in bs4.find_all('img')]
+
+            class Report:
+                fright = [(tech, amount) for tech, amount in zip(technologys, amounts)]
+
+            reports.append(Report)
+
+        return reports
 
     def send_fleet(self, mission, id, where, ships, resources=(0, 0, 0), speed=10, holdingtime=0):
         response = self.session.get(self.index_php + 'page=ingame&component=fleetdispatch&cp={}'.format(id)).text

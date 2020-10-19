@@ -144,8 +144,7 @@ class UnittestOgame(unittest.TestCase):
 
     def test_spyreports(self):
         for report in self.empire.spyreports():
-            self.assertIsInstance(report.technology, dict)
-            self.assertIsInstance(report.coordinates, list)
+            self.assertIsInstance(report.fright, list)
 
     def test_send_fleet(self):
         send_fleet = False
@@ -157,7 +156,7 @@ class UnittestOgame(unittest.TestCase):
                     send_fleet = True
                     break
 
-    def test_relogin(self):
+    def relogin(self):
         self.assertEqual(self.empire.is_logged_in(), True)
         self.assertEqual(self.empire.logout(), True)
         self.assertEqual(self.empire.is_logged_in(), False)
