@@ -20,7 +20,7 @@ class UnittestOgame(unittest.TestCase):
         self.assertIsInstance(self.empire.neutral(), bool)
 
     def test_Constants(self):
-        speed = self.empire.ogame().Speed
+        speed = self.empire.server().Speed
         self.assertGreater(speed.universe, 0)
         self.assertGreater(speed.fleet, 0)
 
@@ -47,6 +47,7 @@ class UnittestOgame(unittest.TestCase):
         for id in self.ids:
             celestial_coordinates = self.empire.celestial_coordinates(id)
             self.assertIsInstance(celestial_coordinates, list)
+            self.assertEqual(len(celestial_coordinates), 4)
 
     def test_resources(self):
         for id in self.ids:
@@ -104,8 +105,9 @@ class UnittestOgame(unittest.TestCase):
         self.assertGreater(defence.rocket_launcher.amount, -1)
 
     def test_galaxy(self):
-        for position in self.empire.galaxy(coordinates=coordinates(1, 1)):
+        for position in self.empire.galaxy(coordinates(1, 1)):
             self.assertIsInstance(position.player, str)
+            self.assertIsInstance(position.list, list)
             self.assertIsInstance(position.moon, bool)
 
     def test_ally(self):
@@ -134,10 +136,10 @@ class UnittestOgame(unittest.TestCase):
     def test_send_message(self):
         send_message = False
         while not send_message:
-            for position in self.empire.galaxy(coordinates=coordinates(randint(1, 6), randint(1, 499))):
-                if send_message:
+            for position in self.empire.galaxy(coordinates(randint(1, 6), randint(1, 499))):
+                if status.inactive in position.status:
+                    send_message = self.empire.send_message(position.player_id, 'Hello')
                     break
-                send_message = self.empire.send_message(position.player_id, 'Hello')
         self.assertEqual(send_message, True)
 
     def test_spyreports(self):
@@ -148,7 +150,7 @@ class UnittestOgame(unittest.TestCase):
     def test_send_fleet(self):
         send_fleet = False
         while not send_fleet:
-            for planet in self.empire.galaxy(coordinates=coordinates(randint(1, 6), randint(1, 499))):
+            for planet in self.empire.galaxy(coordinates(randint(1, 6), randint(1, 499))):
                 send = self.empire.send_fleet(mission.spy, self.ids[0], planet.position, [ships.espionage_probe(1)])
                 self.assertIsInstance(send, bool)
                 if send:
