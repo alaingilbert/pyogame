@@ -350,11 +350,12 @@ class OGame(object):
 
         return Facilities
 
-    def marketplace(self):
+    def marketplace_listings(self, id):
         response = self.session.get(
             url=self.index_php,
             params={'page': 'ingame',
-                    'component': 'marketplace'},
+                    'component': 'marketplace',
+                    'cp': id},
         ).text
         token = re.search('var token = "(.*)"', response).group(1)
         response = self.session.get(
@@ -364,10 +365,15 @@ class OGame(object):
                     'tab': 'buying',
                     'action': 'fetchBuyingItems',
                     'token': token,
-                    'ajax': 1},
+                    'ajax': 1,
+                    'cp': id},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         bs4 = self.BS4(response['content']['marketplace/marketplace_items_buying'])
+        return bs4
+
+    def marketplace(self, id):
+        bs4 = self.marketplace_listings(id)
 
         def convert(sprites, quantity):
             bids = []
@@ -427,16 +433,13 @@ class OGame(object):
             bids.append(Bids)
         return bids
 
-    def buy_marketplace(self, market_id, id):
-        self.session.get(
-            url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=fetchBuyingItems&ajax=1',
-            params={'pagination%5Bpage%5D': 1,
-                    'cp': id},
-            headers={'X-Requested-With': 'XMLHttpRequest'}
-        ).json()
+    def buy_marketplace(self, marketid, id):
+        bs4 = self.marketplace_listings(id)
+        token = bs4.find('a', {'data-itemid': marketid})['data-token']
         response = self.session.post(
-            url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=acceptRequest&asJson=1',
-            data={'marketItemId': market_id},
+            url=self.index_php + f'page=ingame&component=marketplace&tab=buying&action=acceptRequest&asJson=1',
+            data={'marketItemId': marketid,
+                  'token': token},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         if response['status'] == 'success':

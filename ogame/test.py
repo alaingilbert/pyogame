@@ -37,11 +37,10 @@ class UnittestOgame(unittest.TestCase):
         self.collect_all_ids()
 
     def test_celestial(self):
-        for id in self.ids:
-            celestial = self.empire.celestial(id)
-            self.assertGreater(celestial.diameter, 0)
-            self.assertGreater(celestial.free, -1)
-            self.assertIsInstance(celestial.temperature, list)
+        celestial = self.empire.celestial(id)
+        self.assertGreater(celestial.diameter, 0)
+        self.assertGreater(celestial.free, -1)
+        self.assertIsInstance(celestial.temperature, list)
 
     def test_celestial_coordinates(self):
         for id in self.ids:
@@ -57,9 +56,8 @@ class UnittestOgame(unittest.TestCase):
             self.assertIsInstance(res.energy, int)
 
     def test_supply(self):
-        for id in self.empire.planet_ids():
-            sup = self.empire.supply(id)
-            self.assertGreater(sup.metal_mine.level, -1)
+        sup = self.empire.supply(self.ids[0])
+        self.assertGreater(sup.metal_mine.level, -1)
 
     def test_facilities(self):
         for id in self.empire.planet_ids():
@@ -72,7 +70,7 @@ class UnittestOgame(unittest.TestCase):
             self.assertGreater(fac.robotics_factory.level, -1)
 
     def test_marketplace(self):
-        for bid in self.empire.marketplace():
+        for bid in self.empire.marketplace(self.ids[0]):
             if bid.is_ships:
                 self.assertIsInstance(bid.id, int)
             elif bid.is_resources:
@@ -147,14 +145,9 @@ class UnittestOgame(unittest.TestCase):
             self.assertIsInstance(report.fright, list)
 
     def test_send_fleet(self):
-        send_fleet = False
-        while not send_fleet:
-            for planet in self.empire.galaxy(coordinates(randint(1, 6), randint(1, 499))):
-                send = self.empire.send_fleet(mission.spy, self.ids[0], planet.position, [ships.espionage_probe(1)])
-                self.assertIsInstance(send, bool)
-                if send:
-                    send_fleet = True
-                    break
+        for planet in self.empire.galaxy(coordinates(randint(1, 6), randint(1, 499))):
+            send = self.empire.send_fleet(mission.spy, self.ids[0], planet.position, [ships.espionage_probe(1)])
+            self.assertIsInstance(send, bool)
 
     def relogin(self):
         self.assertEqual(self.empire.is_logged_in(), True)
