@@ -5,8 +5,8 @@ OGame is a browser-based, money-management and space-war themed massively multip
 two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
-it supports ogame_version: `7.5.1`
-version `16`
+it supports ogame_version: `7.5.2`
+version `17`
 
 ## install
 <pre>
@@ -70,17 +70,30 @@ empire.attacked()                   returns bool
 empire.neutral()                    returns bool 
 </pre>
 
-### get speed (universe)
+### get friendly
 <pre>
-empire.speed()                      returns class
-empire.speed().universe
-empire.speed().fleet
+empire.friendly()                    returns bool 
+</pre>
+
+### get server (universe)
+<pre>
+server = empire.server()
+server.varsion                       returns list
+server.Speed.universe                returns int
+server.Speed.fleet                   returns int
+server.Donut.galaxy                  returns bool
+server.Donut.system                  returns bool
 </pre>
 
 ### get characterclass
 <pre>
 Get the class of your Ogame Account['miner', 'explorer', 'warrior']
 empire.characterclass()             return string
+</pre>
+
+### get rank
+<pre>
+empire.rank()                       return int
 </pre>
 
 ### get planet id's
@@ -132,9 +145,9 @@ celestial = empire.celestial(id)        returns class
 celestial.temperature                   returns list
 celestial.diameter                      returns int
 celestial.coordinates                   returns list
-celestial.fields.used                   return int
-celestial.fields.total                  return int
-celestial.fields.free                   return int
+celestial.used                          return int
+celestial.total                         return int
+celestial.free                          return int
 </pre>
 
 ### get celestial coordinates
@@ -204,7 +217,7 @@ sup.deuterium_storage                   returns class(object)
 
 ### get facilities
 <pre>
-empire.facilities(id)               returns class(object) 
+empire.facilities(id)                   returns class(object) 
 
 fac = empire.facilities(id)
 
@@ -385,12 +398,14 @@ empire.galaxy(coordinates)          returns list of class(object)
 for planet in empire.galaxy(coordinates(randint(1,6), randint(1,499))):
     print(planet.list)
     print(planet.name, planet.position, planet.player, planet.player_id, planet.status, planet.moon)
-    if status.inactive in planet.status:
+    if status.inactive in planet.status and status.vacation not in planet.status:
         #Farm Inactive
 ```        
 
 ### get ally
 <pre>
+Returns your current Ally name None if you didnt join one yet
+
 empire.ally()                       returns list
 </pre>
 
@@ -418,6 +433,7 @@ for fleet in empire.fleet():
                 fleet.mission, 
                 fleet.diplomacy, 
                 fleet.player, 
+                fleet.player_id,
                 fleet.returns, 
                 fleet.arrival, 
                 fleet.origin, 
@@ -433,16 +449,6 @@ empire.hostile_fleet()              returns list of class(object)
 ```python
 for fleet in empire.hostile_fleet():
     print(fleet.list)
-    print(  
-            fleet.id, 
-            fleet.mission, 
-            fleet.diplomacy, 
-            fleet.player, 
-            fleet.returns, 
-            fleet.arrival, 
-            fleet.origin, 
-            fleet.destination
-        )
 ```
 
 ### get friendly fleet
@@ -453,22 +459,13 @@ empire.hostile_fleet()              returns list of class(object)
 ```python
 for fleet in empire.friendly_fleet():
     print(fleet.list)
-    print(  
-            fleet.id, 
-            fleet.mission, 
-            fleet.diplomacy, 
-            fleet.player, 
-            fleet.returns, 
-            fleet.arrival, 
-            fleet.origin, 
-            fleet.destination
-        )
 ```
 
 ### get phalanx
 <pre>
-Dangereous!!! it gets you banned when not valid
-empire.phalanx(coordinates, id)     returns list of class(object)
+~~Dangereous!!! it gets you banned when not valid
+empire.phalanx(coordinates, id)     returns list of class(object)~~
+
 </pre>
 
 ```python
@@ -484,13 +481,8 @@ empire.spyreports()                  returns list of class(object)
 </pre>
 
 ```python
-for spyreport in empire.spyreports():
-    print(spyreport.id, spyreport.time, spyreport.coordinates, 
-          spyreport.resources, spyreport.technology, spyreport.list)
-    
-    # you need to check bacause somtimes spymissions fail
-    if buildings.metal_mine in spyreports.technology:
-        print(spyreport.technology[buildings.metal_mine])
+for report in empire.spyreports():
+    print(report.fright)
 ```
 
 ### send fleet

@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='ogame',
     packages=['ogame'],
-    version='7.3.0.16',
+    version='7.3.0.17',
     license='MIT',
     description='lib for the popular browsergame ogame',
     author='PapeprPieceCode',
@@ -11,7 +11,7 @@ setup(
     url='https://github.com/PiecePaperCode/pyogame2',
     download_url='https://github.com/PiecePaperCode/pyogame2.git',
     keywords=['OGame', 'lib', 'for bots', 'bot'],
-    install_requires=['requests'],
+    install_requires=['requests', 'beautifulsoup4'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

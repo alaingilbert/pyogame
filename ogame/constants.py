@@ -1,17 +1,31 @@
+import re
+
+
 class destination(object):
+    outer_space = 0
     planet = 1
     debris = 2
     moon = 3
 
 
-def coordinates(galaxy, system, position=None, dest=destination.planet):
+def convert_to_destinations(dest):
+    if dest is None:
+        return destination.outer_space
+    elif 'moon' in dest:
+        return destination.moon
+    elif 'tf' in dest:
+        return destination.debris
+    else:
+        return destination.planet
+
+
+def coordinates(galaxy: int, system: int, position=0, dest=destination.planet):
     return [galaxy, system, position, dest]
 
 
-def convert_to_coordinates(coordinates):
-    coordinates = coordinates.split('[')[1].split(']')[0].split(':')
-    coordinates = [int(coordinate) for coordinate in coordinates]
-    return coordinates
+def convert_to_coordinates(coords):
+    coords = re.search(r'\[(.*):(.*):(.*)]', coords)
+    return [int(coords.group(1)), int(coords.group(2)), int(coords.group(3))]
 
 
 class mission(object):
@@ -42,7 +56,7 @@ class speed(object):
     min = 1
 
 
-class buildings(object):
+class buildings:
     metal_mine = 1, 1, 'supplies'
     crystal_mine = 2, 1, 'supplies'
     deuterium_mine = 3, 1, 'supplies'
@@ -127,7 +141,6 @@ class ships(object):
     def espionage_probe(self=1): return 210, self, 'shipyard'
     def crawler(self=1): return 217, self, 'shipyard'
 
-
     def is_ship(ship):
         if ship[2] == 'shipyard':
             return True
@@ -179,6 +192,7 @@ class status:
     online = 'online'
     recently = 'recently'
     offline = 'offline'
+    yourself = 'yourself'
 
 
 class diplomacy:
@@ -193,7 +207,7 @@ class messages:
 
 def price(technology, level=1):
     def multipli_resources(resources, multiplyer):
-        return [resource*multiplyer for resource in resources]
+        return [resource * multiplyer for resource in resources]
 
     if ships.is_ship(technology):
         if technology[0] == 204: return multipli_resources([3000, 1000, 0], technology[1])

@@ -1,6 +1,7 @@
 import re
 import requests
 import unittest
+from bs4 import BeautifulSoup
 from datetime import datetime
 
 try:
@@ -11,6 +12,7 @@ except ImportError:
 
 class OGame(object):
     def __init__(self, universe, username, password, token=None, user_agent=None, proxy='', language=None):
+        self.forOgameVersion = [7, 5, 1]
         self.universe = universe
         self.username = username
         self.password = password
@@ -20,7 +22,6 @@ class OGame(object):
         self.session = requests.Session()
         self.session.proxies.update({'https': self.proxy})
         self.token = token
-        self.chat_token = None
         if self.user_agent is None:
             self.user_agent = {
                 'User-Agent':
@@ -28,28 +29,13 @@ class OGame(object):
                     'Chrome/83.0.4103.97 Mobile Safari/537.36'}
         self.session.headers.update(self.user_agent)
 
-        def login():
-            self.session.get('https://lobby.ogame.gameforge.com/')
-            login_data = {'identity': self.username,
-                          'password': self.password,
-                          'locale': 'en_EN',
-                          'gfLang': 'en',
-                          'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
-                          'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
-                          'autoGameAccountCreation': False}
-            response = self.session.post('https://gameforge.com/api/v1/auth/thin/sessions', json=login_data)
-            if response.status_code is not 201:
-                raise Exception('Bad Login')
-            self.token = response.json()['token']
-            self.session.headers.update({'authorization': 'Bearer {}'.format(self.token)})
-
         if token is None:
-            login()
+            self.login()
         else:
             self.session.headers.update({'authorization': 'Bearer {}'.format(token)})
             if 'error' in self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json():
                 del self.session.headers['authorization']
-                login()
+                self.login()
 
         servers = self.session.get('https://lobby.ogame.gameforge.com/api/servers').json()
         for server in servers:
@@ -70,70 +56,57 @@ class OGame(object):
                     self.server_id = account['id']
                     self.language = account['server']['language']
                     break
+            self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?'.format(self.server_number,
+                                                                                         self.language)
         except AttributeError:
             raise Exception("Universe not found")
 
         login_link = self.session.get(
-            'https://lobby.ogame.gameforge.com/api/users/me/loginLink?'
-            'id={}'
-            '&server[language]={}'
-            '&server[number]={}'
-            '&clickedButton=account_list'
-                .format(self.server_id, self.language, self.server_number)
+            url='https://lobby.ogame.gameforge.com/api/users/me/loginLink?',
+            params={'id': self.server_id,
+                    'server[language]': self.language,
+                    'server[number]': self.server_number,
+                    'clickedButton': 'account_list'}
         ).json()
         self.landing_page = self.session.get(login_link['url']).text
-        self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
-            .format(self.server_number, self.language)
-        self.landing_page = OGame.HTML(self.session.get(self.index_php + 'page=ingame').text)
-        self.player = self.landing_page.find_all('class', 'overlaytextBeefy', 'value')[0]
-        self.player_id = self.landing_page.find_all('name', 'ogame-player-id', 'attribute', 'content')[0]
+        self.landing_page_text = self.session.get(self.index_php + 'page=ingame').text
+        self.landing_page = self.BS4(self.landing_page_text)
 
-    class HTML:
-        def __init__(self, response):
-            self.parsed = {}
-            for index, html in enumerate(response.split('<')):
-                element = html.replace('/', '').replace('\n', '')
-                tag = element.split('>')[0]
-                attribute = tag.split(' ')
-                if ' ' in tag:
-                    tag = tag.split(' ')[0]
-                del attribute[0]
-                attribute = ' '.join(attribute).replace('=', '').replace(' ', '').split('"')
-                attributes = {}
-                for i in range(0, len(attribute), 2):
-                    try:
-                        attributes.update({attribute[i]: attribute[i + 1]})
-                    except IndexError:
-                        break
-                if len(element.split('>')) > 1:
-                    value = element.split('>')[1]
-                else:
-                    value = None
-                self.parsed.update({index: {'tag': tag, 'attribute': attributes, 'value': value}})
+        self.player = self.landing_page.find('meta', {'name': 'ogame-planet-name'})['content']
+        self.player_id = int(self.landing_page.find('meta', {'name': 'ogame-planet-id'})['content'])
 
-        def find_all(self, attribute_tag, value, result, same_element_attribute=None, exact=False):
-            attributes = []
+    def login(self):
+        self.session.get('https://lobby.ogame.gameforge.com/')
+        login_data = {'identity': self.username,
+                      'password': self.password,
+                      'locale': 'en_EN',
+                      'gfLang': 'en',
+                      'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
+                      'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
+                      'autoGameAccountCreation': False}
+        response = self.session.post('https://gameforge.com/api/v1/auth/thin/sessions', json=login_data)
+        if response.status_code is not 201:
+            raise Exception('Bad Login')
+        else:
+            self.token = response.json()['token']
+            self.session.headers.update({'authorization': 'Bearer {}'.format(self.token)})
 
-            def append_attributes():
-                if result == 'attribute' and same_element_attribute is None:
-                    attributes.append(line[result][attribute_tag])
-                elif result == 'attribute':
-                    attributes.append(line[result][same_element_attribute])
-                else:
-                    val = line[result].replace(' ', '')
-                    if val is not '':
-                        attributes.append(val)
+    def BS4(self, response):
+        parsed = BeautifulSoup(response, features="html5lib")
 
-            for line in self.parsed.values():
-                try:
-                    if attribute_tag in line['attribute']:
-                        if value in line['attribute'][attribute_tag] and exact is False:
-                            append_attributes()
-                        elif value == line['attribute'][attribute_tag] and exact is True:
-                            append_attributes()
-                except KeyError:
-                    continue
-            return attributes
+        def find_partial(**kwargs):
+            for key, value in kwargs.items():
+                kwargs[key] = re.compile(value)
+            return parsed.find(**kwargs)
+
+        def find_all_partial(**kwargs):
+            for key, value in kwargs.items():
+                kwargs[key] = re.compile(value)
+            return parsed.find_all(**kwargs)
+
+        parsed.find_partial = find_partial
+        parsed.find_all_partial = find_all_partial
+        return parsed
 
     def test(self):
         try:
@@ -144,16 +117,38 @@ class OGame(object):
         suite = unittest.TestLoader().loadTestsFromModule(test)
         return unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful()
 
-    def version(self):
-        from pip._internal import main as pip
-        print(pip(['show', 'ogame']))
+    def server(self):
+
+        class Server:
+            version = self.landing_page.find('meta', {'name': 'ogame-version'})
+            version = list(re.split(r"\.|-", version['content']))
+            for i in range(0, 2):
+                version[i] = int(version[i])
+
+            class Speed:
+                universe = self.landing_page.find('meta', {'name': 'ogame-universe-speed'})
+                universe = int(universe['content'])
+                fleet = self.landing_page.find('meta', {'name': 'ogame-universe-speed-fleet'})
+                fleet = int(fleet['content'])
+
+            class Donut:
+                if 1 == int(self.landing_page.find('meta', {'name': 'ogame-donut-galaxy'})['content']):
+                    galaxy = True
+                else:
+                    galaxy = False
+                if 1 == int(self.landing_page.find('meta', {'name': 'ogame-donut-system'})['content']):
+                    system = True
+                else:
+                    system = False
+
+        return Server
 
     def attacked(self):
         response = self.session.get(
             url=self.index_php + 'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
-        if response['hostile'] > 0:
+        if 0 < response['hostile']:
             return True
         else:
             return False
@@ -163,29 +158,39 @@ class OGame(object):
             url=self.index_php + 'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
-        if response['neutral'] > 0:
+        if 0 < response['neutral']:
             return True
         else:
             return False
 
-    def speed(self):
-        class speed:
-            universe = int(self.landing_page.find_all('content', '', 'attribute')[6])
-            fleet = int(self.landing_page.find_all('content', '', 'attribute')[7])
-
-        return speed
+    def friendly(self):
+        response = self.session.get(
+            url=self.index_php + 'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        ).json()
+        if 0 < response['friendly']:
+            return True
+        else:
+            return False
 
     def characterclass(self):
-        character = self.landing_page.find_all('class', 'spritecharacterclassmedium', 'attribute')[0]
-        character = character.replace('spritecharacterclassmedium', '')
-        return character
+        character = self.landing_page.find_partial(class_='sprite characterclass medium')
+        return character['class'][3]
+
+    def rank(self):
+        rank = self.landing_page.find(id='bar')
+        rank = rank.find_all('li')[1].text
+        rank = re.search('\((.*)\)', rank).group(1)
+        return int(rank)
 
     def planet_ids(self):
-        planets = self.landing_page.find_all('id', 'planet-', 'attribute')
-        return [int(planet.replace('planet-', '')) for planet in planets]
+        ids = []
+        for celestial in self.landing_page.find_all(class_='smallplanet'):
+            ids.append(int(celestial['id'].replace('planet-', '')))
+        return ids
 
     def planet_names(self):
-        return self.landing_page.find_all('class', 'planet-name', 'value')
+        return [planet.text for planet in self.landing_page.find_all(class_='planet-name')]
 
     def id_by_planet_name(self, name):
         for planet_name, id in zip(OGame.planet_names(self), OGame.planet_ids(self)):
@@ -193,63 +198,74 @@ class OGame(object):
                 return id
 
     def moon_ids(self):
-        moons = self.landing_page.find_all('class', 'moonlink', 'attribute', 'href')
-        return [int(moon_id.split('cp')[1]) for moon_id in moons]
+        moons = []
+        for moon in self.landing_page.find_all(class_='moonlink'):
+            moon = moon['href']
+            moon = re.search('cp=(.*)', moon).group(1)
+            moons.append(int(moon))
+        return moons
 
     def moon_names(self):
         names = []
-        for name in self.landing_page.find_all('class', 'moonlink', 'attribute', 'title'):
-            names.append(name.split(';')[2].split('[')[0])
+        for name in self.landing_page.find_all(class_='moonlink'):
+            name = name['title']
+            names.append(re.search('<b>(.*) \[', name).group(1))
         return names
 
     def celestial(self, id):
-        response = self.session.get(self.index_php + 'page=ingame&component=overview&cp={}'.format(id)).text
-        textContent1 = response.split('textContent[1] = "')[1]
+        response = self.session.get(
+            url=self.index_php + 'page=ingame&component=overview',
+            params={'cp': id}
+        ).text
+        bs4 = self.BS4(response)
+        javascript = bs4.find_all('script', {'type': 'text/javascript'})[14].text
+        textContent1 = re.search(r'textContent\[1] = "(.*)km \(<span>(.*)<(.*)<span>(.*)<', javascript)
+        textContent3 = re.search('textContent\[3] = "(.*) \\\\u00b0C bis (.*) \\\\u00b0C";', javascript)
 
-        class celestial:
-            diameter = int(textContent1.split(' ')[0].replace('.', '').replace('km', ''))
-
-            class fields:
-                used = int(textContent1.split('<span>')[1].split('<')[0])
-                total = int(textContent1.split('<span>')[2].split('<')[0])
-                free = total - used
-
-            temperature = response.split('textContent[3] = "')[1].split('"')[0].replace('\\u00b0C', '').split(' ')
-            temperature = [int(temperature[0]), int(temperature[3])]
+        class Celestial:
+            diameter = int(textContent1.group(1).replace('.', ''))
+            used = int(textContent1.group(2))
+            total = int(textContent1.group(4))
+            free = total - used
+            temperature = [int(textContent3.group(1)), int(textContent3.group(2))]
             coordinates = OGame.celestial_coordinates(self, id)
 
-        return celestial
+        return Celestial
 
     def celestial_coordinates(self, id):
-        celestial = self.landing_page.find_all('title', 'componentgalaxy&amp;cp{}'.format(id), 'attribute')
-        coordinates = celestial[0].split('componentgalaxy&amp;cp{}&amp;'.format(id))[1].split('&quot;')[0] \
-            .replace('&amp', '').replace('galaxy', '').replace('system', '').replace('position', '').split(';')
-        coordinates = [int(coords) for coords in coordinates]
-        if 'moon' in self.landing_page.find_all('title', 'galaxy&amp;cp{}'.format(id), 'attribute', 'class')[0]:
-            coordinates.append(const.destination.moon)
-        else:
-            coordinates.append(const.destination.planet)
-        return coordinates
+        for celestial in self.landing_page.find_all(class_='smallplanet'):
+            planet = celestial.find(class_='planetlink')
+            if str(id) in planet['href']:
+                coordinates = re.search(r'\[(.*)]', planet['title']).group(1)
+                coordinates = [int(coords) for coords in coordinates.split(':')]
+                coordinates.append(const.destination.planet)
+                return coordinates
+            moon = celestial.find(class_='moonlink')
+            if moon and str(id) in moon['href']:
+                coordinates = re.search(r'\[(.*)]', moon['title']).group(1)
+                coordinates = [int(coords) for coords in coordinates.split(':')]
+                coordinates.append(const.destination.moon)
+                return coordinates
 
     def resources(self, id):
         response = self.session.get(self.index_php + 'page=resourceSettings&cp={}'.format(id)).text
-        html = OGame.HTML(response)
+        bs4 = self.BS4(response)
 
         def to_int(string):
             return int(float(string.replace('M', '000').replace('n', '')))
 
-        class resources:
-            resources = [html.find_all('id', 'resources_metal', 'attribute', 'data-raw')[0],
-                         html.find_all('id', 'resources_crystal', 'attribute', 'data-raw')[0],
-                         html.find_all('id', 'resources_deuterium', 'attribute', 'data-raw')[0]]
+        class Resources:
+            resources = [bs4.find(id='resources_metal')['data-raw'],
+                         bs4.find(id='resources_crystal')['data-raw'],
+                         bs4.find(id='resources_deuterium')['data-raw']]
             resources = [to_int(resource) for resource in resources]
             metal = resources[0]
             crystal = resources[1]
             deuterium = resources[2]
-            darkmatter = to_int(html.find_all('id', 'resources_darkmatter', 'attribute', 'data-raw')[0])
-            energy = to_int(html.find_all('id', 'resources_energy', 'attribute', 'data-raw')[0])
+            darkmatter = to_int(bs4.find(id='resources_darkmatter')['data-raw'])
+            energy = to_int(bs4.find(id='resources_energy')['data-raw'])
 
-        return resources
+        return Resources
 
     def collect_status(self):
         if self == 'on':
@@ -264,9 +280,9 @@ class OGame(object):
 
     def supply(self, id):
         response = self.session.get(self.index_php + 'page=ingame&component=supplies&cp={}'.format(id)).text
-        html = OGame.HTML(response)
-        levels = [int(level) for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
-        status = html.find_all('data-technology', '', 'attribute', 'data-status')
+        bs4 = self.BS4(response)
+        levels = [int(level['data-value']) for level in bs4.find_all('span', {'class': 'level', 'data-value': True})]
+        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Supply:
             def __init__(self, i):
@@ -289,9 +305,9 @@ class OGame(object):
 
     def facilities(self, id):
         response = self.session.get(self.index_php + 'page=ingame&component=facilities&cp={}'.format(id)).text
-        html = OGame.HTML(response)
-        levels = [int(level) for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
-        status = html.find_all('data-technology', '', 'attribute', 'data-status')
+        bs4 = self.BS4(response)
+        levels = [int(level['data-value']) for level in bs4.find_all(class_='level')]
+        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Facility:
             def __init__(self, i):
@@ -314,9 +330,9 @@ class OGame(object):
 
     def moon_facilities(self, id):
         response = self.session.get('{}page=ingame&component=facilities&cp={}'.format(self.index_php, id)).text
-        html = OGame.HTML(response)
-        levels = [int(level) for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
-        status = html.find_all('data-technology', '', 'attribute', 'data-status')
+        bs4 = self.BS4(response)
+        levels = [int(level['data-value']) for level in bs4.find_all(class_='level')]
+        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Facility:
             def __init__(self, i):
@@ -334,11 +350,12 @@ class OGame(object):
 
         return Facilities
 
-    def marketplace(self):
+    def marketplace_listings(self, id):
         response = self.session.get(
             url=self.index_php,
             params={'page': 'ingame',
-                    'component': 'marketplace'},
+                    'component': 'marketplace',
+                    'cp': id},
         ).text
         token = re.search('var token = "(.*)"', response).group(1)
         response = self.session.get(
@@ -348,10 +365,15 @@ class OGame(object):
                     'tab': 'buying',
                     'action': 'fetchBuyingItems',
                     'token': token,
-                    'ajax': 1},
+                    'ajax': 1,
+                    'cp': id},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
-        html = OGame.HTML(response['content']['marketplace/marketplace_items_buying'])
+        bs4 = self.BS4(response['content']['marketplace/marketplace_items_buying'])
+        return bs4
+
+    def marketplace(self, id):
+        bs4 = self.marketplace_listings(id)
 
         def convert(sprites, quantity):
             bids = []
@@ -364,23 +386,30 @@ class OGame(object):
                 elif 'deuterium' in sprite:
                     bids.append(const.resources(deuterium=amount))
                 elif 'ship' in sprite:
-                    shipId = int(sprite.replace('spriteshipsmallship', ''))
+                    shipId = int(sprite.replace('ship', ''))
                     bids.append([shipId, amount, 'shipyard'])
                 else:
                     continue
             return bids
 
-        ids = [int(i) for i in html.find_all('data-itemid', '', 'attribute')]
+        ids = [int(id['data-itemid']) for id in bs4.find_all('a', {'data-itemid': True})]
         sums = len(ids)
-        quantity = html.find_all('class', 'textquantity', 'value')
-        sprites = html.find_all('class', 'sprite', 'attribute')
-        offers = convert(sprites=[sprites[i] for i in range(0, sums * 3, 3)],
-                         quantity=[quantity[i] for i in range(0, sums * 2, 2)])
-        prices = convert(sprites=[sprites[i] for i in range(1, sums * 3, 3)],
-                         quantity=[quantity[i] for i in range(1, sums * 2, 2)])
+        quantity = [quant.text for quant in bs4.find_all(class_='text quantity')]
+        sprites = [sprite['class'][3] for sprite in bs4.find_all(class_='sprite')]
+
+        # every 3 + n [n={0,1}] is the offer n=0 or the price n=1
+        def keep_every_3_item(list, offset):
+            every_3_item = [list[i] for i in range(offset, sums * 3, 3)]
+            return every_3_item
+
+        offers = convert(sprites=keep_every_3_item(sprites, 0),
+                         quantity=keep_every_3_item(quantity, 0))
+        prices = convert(sprites=keep_every_3_item(sprites, 1),
+                         quantity=keep_every_3_item(quantity, 1))
+
         possibles = []
-        for button in html.find_all('class', 'spritebutton', 'attribute'):
-            if 'disabled' in button:
+        for button in bs4.find_all_partial(class_='sprite buttons'):
+            if 'disabled' in button['class']:
                 possibles.append(False)
             else:
                 possibles.append(True)
@@ -404,16 +433,13 @@ class OGame(object):
             bids.append(Bids)
         return bids
 
-    def buy_marketplace(self, market_id, id):
-        self.session.get(
-            url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=fetchBuyingItems&ajax=1&'
-                                 'pagination%5Bpage%5D={}&cp={}'.format(1, id),
-            headers={'X-Requested-With': 'XMLHttpRequest'}
-        ).json()
-        form_data = {'marketItemId': market_id}
+    def buy_marketplace(self, marketid, id):
+        bs4 = self.marketplace_listings(id)
+        token = bs4.find('a', {'data-itemid': marketid})['data-token']
         response = self.session.post(
-            url=self.index_php + 'page=ingame&component=marketplace&tab=buying&action=acceptRequest&asJson=1',
-            data=form_data,
+            url=self.index_php + f'page=ingame&component=marketplace&tab=buying&action=acceptRequest&asJson=1',
+            data={'marketItemId': marketid,
+                  'token': token},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         if response['status'] == 'success':
@@ -442,19 +468,21 @@ class OGame(object):
         token = re.search('var token = "(.*)"', response).group(1)
         response = self.session.post(
             url=self.index_php,
-            params={'page': 'ingame',
-                    'component': 'marketplace',
-                    'tab': 'create_offer',
-                    'action': 'submitOffer',
-                    'asJson': 1},
-            data={'marketItemType': 4,
-                  'itemType': itemType,
-                  'itemId': ItemId,
-                  'quantity': quantity,
-                  'priceType': priceType,
-                  'price': price_form,
-                  'token': token,
-                  'priceRange': range},
+            params={
+                'page': 'ingame',
+                'component': 'marketplace',
+                'tab': 'create_offer',
+                'action': 'submitOffer',
+                'asJson': 1},
+            data={
+                'marketItemType': 4,
+                'itemType': itemType,
+                'itemId': ItemId,
+                'quantity': quantity,
+                'priceType': priceType,
+                'price': price_form,
+                'token': token,
+                'priceRange': range},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         if response['status'] == 'success':
@@ -464,16 +492,14 @@ class OGame(object):
 
     def collect_marketplace(self):
 
-        def collectItems(tab, action):
+        def collectItems(self, tab, action):
             response = self.session.get(
                 url=self.index_php,
                 params={'page': 'ingame',
                         'component': 'marketplace',
                         'tab': tab}
             ).text
-            html = self.HTML(response)
-            javascript = html.find_all('type', 'javascript', 'value')
-            token = re.search('vartoken="(.*)"', javascript[11]).group(1)
+            token = re.search('var token = "(.*)"', response).group(1)
             response = self.session.get(
                 url=self.index_php,
                 params={'page': 'ingame',
@@ -484,9 +510,10 @@ class OGame(object):
                         'token': token},
                 headers={'X-Requested-With': 'XMLHttpRequest'}
             ).json()
-            html = self.HTML(response['content']['marketplace/marketplace_items_history'])
-            transactionIds = set(html.find_all('data-transactionid', '', 'attribute'))
-            token = set(html.find_all('data-token', '', 'attribute'))
+            bs4 = self.BS4(response['content']['marketplace/marketplace_items_history'])
+            transactionIds = bs4.find_all('div', {'data-transactionid': True})
+            transactionIds = set([id['data-transactionid'] for id in transactionIds])
+            token = re.search('collectItem&token=(.*)"', bs4.text).group(1)
             result = []
             for id in transactionIds:
                 response = self.session.post(
@@ -496,7 +523,7 @@ class OGame(object):
                             'action': 'collectItem',
                             'token': token,
                             'asJson': 1},
-                    data={'marketTransactionId': id,
+                    data={'marketTransactionId': int(id),
                           'token': token},
                     headers={'X-Requested-With': 'XMLHttpRequest'}
                 ).json()
@@ -505,29 +532,28 @@ class OGame(object):
             return result
 
         result = []
-        result.extend([collectItems(tab='history_buying', action='fetchHistoryBuyingItems')])
-        result.extend(collectItems(tab='history_selling', action='fetchHistorySellingItems'))
+        result.extend(collectItems(self, tab='history_buying', action='fetchHistoryBuyingItems'))
+        result.extend(collectItems(self, tab='history_selling', action='fetchHistorySellingItems'))
         if 'success' in result:
             return True
         else:
             return False
 
     def traider(self, id):
-        raise Exception("function not implemented yet PLS contribute")
+        raise NotImplementedError("function not implemented yet PLS contribute")
 
     def research(self):
         response = self.session.get(
             url=self.index_php,
             params={'page': 'ingame', 'component': 'research', 'cp': OGame.planet_ids(self)[0]}
         ).text
-        html = OGame.HTML(response)
-        research_level = [int(level)
-                          for level in html.find_all('class', 'level', 'attribute', 'data-value', exact=True)]
-        status = html.find_all('data-technology', '', 'attribute', 'data-status')
+        bs4 = self.BS4(response)
+        levels = [int(level['data-value']) for level in bs4.find_all(class_='level')]
+        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Research:
             def __init__(self, i):
-                self.level = research_level[i]
+                self.level = levels[i]
                 self.data = OGame.collect_status(status[i])
                 self.is_possible = self.data[0]
                 self.in_construction = self.data[1]
@@ -554,10 +580,9 @@ class OGame(object):
 
     def ships(self, id):
         response = self.session.get(self.index_php + 'page=ingame&component=shipyard&cp={}'.format(id)).text
-        html = OGame.HTML(response)
-        ships_amount = html.find_all('class', 'amount', 'attribute', 'data-value', exact=True)
-        ships_amount = [int(ship) for ship in ships_amount]
-        status = html.find_all('data-technology', '', 'attribute', 'data-status')
+        bs4 = self.BS4(response)
+        ships_amount = [int(level['data-value']) for level in bs4.find_all(class_='amount')]
+        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Ship:
             def __init__(self, i):
@@ -600,10 +625,9 @@ class OGame(object):
 
     def defences(self, id):
         response = self.session.get(self.index_php + 'page=ingame&component=defenses&cp={}'.format(id)).text
-        html = OGame.HTML(response)
-        defences_amount = html.find_all('class', 'amount', 'attribute', 'data-value', exact=True)
-        defences_amount = [int(ship) for ship in defences_amount]
-        status = html.find_all('data-technology', '', 'attribute', 'data-status')
+        bs4 = self.BS4(response)
+        defences_amount = [int(level['data-value']) for level in bs4.find_all(class_='amount')]
+        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Defence:
             def __init__(self, i):
@@ -626,161 +650,161 @@ class OGame(object):
 
         return Defences
 
-    def galaxy(self, coordinates):
-        form_data = {'galaxy': coordinates[0], 'system': coordinates[1]}
+    def galaxy(self, coords):
         response = self.session.post(
             url=self.index_php + 'page=ingame&component=galaxyContent&ajax=1',
-            data=form_data,
+            data={'galaxy': coords[0], 'system': coords[1]},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
-        html = OGame.HTML(response['galaxy'])
-        moons = [int(moon.replace('moon', '')) for moon in html.find_all('rel', 'moon', 'attribute')]
+        bs4 = self.BS4(response['galaxy'])
 
-        def collect_player():
-            player_names = []
-            player_ids = []
-            player_ids_count = 0
-            allys = html.find_all('rel', 'alliance', 'value')
-            moderatorTags = ['A', 's', 'n', 'o', 'u', 'g', 'i', 'I', 'ep', '', 'd', 'v', 'ph', 'f', 'b', 'hp', 'sek.']
-            for name in html.find_all('class', 'status_abbr_', 'value'):
-                if name not in moderatorTags and 2 < len(name) and name not in allys:
-                    name = name.replace('...', '')
-                    player_names.append(name)
-                    if name not in self.player:
-                        player_ids.append(int(html.find_all('id', 'player', 'attribute')
-                                              [player_ids_count].replace('player', '')))
-                        player_ids_count += 1
-                    else:
-                        player_ids.append(self.player_id)
-            return player_names, player_ids
+        positions = bs4.find_all_partial(rel='planet')
+        positions = [pos['rel'] for pos in positions]
+        positions = [re.search('planet(.*)', pos).group(1) for pos in positions]
+        positions = [const.coordinates(coords[0], coords[1], int(pos), const.destination.planet) for pos in positions]
 
-        def collect_status():
-            stati = []
-            for status in html.find_all('class', 'row', 'attribute')[5:]:
-                if 'rowempty' in status:
-                    continue
-                elif 'row' == status:
-                    stati.append([const.status.active])
-                else:
-                    activitys = []
-                    for activity in [const.status.active, const.status.inactive, const.status.vacation,
-                                     const.status.noob, const.status.honorableTarget]:
-                        if activity in status and activity != 'active':
-                            activitys.append(activity)
-                    stati.append(activitys)
-            return stati
+        planet_names = bs4.find_all_partial(rel='planet')
+        planet_names = [name.h1.span.text for name in planet_names]
 
-        def collect_online():
-            online_status = []
-            for i, planet in enumerate(response['galaxy'].split('rel="planet')[1:]):
-                if 'activity minute15' in planet:
-                    online_status.append(const.status.online)
-                elif 'activity' in planet:
-                    online_status.append(const.status.recently)
-                else:
-                    online_status.append(const.status.offline)
-            return online_status
+        players = bs4.find_all_partial(id='player')
+        player_names = [name.h1.span.text for name in players]
+        player_ids = [id['id'] for id in players]
+        player_ids = [int(re.search('player(.*)', id).group(1)) for id in player_ids]
+
+        planet_status = []
+        for status in bs4.find_all(class_='row'):
+            status = status['class']
+            status.remove('row')
+            if 'empty_filter' in status:
+                continue
+            elif len(status) is 0:
+                planet_status.append([const.status.yourself])
+            else:
+                status = [re.search('(.*)_filter', sta).group(1) for sta in status]
+                planet_status.append(status)
+
+        moon_pos = bs4.find_all_partial(rel='moon')
+        moon_pos = [pos['rel'] for pos in moon_pos]
+        moon_pos = [int(re.search('moon(.*)', pos).group(1)) for pos in moon_pos]
 
         planets = []
-        for planet_pos, planet_name, planet_player, planet_player_id, player_status, planet_status in zip(
-                [int(pos.replace('planet', '')) for pos in html.find_all('rel', 'planet', 'attribute')],
-                html.find_all('class', 'planetname', 'value'),
-                collect_player()[0],
-                collect_player()[1],
-                collect_online(),
-                collect_status()):
+        for i in range(len(player_ids)):
 
-            class planet_class:
-                position = const.coordinates(coordinates[0], coordinates[1], planet_pos)
-                name = planet_name
-                player = planet_player
-                player_id = planet_player_id
-                status = planet_status
-                status.append(player_status)
-                if planet_pos in moons:
+            class Position:
+                position = positions[i]
+                name = planet_names[i]
+                player = player_names[i]
+                player_id = player_ids[i]
+                status = planet_status[i]
+                if position[2] in moon_pos:
                     moon = True
                 else:
                     moon = False
                 list = [name, position, player, player_id, status, moon]
 
-            planets.append(planet_class)
+            planets.append(Position)
+
         return planets
 
     def ally(self):
-        return self.landing_page.find_all('name', 'ogame-alliance-name', 'attribute', 'content')
+        alliance = self.landing_page.find(name='ogame-alliance-name')
+        if alliance:
+            return alliance
+        else:
+            return []
 
     def officers(self):
-        raise Exception("function not implemented yet PLS contribute")
+        raise NotImplementedError("function not implemented yet PLS contribute")
 
     def shop(self):
-        raise Exception("function not implemented yet PLS contribute")
+        raise NotImplementedError("function not implemented yet PLS contribute")
+
+    def fleet_coordinates(self, event, coordsclass):
+        coordinate = [coords.find(class_=coordsclass).a.text for coords in event]
+        coordinate = [const.convert_to_coordinates(coords) for coords in coordinate]
+        destination = [dest.find('figure', {'class': 'planetIcon'}) for dest in event]
+        destination = [const.convert_to_destinations(dest['class']) for dest in destination]
+        coordinates = []
+        for coords, dest in zip(coordinate, destination):
+            coords.append(dest)
+            coordinates.append(coords)
+
+        return coordinates
 
     def friendly_fleet(self):
-        response = self.session.get(
-            url=self.index_php + 'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
-            headers={'X-Requested-With': 'XMLHttpRequest'}
-        ).json()
-        if response['friendly'] == 0:
+        if not self.friendly():
             return []
         response = self.session.get(self.index_php + 'page=ingame&component=movement').text
-        html = OGame.HTML(response)
-        missions = len(html.find_all('id', 'fleet', 'attribute'))
+        bs4 = self.BS4(response)
+        fleetDetails = bs4.find_all(class_='fleetDetails')
+        fleet_ids = bs4.find_all_partial(id="fleet")
+        fleet_ids = [id['id'] for id in fleet_ids]
+        fleet_ids = [int(re.search('fleet(.*)', id).group(1)) for id in fleet_ids]
+
+        mission_types = [int(event['data-mission-type']) for event in fleetDetails]
+        return_flights = [bool(event['data-return-flight']) for event in fleetDetails]
+
+        arrival_times = [int(event['data-arrival-time']) for event in fleetDetails]
+        arrival_times = [datetime.fromtimestamp(timestamp) for timestamp in arrival_times]
+
+        destinations = self.fleet_coordinates(fleetDetails, 'destinationCoords')
+        origins = self.fleet_coordinates(fleetDetails, 'originCoords')
+
         fleets = []
-        for fleet_id, fleet_mission, fleet_returns, fleet_arrival, fleet_origin, fleet_destination in zip(
-                [int(fleet_id.replace('fleet', '')) for fleet_id in html.find_all('id', 'fleet', 'attribute')],
-                html.find_all('data-mission-type', '', 'attribute')[-missions:],
-                html.find_all('data-return-flight', '', 'attribute')[-missions:],
-                html.find_all('class', 'timertooltip', 'attribute', 'title'),
-                [html.find_all('href', '&componentgalaxy&galaxy', 'value')[i] for i in range(0, missions * 2, 2)],
-                [html.find_all('href', '&componentgalaxy&galaxy', 'value')[i] for i in range(1, missions * 2, 2)]):
-
-            class fleets_class:
-                id = fleet_id
-                mission = int(fleet_mission)
+        for i in range(len(fleet_ids)):
+            class Fleets:
+                id = fleet_ids[i]
+                mission = mission_types[i]
                 diplomacy = const.diplomacy.friendly
-                player = self.player_id
-                if fleet_returns == '1':
-                    returns = True
-                else:
-                    returns = False
-                arrival = datetime.strptime(fleet_arrival, '%d.%m.%Y%H:%M:%S')
-                origin = const.convert_to_coordinates(fleet_origin)
-                destination = const.convert_to_coordinates(fleet_destination)
-                list = [id, mission, diplomacy, player, returns, arrival, origin, destination]
+                player_name = self.player
+                player_id = self.player_id
+                returns = return_flights[i]
+                arrival = arrival_times[i]
+                origin = origins[i]
+                destination = destinations[i]
+                list = [id, mission, diplomacy, player_name, player_id, returns, arrival, origin, destination]
 
-            fleets.append(fleets_class)
+            fleets.append(Fleets)
         return fleets
 
     def hostile_fleet(self):
+        if not self.attacked():
+            return []
         response = self.session.get(
             url=self.index_php + 'page=componentOnly&component=eventList'
         ).text
-        html = OGame.HTML(response)
-        missions = len(html.find_all('id', 'eventRow-', 'attribute'))
-        coordinates = [self.celestial_coordinates(id) for id in self.planet_ids() + self.moon_ids()]
-        coordinates = [coords[:-1] for coords in coordinates]
+        bs4 = self.BS4(response)
+
+        eventFleet = bs4.find_all('span', class_='hostile')
+        eventFleet = [child.parent.parent for child in eventFleet]
+
+        fleet_ids = [id['id'] for id in eventFleet]
+        fleet_ids = [int(re.search('eventRow-(.*)', id).group(1)) for id in fleet_ids]
+
+        arrival_times = [int(event['data-arrival-time']) for event in eventFleet]
+        arrival_times = [datetime.fromtimestamp(timestamp) for timestamp in arrival_times]
+
+        destinations = self.fleet_coordinates(eventFleet, 'destCoords')
+        origins = self.fleet_coordinates(eventFleet, 'coordsOrigin')
+
+        player_ids = [int(id.find(class_='sendMail').a['data-playerid']) for id in eventFleet]
+        player_names = [name.find(class_='sendMail').a['title'] for name in eventFleet]
+
         fleets = []
-        for player_id, fleet_mission, event_id, fleet_arrival, fleet_origin, fleet_destination in zip(
-                html.find_all('class', 'sendMail', 'attribute', 'data-playerId'),
-                html.find_all('data-mission-type', '', 'attribute')[-missions:],
-                [int(fleet_id.replace('eventRow-', '')) for fleet_id in html.find_all('id', 'eventRow-', 'attribute')],
-                html.find_all('data-arrival-time', '', 'attribute'),
-                [html.find_all('target', '_top', 'value')[i] for i in range(0, missions * 2, 2)],
-                [html.find_all('target', '_top', 'value')[i] for i in range(1, missions * 2, 2)]):
+        for i in range(len(fleet_ids)):
+            class Fleets:
+                id = fleet_ids[i]
+                mission = 1
+                diplomacy = const.diplomacy.hostile
+                player_name = player_names[i]
+                player_id = player_ids[i]
+                returns = False
+                arrival = arrival_times[i]
+                origin = origins[i]
+                destination = destinations[i]
+                list = [id, mission, diplomacy, player_name, player_id, returns, arrival, origin, destination]
 
-            if const.convert_to_coordinates(fleet_destination) in coordinates:
-                class fleets_class:
-                    id = event_id
-                    mission = int(fleet_mission)
-                    diplomacy = const.diplomacy.hostile
-                    player = int(player_id)
-                    returns = False
-                    arrival = datetime.fromtimestamp(int(fleet_arrival))
-                    origin = const.convert_to_coordinates(fleet_origin)
-                    destination = const.convert_to_coordinates(fleet_destination)
-                    list = [id, mission, diplomacy, player, returns, arrival, origin, destination]
-
-                fleets.append(fleets_class)
+            fleets.append(Fleets)
         return fleets
 
     def fleet(self):
@@ -790,66 +814,18 @@ class OGame(object):
         return fleets
 
     def phalanx(self, coordinates, id):
-        UserWarning("")
-        response = self.session.get(
-            url=self.index_php + 'page=phalanx&galaxy={}&system={}&position={}&ajax=1&cp={}'
-                .format(coordinates[0], coordinates[1], coordinates[2], id)
-        ).text
-        html = OGame.HTML(response)
-        missions = len(html.find_all('id', 'eventRow-', 'attribute'))
-        fleets = []
-        for fleet_id, fleet_mission, fleet_returns, fleet_arrival, fleet_origin, fleet_destination in zip(
-                html.find_all('id', 'eventRow-', 'attribute'),
-                html.find_all('data-mission-type', '', 'attribute'),
-                html.find_all('data-return-flight', '', 'attribute'),
-                html.find_all('data-arrival-time', '', 'attribute'),
-                [html.find_all('class', 'dark_highlight_tablet', 'value')[i] for i in range(0, missions * 3, 3)],
-                [html.find_all('class', 'dark_highlight_tablet', 'value')[i] for i in range(2, missions * 3, 3)]):
-
-            class fleets_class:
-                id = int(fleet_id.replace('eventRow-', ''))
-                mission = int(fleet_mission)
-                if fleet_returns == 'true':
-                    returns = True
-                else:
-                    returns = False
-                arrival = datetime.fromtimestamp(int(fleet_arrival))
-                origin = const.convert_to_coordinates(fleet_origin)
-                destination = const.convert_to_coordinates(fleet_destination)
-                list = [id, mission, returns, arrival, origin, destination]
-
-            fleets.append(fleets_class)
-        return fleets
-
-    def messages(self, message_type, page):
-        form_data = {'messageId': -1,
-                     'tabid': message_type,
-                     'action': 107,
-                     'pagination': page,
-                     'ajax': 1}
-        response = self.session.post(
-            url=self.index_php + 'page=messages',
-            data=form_data
-        ).text
-        html = OGame.HTML(response)
-        return html
+        raise NotImplemented('Phalanx get you banned ig used with invalid parameters')
 
     def send_message(self, player_id, msg):
         response = self.session.get(self.index_php + 'page=chat').text
-        html = OGame.HTML(response)
-        chat_token = None
-        for line in html.find_all('type', 'textjavascript', 'value'):
-            if 'ajaxChatToken' in line:
-                chat_token = line.split('ajaxChatToken=')[1].split('"')[1]
-                break
-        form_data = {'playerId': player_id,
-                     'text': msg,
-                     'mode': 1,
-                     'ajax': 1,
-                     'token': chat_token}
+        chat_token = re.search('var ajaxChatToken = "(.*)"', response).group(1)
         response = self.session.post(
             url=self.index_php + 'page=ajaxChat',
-            data=form_data,
+            data={'playerId': player_id,
+                  'text': msg,
+                  'mode': 1,
+                  'ajax': 1,
+                  'token': chat_token},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         if 'OK' in response['status']:
@@ -858,63 +834,38 @@ class OGame(object):
             return False
 
     def spyreports(self):
-        html = OGame.messages(self, const.messages.spy_reports, 1)
-        spyreports = []
-        for message in html.find_all('data-msg-id', '', 'attribute'):
-            response = self.session.get(
-                url=self.index_php + 'page=messages&messageId={}&tabid={}&ajax=1'
-                    .format(message, const.messages.spy_reports)
-            ).text
-            spy_html = OGame.HTML(response)
-            fright = spy_html.find_all('class', 'fright', 'value')
-            fright.pop()
-            if len(fright) > 10:  # non Spyreports are less than 10
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'messages',
+                    'tab': 20,
+                    'ajax': 1}
+        ).text
+        bs4 = self.BS4(response)
+        report_links = [link['href'] for link in bs4.find_all_partial(href='page=messages&messageId')]
 
-                class spy_report_class:
-                    id = message
-                    coordinates = const.convert_to_coordinates(response)
-                    if spy_html.find_all('class', 'planetIcon', 'attribute') is not []:
-                        coordinates.append(const.destination.planet)
-                    else:
-                        coordinates.append(const.destination.moon)
-                    time = datetime.strptime(fright[5], '%d.%m.%Y%H:%M:%S')
-                    resources = spy_html.find_all('class', 'resource_list', 'attribute', 'title')
-                    resources = [resources[0], resources[1], resources[2]]
-                    resources = [int(resource.replace('.', '')) for resource in resources]
-                    tech = []
-                    fleets = spy_html.find_all('class', 'tech', 'attribute')
-                    for fleet in fleets:
-                        tech.append(const.convert_tech(int(fleet.replace('tech', '')), 'shipyard'))
-                    defences = spy_html.find_all('class', 'fright', 'value')
-                    for defence in defences:
-                        if not defence.isdigit():
-                            defence = defences.remove(defence)
-                    buildings = spy_html.find_all('class', 'building', 'attribute')
-                    for building in buildings:
-                        if building != 'building_imagefloat_left':
-                            tech.append(const.convert_tech(int(building.replace('building', '')), 'supplies'))
-                    researchings = spy_html.find_all('class', 'research', 'attribute')
-                    for research in researchings:
-                        if research != 'research_imagefloat_left':
-                            tech.append(const.convert_tech(int(research.replace('research', '')), 'research'))
-                    technology = dict((tech, amount) for tech, amount in zip(tech, fright[7:]))
-                    list = [id, time, coordinates, resources, technology]
+        reports = []
+        for link in report_links:
+            response = self.session.get(link).text
+            bs4 = self.BS4(response)
+            technologys = [tech['class'][0] for tech in bs4.find_all('img')]
+            amounts = [tech.parent.parent.find_all('span')[1].text for tech in bs4.find_all('img')]
 
-                spyreports.append(spy_report_class)
-        return spyreports
+            class Report:
+                fright = [(tech, amount) for tech, amount in zip(technologys, amounts)]
 
-    def send_fleet(self, mission, id, where, ships, resources=[0, 0, 0], speed=10, holdingtime=0):
+            reports.append(Report)
+
+        return reports
+
+    def send_fleet(self, mission, id, where, ships, resources=(0, 0, 0), speed=10, holdingtime=0):
         response = self.session.get(self.index_php + 'page=ingame&component=fleetdispatch&cp={}'.format(id)).text
-        html = OGame.HTML(response)
-        sendfleet_token = None
-        for line in html.find_all('type', 'textjavascript', 'value'):
-            if 'fleetSendingToken' in line:
-                sendfleet_token = line.split('fleetSendingToken=')[1].split('"')[1]
-                break
+        sendfleet_token = re.search('var fleetSendingToken = "(.*)"', response).group(1)
         form_data = {'token': sendfleet_token}
+
         for ship in ships:
             ship_type = 'am{}'.format(ship[0])
             form_data.update({ship_type: ship[1]})
+
         form_data.update({'galaxy': where[0],
                           'system': where[1],
                           'position': where[2],
@@ -930,6 +881,7 @@ class OGame(object):
                           'retreatAfterDefenderRetreat': 0,
                           'union': 0,
                           'holdingtime': holdingtime})
+
         response = self.session.post(
             url=self.index_php + 'page=ingame&component=fleetdispatch&action=sendFleet&ajax=1&asJson=1',
             data=form_data,
@@ -945,15 +897,16 @@ class OGame(object):
         amount = what[1]
         component = what[2]
         response = self.session.get(self.index_php + 'page=ingame&component={}&cp={}'.format(component, id)).text
-        html = OGame.HTML(response)
-        build_token = None
-        for line in html.find_all('type', 'javascript', 'value'):
-            if 'urlQueueAdd' in line:
-                build_token = line.split('token=')[1].split('\'')[0]
-                break
-        build_url = self.index_php + 'page=ingame&component={}&modus=1&token={}&type={}&menge={}' \
-            .format(component, build_token, type, amount)
-        self.session.get(build_url)
+        build_token = re.search("var urlQueueAdd = (.*)token=(.*)'", response).group(2)
+        self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame',
+                    'component': component,
+                    'modus': 1,
+                    'token': build_token,
+                    'type': type,
+                    'menge': amount}
+        )
 
     def collect_rubble_field(self, id):
         self.session.get(
