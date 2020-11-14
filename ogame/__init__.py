@@ -3,7 +3,6 @@ import requests
 import unittest
 from bs4 import BeautifulSoup
 from datetime import datetime
-from urllib.parse import parse_qs
 
 try:
     import constants as const
@@ -657,6 +656,7 @@ class OGame(object):
             data={'galaxy': coords[0], 'system': coords[1]},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
+        print(response['galaxy'])
         bs4 = self.BS4(response['galaxy'])
 
         positions = bs4.find_all_partial(rel='planet')
@@ -673,8 +673,7 @@ class OGame(object):
         player_ids = [int(re.search('player(.*)', id).group(1)) for id in player_ids]
 
         player_rank = bs4.select(".rank a")
-        player_rank = {int(parse_qs(a['href'])['searchRelId'][0]): int(a.text)
-                for a in player_rank}
+        player_rank = {int(re.search('searchRelId=(.*)', a['href']).group(1)): int(a.text) for a in player_rank}
 
         planet_status = []
         for status in bs4.find_all(class_='row'):
@@ -701,7 +700,7 @@ class OGame(object):
                 player = player_names[i]
                 player_id = player_ids[i]
                 status = planet_status[i]
-                rank = player_rank.get(player_ids[i], None)
+                rank = player_rank.get(player_id, None)
                 if position[2] in moon_pos:
                     moon = True
                 else:
