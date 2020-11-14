@@ -656,7 +656,6 @@ class OGame(object):
             data={'galaxy': coords[0], 'system': coords[1]},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
-        print(response['galaxy'])
         bs4 = self.BS4(response['galaxy'])
 
         positions = bs4.find_all_partial(rel='planet')
