@@ -3,6 +3,7 @@ import requests
 import unittest
 from bs4 import BeautifulSoup
 from datetime import datetime
+from urllib.parse import parse_qs
 
 try:
     import constants as const
@@ -671,6 +672,10 @@ class OGame(object):
         player_ids = [id['id'] for id in players]
         player_ids = [int(re.search('player(.*)', id).group(1)) for id in player_ids]
 
+        player_rank = bs4.select(".rank a")
+        player_rank = {int(parse_qs(a['href'])['searchRelId'][0]): int(a.text)
+                for a in player_rank}
+
         planet_status = []
         for status in bs4.find_all(class_='row'):
             status = status['class']
@@ -696,11 +701,12 @@ class OGame(object):
                 player = player_names[i]
                 player_id = player_ids[i]
                 status = planet_status[i]
+                rank = player_rank.get(player_ids[i], None)
                 if position[2] in moon_pos:
                     moon = True
                 else:
                     moon = False
-                list = [name, position, player, player_id, status, moon]
+                list = [name, position, player, player_id, status, moon, rank]
 
             planets.append(Position)
 
