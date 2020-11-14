@@ -698,13 +698,13 @@ class OGame(object):
                 name = planet_names[i]
                 player = player_names[i]
                 player_id = player_ids[i]
-                status = planet_status[i]
                 rank = player_rank.get(player_id, None)
+                status = planet_status[i]
                 if position[2] in moon_pos:
                     moon = True
                 else:
                     moon = False
-                list = [name, position, player, player_id, status, moon, rank]
+                list = [name, position, player, player_id, rank, status, moon]
 
             planets.append(Position)
 
