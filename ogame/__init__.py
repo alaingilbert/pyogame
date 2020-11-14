@@ -669,7 +669,7 @@ class OGame(object):
                 for player in players if player.a.text.isdigit()}
 
         alliances = bs4.find_all_partial(id='alliance')
-        alliance_name = {num_from_tag(alliance['id']): alliance.h1.text for alliance in alliances}
+        alliance_name = {num_from_tag(alliance['id']): alliance.h1.text.strip() for alliance in alliances}
 
         planets = []
         for row in bs4.select('#galaxytable .row'):
@@ -698,15 +698,19 @@ class OGame(object):
                     coords[0], coords[1], int(planet), const.destination.planet)
             moon_pos = row.find(rel=re.compile(r'moon[0-9]*'))
 
+            alliance_id = row.find(rel=re.compile(r'alliance[0-9]+'))
+            alliance_id = num_from_tag(alliance_id['rel']) if alliance_id else None
+
             class Position:
                 position = planet_cord
                 name = row.find(id=re.compile(r'planet[0-9]+')).h1.span.text
                 player = player_name[pid]
                 player_id = pid
-                rank = player_rank.get(pid, None)
+                rank = player_rank.get(pid)
                 status = planet_status
                 moon = moon_pos is not None
-                list = [name, position, player, player_id, rank, status, moon]
+                alliance = alliance_name.get(alliance_id)
+                list = [name, position, player, player_id, rank, status, moon, alliance]
 
             planets.append(Position)
 
