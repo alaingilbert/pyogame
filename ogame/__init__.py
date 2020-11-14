@@ -673,6 +673,7 @@ class OGame(object):
 
         player_rank = bs4.select(".rank a")
         player_rank = {int(re.search('searchRelId=(.*)', a['href']).group(1)): int(a.text) for a in player_rank}
+                for a in player_rank if a.text}
 
         planet_status = []
         for status in bs4.find_all(class_='row'):
