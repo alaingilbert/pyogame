@@ -12,7 +12,6 @@ except ImportError:
 
 class OGame(object):
     def __init__(self, universe, username, password, token=None, user_agent=None, proxy='', language=None):
-        print('Die Login-Daten sind: ' + universe + ' ' + username + ' ' + password)
         self.forOgameVersion = [7, 5, 1]
         self.universe = universe
         self.username = username
@@ -91,7 +90,6 @@ class OGame(object):
         else:
             self.token = response.json()['token']
             self.session.headers.update({'authorization': 'Bearer {}'.format(self.token)})
-            print('Login successfull')
 
     def BS4(self, response):
         #parsed = BeautifulSoup(response, features="html5lib")
