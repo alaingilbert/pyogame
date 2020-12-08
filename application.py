@@ -10,13 +10,6 @@ login = config['Login']
 telegram = config['Telegram']
 
 
-# Init text
-print('############################################')
-print('# Run the ogame bot')
-print('# modified by edelblistar@kuppelwieser.net')
-print('############################################')
-print('')
-
 # block: user infos
 print('### User informations')
 empire = OGame(login.get('Uni'), login.get('Username'), login.get('Password'))
