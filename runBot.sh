@@ -2,4 +2,4 @@
 pip uninstall --yes ogame
 pip install ogame
 
-python init.py
+python application.py
