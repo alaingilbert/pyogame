@@ -3,9 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-#custom config
-config.cfg
-
 # User-specific stuff
 .idea/**/workspace.xml
 .idea/**/tasks.xml
