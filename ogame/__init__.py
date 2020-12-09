@@ -5,10 +5,9 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 
 try:
-    import constants as const
+    import constants
 except ImportError:
-    import ogame.constants as const
-
+    pass
 
 class OGame(object):
     def __init__(self, universe, username, password, token=None, user_agent=None, proxy='', language=None):
@@ -113,7 +112,7 @@ class OGame(object):
         try:
             import test
         except ImportError:
-            import ogame.test as test
+            pass
         test.UnittestOgame.empire = self
         suite = unittest.TestLoader().loadTestsFromModule(test)
         return unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful()
@@ -239,13 +238,13 @@ class OGame(object):
             if str(id) in planet['href']:
                 coordinates = re.search(r'\[(.*)]', planet['title']).group(1)
                 coordinates = [int(coords) for coords in coordinates.split(':')]
-                coordinates.append(const.destination.planet)
+                coordinates.append(constants.destination.planet)
                 return coordinates
             moon = celestial.find(class_='moonlink')
             if moon and str(id) in moon['href']:
                 coordinates = re.search(r'\[(.*)]', moon['title']).group(1)
                 coordinates = [int(coords) for coords in coordinates.split(':')]
-                coordinates.append(const.destination.moon)
+                coordinates.append(constants.destination.moon)
                 return coordinates
 
     def resources(self, id):
@@ -381,11 +380,11 @@ class OGame(object):
             for sprite, amount in zip(sprites, quantity):
                 amount = amount.replace('.', '')
                 if 'metal' in sprite:
-                    bids.append(const.resources(metal=amount))
+                    bids.append(constants.resources(metal=amount))
                 elif 'crystal' in sprite:
-                    bids.append(const.resources(crystal=amount))
+                    bids.append(constants.resources(crystal=amount))
                 elif 'deuterium' in sprite:
-                    bids.append(const.resources(deuterium=amount))
+                    bids.append(constants.resources(deuterium=amount))
                 elif 'ship' in sprite:
                     shipId = int(sprite.replace('ship', ''))
                     bids.append([shipId, amount, 'shipyard'])
@@ -423,7 +422,7 @@ class OGame(object):
                 offer = offers[i]
                 price = prices[i]
                 is_possible = possibles[i]
-                if const.ships.is_ship(offer):
+                if constants.ships.is_ship(offer):
                     is_ships = True
                     is_resources = False
                 else:
@@ -449,10 +448,10 @@ class OGame(object):
             return False
 
     def submit_marketplace(self, offer, price, range, id):
-        if const.ships.is_ship(offer):
+        if constants.ships.is_ship(offer):
             itemType = 1
-            ItemId = const.ships.ship_id(offer)
-            quantity = const.ships.ship_amount(offer)
+            ItemId = constants.ships.ship_id(offer)
+            quantity = constants.ships.ship_amount(offer)
         else:
             itemType = 2
             ItemId = offer.index(max(offer)) + 1  # ItemId 1 = Metall ...
@@ -662,7 +661,7 @@ class OGame(object):
         positions = bs4.find_all_partial(rel='planet')
         positions = [pos['rel'] for pos in positions]
         positions = [re.search('planet(.*)', pos).group(1) for pos in positions]
-        positions = [const.coordinates(coords[0], coords[1], int(pos), const.destination.planet) for pos in positions]
+        positions = [constants.coordinates(coords[0], coords[1], int(pos), constants.destination.planet) for pos in positions]
 
         planet_names = bs4.find_all_partial(rel='planet')
         planet_names = [name.h1.span.text for name in planet_names]
@@ -679,7 +678,7 @@ class OGame(object):
             if 'empty_filter' in status:
                 continue
             elif len(status) is 0:
-                planet_status.append([const.status.yourself])
+                planet_status.append([constants.status.yourself])
             else:
                 status = [re.search('(.*)_filter', sta).group(1) for sta in status]
                 planet_status.append(status)
@@ -722,9 +721,9 @@ class OGame(object):
 
     def fleet_coordinates(self, event, coordsclass):
         coordinate = [coords.find(class_=coordsclass).a.text for coords in event]
-        coordinate = [const.convert_to_coordinates(coords) for coords in coordinate]
+        coordinate = [constants.convert_to_coordinates(coords) for coords in coordinate]
         destination = [dest.find('figure', {'class': 'planetIcon'}) for dest in event]
-        destination = [const.convert_to_destinations(dest['class']) for dest in destination]
+        destination = [constants.convert_to_destinations(dest['class']) for dest in destination]
         coordinates = []
         for coords, dest in zip(coordinate, destination):
             coords.append(dest)
@@ -756,7 +755,7 @@ class OGame(object):
             class Fleets:
                 id = fleet_ids[i]
                 mission = mission_types[i]
-                diplomacy = const.diplomacy.friendly
+                diplomacy = constants.diplomacy.friendly
                 player_name = self.player
                 player_id = self.player_id
                 returns = return_flights[i]
@@ -796,7 +795,7 @@ class OGame(object):
             class Fleets:
                 id = fleet_ids[i]
                 mission = 1
-                diplomacy = const.diplomacy.hostile
+                diplomacy = constants.diplomacy.hostile
                 player_name = player_names[i]
                 player_id = player_ids[i]
                 returns = False
