@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#custom config
+config.cfg
+
 # User-specific stuff
 .idea/**/workspace.xml
 .idea/**/tasks.xml
@@ -144,3 +147,8 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+.idea/misc.xml
+.idea/modules.xml
+.idea/Privat_pyogame.iml
+.idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml
