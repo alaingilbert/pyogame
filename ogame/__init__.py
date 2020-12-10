@@ -84,7 +84,7 @@ class OGame(object):
                       'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
                       'autoGameAccountCreation': False}
         response = self.session.post('https://gameforge.com/api/v1/auth/thin/sessions', json=login_data)
-        if response.status_code is not 201:
+        if response.status_code != 201:
             raise Exception('Bad Login')
         else:
             self.token = response.json()['token']
@@ -677,7 +677,7 @@ class OGame(object):
             status.remove('row')
             if 'empty_filter' in status:
                 continue
-            elif len(status) is 0:
+            elif len(status) == 0:
                 planet_status.append([constants.status.yourself])
             else:
                 status = [re.search('(.*)_filter', sta).group(1) for sta in status]
@@ -833,6 +833,7 @@ class OGame(object):
         else:
             return False
 
+    @property
     def spyreports(self):
         response = self.session.get(
             url=self.index_php,
@@ -843,18 +844,35 @@ class OGame(object):
         bs4 = self.BS4(response)
         report_links = [link['href'] for link in bs4.find_all_partial(href='page=messages&messageId')]
 
+        def to_int(string):
+            return int(float(string.replace('M', '000').replace('n', '')))
+
         reports = []
         for link in report_links:
-            response = self.session.get(link).text
-            bs4 = self.BS4(response)
-            technologys = [tech['class'][0] for tech in bs4.find_all('img')]
-            amounts = [tech.parent.parent.find_all('span')[1].text for tech in bs4.find_all('img')]
+            try:
+                response = self.session.get(link).text
+                if bs4 == '':
+                    continue
+                bs4 = self.BS4(response)
+                if('Flottenkommando' == bs4.find(class_='msg_sender').text):
+                    # technologys = [tech['class'][0] for tech in bs4.find_all('img')]
+                    # amounts = [tech.parent.parent.find_all('span')[1].text for tech in bs4.find_all('img')]
+                    resources = bs4.find_all(class_='resource_list_el tooltipCustom')
 
-            class Report:
-                fright = [(tech, amount) for tech, amount in zip(technologys, amounts)]
+                    class Report:
+                        # fright = [(tech, amount) for tech, amount in zip(technologys, amounts)]
+                        fright_date = bs4.find(class_='msg_date fright').text
+                        planet = bs4.find('figure').parent.text.rsplit(' ',1)[0]
+                        cords = bs4.find('figure').parent.text.rsplit(' ',1)[1]
+                        metal = resources[0]['title'] if resources[0]['title'] else 'none'
+                        crystal = resources[1]['title'] if resources[1]['title'] else 'none'
+                        deuterium = resources[2]['title'] if resources[2]['title'] else 'none'
 
-            reports.append(Report)
-
+                    reports.append(Report)
+                else:
+                    print('No spy report. It is a', bs4.find(class_='msg_sender').text)
+            except:
+                print("An exception occurred")
         return reports
 
     def send_fleet(self, mission, id, where, ships, resources=(0, 0, 0), speed=10, holdingtime=0):
