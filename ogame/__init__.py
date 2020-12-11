@@ -835,17 +835,22 @@ class OGame(object):
 
     @property
     def spyreports(self):
-        response = self.session.get(
-            url=self.index_php,
-            params={'page': 'messages',
-                    'tab': 20,
-                    'ajax': 1}
-        ).text
-        bs4 = self.BS4(response)
-        report_links = [link['href'] for link in bs4.find_all_partial(href='page=messages&messageId')]
-
-        def to_int(string):
-            return int(float(string.replace('M', '000').replace('n', '')))
+        # get links for the last 30 pages
+        i = 1
+        report_links = []
+        while i <= 30:
+            response = self.session.get(
+                url=self.index_php,
+                params={'page': 'messages',
+                        'tab': 20,
+                        'action': 107,
+                        'messageId': -1,
+                        'pagination': i,
+                        'ajax': 1}
+            ).text
+            bs4 = self.BS4(response)
+            report_links.extend([link['href'] for link in bs4.find_all_partial(href='page=messages&messageId')])
+            i += 1
 
         reports = []
         for link in report_links:
