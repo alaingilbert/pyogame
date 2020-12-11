@@ -44,7 +44,5 @@ empire = OGame(login.get('Uni'), login.get('Username'), login.get('Password'))
 
 # print out spyreport
 for spyreport in empire.spyreports:
-    print('{3} - {4}: Metal {0} Kristall {1} Deuterium {2}'.format(spyreport.metal, spyreport.crystal, spyreport.deuterium, spyreport.cords, spyreport.planet))
-
-
-res = empire.resources(33643513)
+    print('@{5}, {3} - {4}: Metal {0} Kristall {1} Deuterium {2}'
+          .format(spyreport.metal, spyreport.crystal, spyreport.deuterium, spyreport.cords, spyreport.planet, spyreport.fright_date))
