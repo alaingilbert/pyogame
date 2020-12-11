@@ -43,11 +43,15 @@ empire = OGame(login.get('Uni'), login.get('Username'), login.get('Password'))
 #             continue
 
 
-# print out spyreport
-# To return a new list, use the sorted() built-in function...
-spyreports = sorted(empire.spyreports, key=lambda x: float(x.metal), reverse=True)
+# print spy reports
+spyreports = sorted(empire.spyreports, key=lambda x: float(x.metal), reverse=True) #sort list descending
 for spyreport in spyreports:
     print('{3}: Metal {0} Kristall {1} Deuterium {2}'
-          .format(spyreport.metal, spyreport.crystal, spyreport.deuterium, spyreport.cords, spyreport.planet, spyreport.fright_date))
+          .format(spyreport.metal if spyreport.metal != -1 else 'unbekannt',
+                  spyreport.crystal if spyreport.crystal != -1 else 'unbekannt',
+                  spyreport.deuterium if spyreport.deuterium != -1 else 'unbekannt',
+                  spyreport.cords,
+                  spyreport.planet,
+                  spyreport.fright_date))
 
 print('Finished!')
