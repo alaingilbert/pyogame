@@ -869,9 +869,9 @@ class OGame(object):
                         fright_date = bs4.find(class_='msg_date fright').text
                         planet = bs4.find('figure').parent.text.rsplit(' ',1)[0]
                         cords = bs4.find('figure').parent.text.rsplit(' ',1)[1]
-                        metal = resources[0]['title'] if resources[0]['title'] else 'none'
-                        crystal = resources[1]['title'] if resources[1]['title'] else 'none'
-                        deuterium = resources[2]['title'] if resources[2]['title'] else 'none'
+                        metal = resources[0]['title'] if resources[0]['title'] else '-1'
+                        crystal = resources[1]['title'] if resources[1]['title'] else '-1'
+                        deuterium = resources[2]['title'] if resources[2]['title'] else '-1'
 
                     reports.append(Report)
                 else:
