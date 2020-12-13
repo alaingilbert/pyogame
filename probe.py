@@ -14,13 +14,14 @@ maxFleets = 5
 empire = OGame(login.get('Uni'), login.get('Username'), login.get('Password'))
 
 # properties
-spyplanets = True
+spyplanets = False
 printreport = True
-lastDateOfReport = datetime.now()
-#lastDateOfReport = None
+#lastDateOfReport = datetime.now()
+lastDateOfReport = None
+lastPage = 2
 
-galaxy_range = [1, 1] #[1, 6]
-system_range = [1, 10] #[1, 499]
+galaxy_range = [2, 2] #[1, 6]
+system_range = [1, 499] #[1, 499]
 
 planetMILLET = empire.planet_ids()[0]
 planetORTOVOX = empire.planet_ids()[1]
@@ -75,10 +76,10 @@ if spyplanets:
 
 # print spy reports
 print()
-spyreports = sorted(empire.spyreports(lastDateOfReport=lastDateOfReport), key=lambda x: float(x.resourcesTotal), reverse=True) #sort list descending
+spyreports = sorted(empire.spyreports(lastDateOfReport=lastDateOfReport, lastpage=lastPage), key=lambda x: float(x.resourcesTotal), reverse=True) #sort list descending
 for spyreport in spyreports:
     print('{3}: Total {7} Plunder {8} Metal {0} Crystal {1} Deuterium {2} Defense {6} '
-            '=> You need {9} little Transporter'
+            '=> You need {9} small transporters'
           .format(spyreport.metal if spyreport.metal != -1 else 'unknown',
                     spyreport.crystal if spyreport.crystal != -1 else 'unknown',
                     spyreport.deuterium if spyreport.deuterium != -1 else 'unknown',
@@ -88,7 +89,7 @@ for spyreport in spyreports:
                     spyreport.defenseScore if spyreport.defenseScore != -1 else 'unknown',
                     spyreport.resourcesTotal,
                     spyreport.resourcesTotal / 2,
-                    spyreport.resourcesTotal / 6250
+                    spyreport.resourcesTotal / 2 / 6250
                   )
           )
 

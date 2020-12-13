@@ -877,9 +877,9 @@ class OGame(object):
                              continue
 
                     # defense
-                    defense = bs4.find('ul', {'data-type': 'defense'})
-                    defenseBuildingIDs = defense.find_all('img')
-                    defenseVars = defense.find_all('span')
+                    defenseContent = bs4.find('ul', {'data-type': 'defense'})
+                    defenseBuildingIDs = defenseContent.find_all('img')
+                    defenseVars = defenseContent.find_all('span')
 
                     class Report:
                         fright_date = reportDate
@@ -936,9 +936,11 @@ class OGame(object):
                                 i += 1
                                 j += 2
                         else:
-                            defenseScore = 0
-                            # fix it later
-                            # defenseScore should be -1 when spy lvl to small
+                            if defenseContent.text.find(
+                                    'Wir konnten für diesen Typ keine verlässlichen Daten beim Scannen ermitteln.') != -1:
+                                defenseScore = -1
+                            else:
+                                defenseScore = 0
 
                     reports.append(Report)
                 else:
