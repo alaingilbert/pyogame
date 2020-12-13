@@ -836,21 +836,22 @@ class OGame(object):
     @property
     def spyreports(self):
         # get links for the last 30 pages
-        i = 1
+        firstpage = 1
+        lastpage = 30
         report_links = []
-        while i <= 30:
+        while firstpage <= lastpage:
             response = self.session.get(
                 url=self.index_php,
                 params={'page': 'messages',
                         'tab': 20,
                         'action': 107,
                         'messageId': -1,
-                        'pagination': i,
+                        'pagination': firstpage,
                         'ajax': 1}
             ).text
             bs4 = self.BS4(response)
             report_links.extend([link['href'] for link in bs4.find_all_partial(href='page=messages&messageId')])
-            i += 1
+            firstpage += 1
 
         reports = []
         for link in report_links:
@@ -860,18 +861,68 @@ class OGame(object):
                     continue
                 bs4 = self.BS4(response)
                 if('Flottenkommando' == bs4.find(class_='msg_sender').text):
-                    # technologys = [tech['class'][0] for tech in bs4.find_all('img')]
-                    # amounts = [tech.parent.parent.find_all('span')[1].text for tech in bs4.find_all('img')]
+                    #technologys = [tech['class'][0] for tech in bs4.find_all('img')]
+                    #ships = bs4.find('ul', {'data-type': 'ships'})
+                    #buildings = bs4.find('ul', {'data-type': 'buildings'})
+                    #research = bs4.find('ul', {'data-type': 'research'})
+                    #amounts = [tech.parent.parent.find_all('span')[1].text for tech in bs4.find_all('img')]
                     resources = bs4.find_all(class_='resource_list_el tooltipCustom')
 
+                    # planet properties
+                    planetNameCords = bs4.find('figure')
+                    if planetNameCords is None: # is "Spionagebericht von Zerstörter Planet"
+                        continue
+
+                    # defense
+                    defense = bs4.find('ul', {'data-type': 'defense'})
+                    defenseBuildingIDs = defense.find_all('img')
+                    defenseVars = defense.find_all('span')
+
                     class Report:
-                        # fright = [(tech, amount) for tech, amount in zip(technologys, amounts)]
                         fright_date = bs4.find(class_='msg_date fright').text
-                        planet = bs4.find('figure').parent.text.rsplit(' ',1)[0]
-                        cords = bs4.find('figure').parent.text.rsplit(' ',1)[1]
-                        metal = resources[0]['title'].replace('.','') if resources[0]['title'] else '-1'
-                        crystal = resources[1]['title'].replace('.','') if resources[1]['title'] else '-1'
-                        deuterium = resources[2]['title'].replace('.','') if resources[2]['title'] else '-1'
+                        planet = planetNameCords.parent.text.rsplit(' ', 1)[0]
+                        cords = planetNameCords.parent.text.rsplit(' ', 1)[1]
+                        metal = resources[0]['title'].replace('.', '') if resources[0]['title'] else '-1'
+                        crystal = resources[1]['title'].replace('.', '') if resources[1]['title'] else '-1'
+                        deuterium = resources[2]['title'].replace('.', '') if resources[2]['title'] else '-1'
+
+                        #defense
+                        defenseScore = 0
+                        defense = []
+                        if len(defenseBuildingIDs) > 0:
+                            i = 0
+                            while i < len(defenseBuildingIDs):
+                                defenseID = defenseBuildingIDs[i]['class'][0]
+                                print('id defense', defenseID)
+                                defenseName = defenseVars[i].text
+                                defenseValue = int(defenseVars[i + 1].text)
+                                defense.append([defenseID, defenseName, defenseValue])
+
+                                # wiki: https://ogame.fandom.com/wiki/Defense
+                                if (defenseID == 'defense401'):  # Raktenwerfer
+                                    defenseScore += 2000 * defenseValue
+                                elif (defenseID == 'defense402'):  # Leichtes Läsergeschütz
+                                    defenseScore += 2000 * defenseValue
+                                elif (defenseID == 'defense403'):  # Schweres Läsergeschütz
+                                    defenseScore += 8000 * defenseValue
+                                elif (defenseID == 'defense405'):  # Ionengeschütz
+                                    defenseScore += 8000 * defenseValue
+                                elif (defenseID == 'defense404'):  # Gaußkanone
+                                    defenseScore += 35000 * defenseValue
+                                elif (defenseID == 'defense406'):  # Plasma Kanone
+                                    defenseScore += 100000 * defenseValue
+                                elif (defenseID == 'defense407'):  # kleine Schildkuppel
+                                    defenseScore += 20000 * defenseValue
+                                elif (defenseID == 'defense408'):  # große Schildkuppel
+                                    defenseScore += 100000 * defenseValue
+                                elif (defenseID == 'defense502'):  # Abfangraketen
+                                    defenseScore += 8000 * defenseValue
+                                elif (defenseID == 'defense502'):  # Interplanetarrakete
+                                    defenseScore += 15000 * defenseValue
+                                else:
+                                    print('defense score is unknown')
+                                defenseScore += defenseValue
+                                i += 1
 
                     reports.append(Report)
                 else:
