@@ -872,7 +872,7 @@ class OGame(object):
                     if planetNameCords is None: # is "Spionagebericht von Zerstörter Planet"
                         continue
                     if lastDateOfReport is not None:
-                        if lastDateOfReport >= datetime.strptime(reportDate, '%d.%m.%Y %H:%M:%S'):
+                        if lastDateOfReport <= datetime.strptime(reportDate, '%d.%m.%Y %H:%M:%S'):
                              continue
 
                     # defense
@@ -922,7 +922,6 @@ class OGame(object):
                                     defenseScore += 15000 * defenseValue
                                 else:
                                     print('defense score is unknown')
-                                defenseScore += defenseValue
                                 i += 1
 
                     reports.append(Report)

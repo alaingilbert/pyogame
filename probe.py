@@ -46,7 +46,7 @@ lastDateOfReport = datetime.now()
 
 
 # print spy reports
-spyreports = sorted(empire.spyreports(lastDateOfReport=lastDateOfReport, lastpage=3), key=lambda x: float(x.metal), reverse=True) #sort list descending
+spyreports = sorted(empire.spyreports(lastDateOfReport=lastDateOfReport), key=lambda x: float(x.metal), reverse=True) #sort list descending
 for spyreport in spyreports:
     print('{3}: Metal {0} Kristall {1} Deuterium {2} Defense {6}'
           .format(spyreport.metal if spyreport.metal != -1 else 'unbekannt',
