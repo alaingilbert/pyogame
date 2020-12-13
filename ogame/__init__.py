@@ -853,6 +853,7 @@ class OGame(object):
 
         reports = []
         for link in report_links:
+
             try:
                 response = self.session.get(link).text
                 if bs4 == '':
@@ -884,19 +885,29 @@ class OGame(object):
                         fright_date = reportDate
                         planet = planetNameCords.parent.text.rsplit(' ', 1)[0]
                         cords = planetNameCords.parent.text.rsplit(' ', 1)[1]
+
+                        # resources
                         metal = resources[0]['title'].replace('.', '') if resources[0]['title'] else '-1'
                         crystal = resources[1]['title'].replace('.', '') if resources[1]['title'] else '-1'
                         deuterium = resources[2]['title'].replace('.', '') if resources[2]['title'] else '-1'
+                        resourcesTotal = 0
+                        if metal != '-1':
+                            resourcesTotal += int(metal)
+                        if crystal != '-1':
+                            resourcesTotal += int(crystal)
+                        if deuterium != '-1':
+                            resourcesTotal += int(deuterium)
 
-                        #defense
+                        # defense
                         defenseScore = 0
                         defense = []
                         if len(defenseBuildingIDs) > 0:
                             i = 0
+                            j = 0
                             while i < len(defenseBuildingIDs):
                                 defenseID = defenseBuildingIDs[i]['class'][0]
-                                defenseName = defenseVars[i].text
-                                defenseValue = int(defenseVars[i + 1].text)
+                                defenseName = defenseVars[j].text
+                                defenseValue = int(defenseVars[j + 1].text)
                                 defense.append([defenseID, defenseName, defenseValue])
 
                                 # wiki: https://ogame.fandom.com/wiki/Defense
@@ -923,12 +934,17 @@ class OGame(object):
                                 else:
                                     print('defense score is unknown')
                                 i += 1
+                                j += 2
+                        else:
+                            defenseScore = 0
+                            # fix it later
+                            # defenseScore should be -1 when spy lvl to small
 
                     reports.append(Report)
                 else:
                     print('No spy report. It is a', bs4.find(class_='msg_sender').text)
             except:
-                print("An exception occurred")
+                print("An exception occurred in link: ", link)
         return reports
 
     def send_fleet(self, mission, id, where, ships, resources=(0, 0, 0), speed=10, holdingtime=0):
