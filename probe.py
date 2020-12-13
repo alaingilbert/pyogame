@@ -14,17 +14,17 @@ maxFleets = 5
 empire = OGame(login.get('Uni'), login.get('Username'), login.get('Password'))
 
 # properties
-spyplanets = False
+spyplanets = True
 printreport = True
-#lastDateOfReport = datetime.now()
-lastDateOfReport = None
+lastDateOfReport = datetime.now()
+#lastDateOfReport = None
 
-galaxy_range = [3, 3] #[1, 6]
-system_range = [1, 499] #[1, 499]
+galaxy_range = [1, 1] #[1, 6]
+system_range = [1, 10] #[1, 499]
 
 planetMILLET = empire.planet_ids()[0]
-planetORTOVOS = empire.planet_ids()[1]
-planeteBase = planetMILLET
+planetORTOVOX = empire.planet_ids()[1]
+planeteBase = planetORTOVOX
 
 # get inactives players
 planetsToCheck = []
@@ -66,8 +66,9 @@ if spyplanets:
 
         # send 5 probes
         if empire.send_fleet(mission.spy, planeteBase, planet.position, [ships.espionage_probe(2)]):
+            send_fleets += 1
             fleets = empire.fleet()
-            print('Mission SPYREPORT to {0} arrivas at {1}'.format(fleets[-1].destination, fleets[-1].arrival))
+            print('Mission SPYREPORT to {0} arrivas at {1}'.format(fleets[send_fleets - 1].destination, fleets[send_fleets - 1].arrival))
 
     print("spys are finished")
 
