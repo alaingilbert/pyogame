@@ -12,6 +12,8 @@ login = config['Login']
 # ogame
 empire = OGame(login.get('Uni'), login.get('Username'), login.get('Password'))
 
+lastDateOfReport = datetime.now()
+
 # # get inactives players
 # galaxy_range = [1, 1] #[1, 6]
 # system_range = [70, 71] #[1, 499]
@@ -44,7 +46,7 @@ empire = OGame(login.get('Uni'), login.get('Username'), login.get('Password'))
 
 
 # print spy reports
-spyreports = sorted(empire.spyreports, key=lambda x: float(x.metal), reverse=True) #sort list descending
+spyreports = sorted(empire.spyreports(lastDateOfReport=lastDateOfReport, lastpage=3), key=lambda x: float(x.metal), reverse=True) #sort list descending
 for spyreport in spyreports:
     print('{3}: Metal {0} Kristall {1} Deuterium {2} Defense {6}'
           .format(spyreport.metal if spyreport.metal != -1 else 'unbekannt',

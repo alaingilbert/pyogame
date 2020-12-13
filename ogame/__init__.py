@@ -4,6 +4,7 @@ import unittest
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+
 try:
     import constants
 except ImportError:
@@ -833,11 +834,8 @@ class OGame(object):
         else:
             return False
 
-    @property
-    def spyreports(self):
+    def spyreports(self, lastDateOfReport=None, firstpage=1, lastpage=30):
         # get links for the last 30 pages
-        firstpage = 1
-        lastpage = 30
         report_links = []
         while firstpage <= lastpage:
             response = self.session.get(
@@ -870,8 +868,12 @@ class OGame(object):
 
                     # planet properties
                     planetNameCords = bs4.find('figure')
+                    reportDate = bs4.find(class_='msg_date fright').text
                     if planetNameCords is None: # is "Spionagebericht von Zerstörter Planet"
                         continue
+                    if lastDateOfReport is not None:
+                        if lastDateOfReport >= datetime.strptime(reportDate, '%d.%m.%Y %H:%M:%S'):
+                             continue
 
                     # defense
                     defense = bs4.find('ul', {'data-type': 'defense'})
@@ -879,7 +881,7 @@ class OGame(object):
                     defenseVars = defense.find_all('span')
 
                     class Report:
-                        fright_date = bs4.find(class_='msg_date fright').text
+                        fright_date = reportDate
                         planet = planetNameCords.parent.text.rsplit(' ', 1)[0]
                         cords = planetNameCords.parent.text.rsplit(' ', 1)[1]
                         metal = resources[0]['title'].replace('.', '') if resources[0]['title'] else '-1'
@@ -893,7 +895,6 @@ class OGame(object):
                             i = 0
                             while i < len(defenseBuildingIDs):
                                 defenseID = defenseBuildingIDs[i]['class'][0]
-                                print('id defense', defenseID)
                                 defenseName = defenseVars[i].text
                                 defenseValue = int(defenseVars[i + 1].text)
                                 defense.append([defenseID, defenseName, defenseValue])
