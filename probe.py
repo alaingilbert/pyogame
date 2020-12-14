@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from ogame import OGame
 import configparser
 import time
@@ -94,7 +95,7 @@ if spyplanets:
 # print spy reports              #
 ##################################
 print()
-spyreports = sorted(empire.spyreports(lastDateOfReport=lastDateOfReport), key=lambda x: float(x.resourcesTotal), reverse=True) #sort list descending
+spyreports = sorted(empire.spyreports(lastDateOfReport=lastDateOfReport, lastpage=30), key=lambda x: float(x.resourcesTotal), reverse=True) #sort list descending
 
 #filter list
 filteredReport = []
@@ -115,7 +116,7 @@ for spyreport in filteredReport:
                     spyreport.defenseScore if spyreport.defenseScore != -1 else 'unknown',
                     spyreport.resourcesTotal,
                     spyreport.resourcesTotal / 2,
-                    spyreport.resourcesTotal / 2 / 7500
+                    round(spyreport.resourcesTotal / 2 / 7500, 2)
                 )
 
     # format output
@@ -124,6 +125,6 @@ for spyreport in filteredReport:
     elif spyreport.defenseScore == -1:
         logger.error(message)
     elif spyreport.defenseScore > 0:
-        logger.warn(message)
+        logger.warning(message)
 
 print('Probs finished!')
