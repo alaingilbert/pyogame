@@ -2,6 +2,7 @@ from datetime import datetime
 from ogame import OGame
 import configparser
 import time
+from loguru import logger
 
 from ogame.constants import coordinates, status, ships, mission
 
@@ -102,9 +103,10 @@ for spyreport in spyreports:
         filteredReport.append(spyreport)
 
 for spyreport in filteredReport:
-    print('{3}: Total {7} Plunder {8} Metal {0} Crystal {1} Deuterium {2} Defense {6} '
-            '=> You need {9} small transporters'
-          .format(spyreport.metal if spyreport.metal != -1 else 'unknown',
+    message = '{3}: Total {7} Plunder {8} Metal {0} Crystal {1} Deuterium {2} Defense {6} ' \
+              '=> You need {9} small transporters'\
+                .format(
+                    spyreport.metal if spyreport.metal != -1 else 'unknown',
                     spyreport.crystal if spyreport.crystal != -1 else 'unknown',
                     spyreport.deuterium if spyreport.deuterium != -1 else 'unknown',
                     spyreport.cords,
@@ -114,7 +116,14 @@ for spyreport in filteredReport:
                     spyreport.resourcesTotal,
                     spyreport.resourcesTotal / 2,
                     spyreport.resourcesTotal / 2 / 7500
-                  )
-          )
+                )
+
+    # format output
+    if spyreport.defenseScore == 0:
+        logger.info(message)
+    elif spyreport.defenseScore == -1:
+        logger.error(message)
+    elif spyreport.defenseScore > 0:
+        logger.warn(message)
 
 print('Probs finished!')

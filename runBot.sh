@@ -7,11 +7,14 @@ echo '# modified by edelblistar@kuppelwieser.net'
 echo '############################################'
 echo ''
 
-# Update ogame pip
+# Remove ogame pip
 echo '# install python lib ogame'
 echo ''
 #pip uninstall --yes ogame
+
+# Install libs
 pip install ogame
+pip install loguru
 
 # Run bot
 echo '# run bot script'
