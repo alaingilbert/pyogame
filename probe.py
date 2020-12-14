@@ -13,19 +13,25 @@ maxFleets = 5
 # ogame
 empire = OGame(login.get('Uni'), login.get('Username'), login.get('Password'))
 
-# properties
+##################################
+# properties                     #
+##################################
 spyplanets = False
 printreport = True
-#lastDateOfReport = datetime.now()
-lastDateOfReport = None
-lastPage = 2
+lastDateOfReport = datetime.now()
+#lastDateOfReport = None
+#lastPage = 30
 
 galaxy_range = [2, 2] #[1, 6]
-system_range = [1, 499] #[1, 499]
+system_range = [75, 125] #[1, 499]
 
 planetMILLET = empire.planet_ids()[0]
 planetORTOVOX = empire.planet_ids()[1]
-planeteBase = planetORTOVOX
+planetMAMMUT = empire.planet_ids()[2]
+planetBase = planetMAMMUT
+
+spyreportGalaxy = 2
+
 
 # get inactives players
 planetsToCheck = []
@@ -66,18 +72,26 @@ if spyplanets:
             break
 
         # send 5 probes
-        if empire.send_fleet(mission.spy, planeteBase, planet.position, [ships.espionage_probe(2)]):
+        if empire.send_fleet(mission.spy, planetBase, planet.position, [ships.espionage_probe(2)]):
             send_fleets += 1
             fleets = empire.fleet()
             print('Mission SPYREPORT to {0} arrivas at {1}'.format(fleets[send_fleets - 1].destination, fleets[send_fleets - 1].arrival))
 
     print("spys are finished")
 
-
-# print spy reports
+##################################
+# print spy reports              #
+##################################
 print()
-spyreports = sorted(empire.spyreports(lastDateOfReport=lastDateOfReport, lastpage=lastPage), key=lambda x: float(x.resourcesTotal), reverse=True) #sort list descending
+spyreports = sorted(empire.spyreports(lastDateOfReport=lastDateOfReport, lastpage=2), key=lambda x: float(x.resourcesTotal), reverse=True) #sort list descending
+
+#filter list
+filteredReport = []
 for spyreport in spyreports:
+    if spyreport.cords.find('[' + str(spyreportGalaxy) + ':') != -1:
+        filteredReport.append(spyreport)
+
+for spyreport in filteredReport:
     print('{3}: Total {7} Plunder {8} Metal {0} Crystal {1} Deuterium {2} Defense {6} '
             '=> You need {9} small transporters'
           .format(spyreport.metal if spyreport.metal != -1 else 'unknown',
@@ -89,7 +103,7 @@ for spyreport in spyreports:
                     spyreport.defenseScore if spyreport.defenseScore != -1 else 'unknown',
                     spyreport.resourcesTotal,
                     spyreport.resourcesTotal / 2,
-                    spyreport.resourcesTotal / 2 / 6250
+                    spyreport.resourcesTotal / 2 / 7500
                   )
           )
 
