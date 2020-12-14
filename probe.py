@@ -5,6 +5,9 @@ import time
 
 from ogame.constants import coordinates, status, ships, mission
 
+##################################
+# credentials                    #
+##################################
 config = configparser.ConfigParser()
 config.read('config.cfg')
 login = config['Login']
@@ -12,6 +15,7 @@ maxFleets = 5
 
 # ogame
 empire = OGame(login.get('Uni'), login.get('Username'), login.get('Password'))
+
 
 ##################################
 # properties                     #
@@ -33,7 +37,9 @@ planetBase = planetMAMMUT
 spyreportGalaxy = 2
 
 
-# get inactives players
+##################################
+# get inactive players           #
+##################################
 planetsToCheck = []
 if spyplanets:
     galaxy = galaxy_range[0]
@@ -51,7 +57,10 @@ if spyplanets:
 
     print("Scans are finished")
 
-# Send a spy probe to list
+
+##################################
+# Send a spy probe to list         #
+##################################
 if spyplanets:
     print()
     for planet in planetsToCheck:
@@ -79,11 +88,12 @@ if spyplanets:
 
     print("spys are finished")
 
+
 ##################################
 # print spy reports              #
 ##################################
 print()
-spyreports = sorted(empire.spyreports(lastDateOfReport=lastDateOfReport, lastpage=2), key=lambda x: float(x.resourcesTotal), reverse=True) #sort list descending
+spyreports = sorted(empire.spyreports(lastDateOfReport=lastDateOfReport), key=lambda x: float(x.resourcesTotal), reverse=True) #sort list descending
 
 #filter list
 filteredReport = []
