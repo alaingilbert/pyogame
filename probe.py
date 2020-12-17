@@ -1,10 +1,9 @@
 from datetime import datetime
 
-from ogame import OGame
 import configparser
 import time
+from ogame import OGame
 from loguru import logger
-
 from ogame.constants import coordinates, status, ships, mission
 
 ##################################
@@ -13,7 +12,6 @@ from ogame.constants import coordinates, status, ships, mission
 config = configparser.ConfigParser()
 config.read('config.cfg')
 login = config['Login']
-maxFleets = 5
 
 # ogame
 empire = OGame(login.get('Uni'), login.get('Username'), login.get('Password'))
@@ -22,22 +20,22 @@ empire = OGame(login.get('Uni'), login.get('Username'), login.get('Password'))
 ##################################
 # properties                     #
 ##################################
-spyplanets = False
+spyplanets = True
 printreport = True
-lastDateOfReport = datetime.now()
-#lastDateOfReport = None
-#lastPage = 30
+lastPage = 60
 
-galaxy_range = [2, 2] #[1, 6]
-system_range = [75, 125] #[1, 499]
+galaxy_range = [1, 1] #[1, 6]
+system_range = [1, 200] #[1, 499]
+#amountOfProbes = 11
+amountOfProbes = 7
 
-planetMILLET = empire.planet_ids()[0]
-planetORTOVOX = empire.planet_ids()[1]
-planetMAMMUT = empire.planet_ids()[2]
-planetBase = planetMAMMUT
+planetMILLET = empire.planet_ids()[0] # galaxy 3
+planetORTOVOX = empire.planet_ids()[1] # galaxy 1
+planetMAMMUT = empire.planet_ids()[2] # galaxy 2
+planetBase = planetORTOVOX
+maxFleets = 1
 
-spyreportGalaxy = 2
-
+spyreportGalaxy = 1
 
 ##################################
 # get inactive players           #
@@ -73,9 +71,9 @@ if spyplanets:
             if fleet.list[1] == mission.spy:
                 send_fleets += 1
 
-        while send_fleets >= 5:
+        while send_fleets >= maxFleets:
             time.sleep(10)
-            print('Currently are 5 probs on the way. Wait 10 seconds..')
+            print('Currently are {0} probs on the way. Wait 10 seconds..'.format(maxFleets))
             fleets = empire.fleet()
             for fleet in fleets:
                 if fleet.list[1] == mission.spy:
@@ -83,19 +81,22 @@ if spyplanets:
             break
 
         # send 5 probes
-        if empire.send_fleet(mission.spy, planetBase, planet.position, [ships.espionage_probe(2)]):
-            send_fleets += 1
-            fleets = empire.fleet()
-            print('Mission SPYREPORT to {0} arrivas at {1}'.format(fleets[send_fleets - 1].destination, fleets[send_fleets - 1].arrival))
+        try:
+            if empire.send_fleet(mission.spy, planetBase, planet.position, [ships.espionage_probe(amountOfProbes)]):
+                send_fleets += 1
+                fleets = empire.fleet()
+                print('Mission SPYREPORT to {0} arrivas at {1}'.format(fleets[send_fleets - 1].destination, fleets[send_fleets - 1].arrival))
+        except:
+            print('error. Try next')
 
-    print("spys are finished")
+    print("spy missons are finished")
 
 
 ##################################
 # print spy reports              #
 ##################################
 print()
-spyreports = sorted(empire.spyreports(lastDateOfReport=lastDateOfReport, lastpage=30), key=lambda x: float(x.resourcesTotal), reverse=True) #sort list descending
+spyreports = sorted(empire.spyreports(lastpage=lastPage), key=lambda x: float(x.resourcesTotal), reverse=True) #sort list descending
 
 #filter list
 filteredReport = []
@@ -105,7 +106,7 @@ for spyreport in spyreports:
 
 for spyreport in filteredReport:
     message = '{3}: Total {7} Plunder {8} Metal {0} Crystal {1} Deuterium {2} Defense {6} ' \
-              '=> You need {9} small transporters'\
+              '=> {9} small transporters'\
                 .format(
                     spyreport.metal if spyreport.metal != -1 else 'unknown',
                     spyreport.crystal if spyreport.crystal != -1 else 'unknown',
