@@ -110,7 +110,7 @@ class OGame(object):
 
     def test(self):
         try:
-            import pruebas
+            import test
         except ImportError:
             import ogame.test as test
         test.UnittestOgame.empire = self
