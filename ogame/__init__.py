@@ -110,7 +110,7 @@ class OGame(object):
 
     def test(self):
         try:
-            import test
+            import pruebas
         except ImportError:
             import ogame.test as test
         test.UnittestOgame.empire = self
@@ -281,7 +281,7 @@ class OGame(object):
     def supply(self, id):
         response = self.session.get(self.index_php + 'page=ingame&component=supplies&cp={}'.format(id)).text
         bs4 = self.BS4(response)
-        levels = [int(level['data-value']) for level in bs4.find_all('span', {'class': 'level', 'data-value': True})]
+        levels = [int(level['data-value']) for level in bs4.find_all('span', {'data-value': True})]
         status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Supply:
