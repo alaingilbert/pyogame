@@ -306,7 +306,7 @@ class OGame(object):
     def facilities(self, id):
         response = self.session.get(self.index_php + 'page=ingame&component=facilities&cp={}'.format(id)).text
         bs4 = self.BS4(response)
-        levels = [int(level['data-value']) for level in bs4.find_all(class_='level')]
+        levels = [int(level['data-value']) for level in bs4.find_all('span', {'class': 'level', 'data-value': True})]
         status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
         class Facility:
