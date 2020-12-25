@@ -9,7 +9,7 @@ setup(
     author='PapeprPieceCode',
     author_email='marcos.gam@hotmail.com',
     url='https://github.com/PiecePaperCode/pyogame2',
-    download_url='https://github.com/PiecePaperCode/pyogame2.git',
+    download_url='https://github.com/alaingilbert/pyogame',
     keywords=['OGame', 'lib', 'for bots', 'bot'],
     install_requires=['requests', 'bs4', 'html5lib'],
     classifiers=[
