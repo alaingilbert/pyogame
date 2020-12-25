@@ -85,7 +85,7 @@ class OGame(object):
                       'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
                       'autoGameAccountCreation': False}
         response = self.session.post('https://gameforge.com/api/v1/auth/thin/sessions', json=login_data)
-        if response.status_code is not 201:
+        if response.status_code != 201:
             raise Exception('Bad Login')
         else:
             self.token = response.json()['token']
@@ -109,12 +109,9 @@ class OGame(object):
         return parsed
 
     def test(self):
-        try:
-            import test
-        except ImportError:
-            import ogame.test as test
-        test.UnittestOgame.empire = self
-        suite = unittest.TestLoader().loadTestsFromModule(test)
+        import ogame.test
+        ogame.test.UnittestOgame.empire = self
+        suite = unittest.TestLoader().loadTestsFromModule(ogame.test)
         return unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful()
 
     def server(self):
@@ -217,10 +214,8 @@ class OGame(object):
             url=self.index_php + 'page=ingame&component=overview',
             params={'cp': id}
         ).text
-        bs4 = self.BS4(response)
-        javascript = bs4.find_all('script', {'type': 'text/javascript'})[14].text
-        textContent1 = re.search(r'textContent\[1] = "(.*)km \(<span>(.*)<(.*)<span>(.*)<', javascript)
-        textContent3 = re.search('textContent\[3] = "(.*) \\\\u00b0C bis (.*) \\\\u00b0C";', javascript)
+        textContent1 = re.search(r'textContent\[1] = "(.*)km \(<span>(.*)<(.*)<span>(.*)<', response)
+        textContent3 = re.search('textContent\[3] = "(.*) \\\\u00b0C bis (.*) \\\\u00b0C";', response)
 
         class Celestial:
             diameter = int(textContent1.group(1).replace('.', ''))
@@ -372,173 +367,6 @@ class OGame(object):
         bs4 = self.BS4(response['content']['marketplace/marketplace_items_buying'])
         return bs4
 
-    def marketplace(self, id):
-        bs4 = self.marketplace_listings(id)
-
-        def convert(sprites, quantity):
-            bids = []
-            for sprite, amount in zip(sprites, quantity):
-                amount = amount.replace('.', '')
-                if 'metal' in sprite:
-                    bids.append(const.resources(metal=amount))
-                elif 'crystal' in sprite:
-                    bids.append(const.resources(crystal=amount))
-                elif 'deuterium' in sprite:
-                    bids.append(const.resources(deuterium=amount))
-                elif 'ship' in sprite:
-                    shipId = int(sprite.replace('ship', ''))
-                    bids.append([shipId, amount, 'shipyard'])
-                else:
-                    continue
-            return bids
-
-        ids = [int(id['data-itemid']) for id in bs4.find_all('a', {'data-itemid': True})]
-        sums = len(ids)
-        quantity = [quant.text for quant in bs4.find_all(class_='text quantity')]
-        sprites = [sprite['class'][3] for sprite in bs4.find_all(class_='sprite')]
-
-        # every 3 + n [n={0,1}] is the offer n=0 or the price n=1
-        def keep_every_3_item(list, offset):
-            every_3_item = [list[i] for i in range(offset, sums * 3, 3)]
-            return every_3_item
-
-        offers = convert(sprites=keep_every_3_item(sprites, 0),
-                         quantity=keep_every_3_item(quantity, 0))
-        prices = convert(sprites=keep_every_3_item(sprites, 1),
-                         quantity=keep_every_3_item(quantity, 1))
-
-        possibles = []
-        for button in bs4.find_all_partial(class_='sprite buttons'):
-            if 'disabled' in button['class']:
-                possibles.append(False)
-            else:
-                possibles.append(True)
-
-        bids = []
-        for i in range(sums):
-
-            class Bids:
-                id = ids[i]
-                offer = offers[i]
-                price = prices[i]
-                is_possible = possibles[i]
-                if const.ships.is_ship(offer):
-                    is_ships = True
-                    is_resources = False
-                else:
-                    is_ships = False
-                    is_resources = True
-                list = [id, offer, price, is_possible]
-
-            bids.append(Bids)
-        return bids
-
-    def buy_marketplace(self, marketid, id):
-        bs4 = self.marketplace_listings(id)
-        token = bs4.find('a', {'data-itemid': marketid})['data-token']
-        response = self.session.post(
-            url=self.index_php + f'page=ingame&component=marketplace&tab=buying&action=acceptRequest&asJson=1',
-            data={'marketItemId': marketid,
-                  'token': token},
-            headers={'X-Requested-With': 'XMLHttpRequest'}
-        ).json()
-        if response['status'] == 'success':
-            return True
-        else:
-            return False
-
-    def submit_marketplace(self, offer, price, range, id):
-        if const.ships.is_ship(offer):
-            itemType = 1
-            ItemId = const.ships.ship_id(offer)
-            quantity = const.ships.ship_amount(offer)
-        else:
-            itemType = 2
-            ItemId = offer.index(max(offer)) + 1  # ItemId 1 = Metall ...
-            quantity = max(offer)
-        priceType = price.index(max(price)) + 1
-        price_form = max(price)
-        response = self.session.get(
-            url=self.index_php,
-            params={'page': 'ingame',
-                    'component': 'marketplace',
-                    'tab': 'overview',
-                    'cp': id}
-        ).text
-        token = re.search('var token = "(.*)"', response).group(1)
-        response = self.session.post(
-            url=self.index_php,
-            params={
-                'page': 'ingame',
-                'component': 'marketplace',
-                'tab': 'create_offer',
-                'action': 'submitOffer',
-                'asJson': 1},
-            data={
-                'marketItemType': 4,
-                'itemType': itemType,
-                'itemId': ItemId,
-                'quantity': quantity,
-                'priceType': priceType,
-                'price': price_form,
-                'token': token,
-                'priceRange': range},
-            headers={'X-Requested-With': 'XMLHttpRequest'}
-        ).json()
-        if response['status'] == 'success':
-            return True
-        else:
-            return False
-
-    def collect_marketplace(self):
-
-        def collectItems(self, tab, action):
-            response = self.session.get(
-                url=self.index_php,
-                params={'page': 'ingame',
-                        'component': 'marketplace',
-                        'tab': tab}
-            ).text
-            token = re.search('var token = "(.*)"', response).group(1)
-            response = self.session.get(
-                url=self.index_php,
-                params={'page': 'ingame',
-                        'component': 'marketplace',
-                        'tab': tab,
-                        'action': action,
-                        'ajax': 1,
-                        'token': token},
-                headers={'X-Requested-With': 'XMLHttpRequest'}
-            ).json()
-            bs4 = self.BS4(response['content']['marketplace/marketplace_items_history'])
-            transactionIds = bs4.find_all('div', {'data-transactionid': True})
-            transactionIds = set([id['data-transactionid'] for id in transactionIds])
-            token = re.search('collectItem&token=(.*)"', bs4.text).group(1)
-            result = []
-            for id in transactionIds:
-                response = self.session.post(
-                    url=self.index_php,
-                    params={'page': 'componentOnly',
-                            'component': 'marketplace',
-                            'action': 'collectItem',
-                            'token': token,
-                            'asJson': 1},
-                    data={'marketTransactionId': int(id),
-                          'token': token},
-                    headers={'X-Requested-With': 'XMLHttpRequest'}
-                ).json()
-                token = response['newToken']
-                result.append(response['status'])
-            return result
-
-        result = []
-        result.extend(collectItems(self, tab='history_buying', action='fetchHistoryBuyingItems'))
-        result.extend(collectItems(self, tab='history_selling', action='fetchHistorySellingItems'))
-        if 'success' in result:
-            return True
-        else:
-            return False
-
     def traider(self, id):
         raise NotImplementedError("function not implemented yet PLS contribute")
 
@@ -678,7 +506,7 @@ class OGame(object):
             if 'empty_filter' in status:
                 continue
 
-            if len(status) is 0:
+            if len(status) == 0:
                 planet_status = [const.status.yourself]
                 pid = self.player_id
                 player_name[pid] = self.player
