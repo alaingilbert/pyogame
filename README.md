@@ -5,8 +5,8 @@ OGame is a browser-based, money-management and space-war themed massively multip
 two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
-it supports ogame_version: `7.5.2`
-version `17`
+it supports ogame_version: `7.6.2`
+version `18`
 
 ## install
 <pre>
@@ -249,66 +249,6 @@ fac.sensor_phalanx
 fac.jump_gate
 </pre>
 
-### get marketplace
-<pre>
-Use this function to get all offerings from the market.
-resourses will be returned in the resourse's format
-ships will be returned in the ship's format
-</pre>
-```python
-for bid in empire.marketplace():
-    if bid.is_ships:
-        print(bid.id, bid.offer, bid.price)
-        print(ships.ship_name(bid.offer), ships.ship_amount(bid.offer))
-    if bid.is_resources:
-        print(bid.id, bid.offer, bid.price) 
-    print(bid.is_possible)
-
->>>1234 (204, '508', 'shipyard') [0, '1500000', 0]
->>>light_fighter 508
->>>True
->>>1235 ['10000000', 0, 0] [0, '8000000', 0]
->>>False
-```
-
-### buy marketplace
-<pre>
-empire.buy_marketplace(bid.id, id)      returns bool
-</pre>
-
-### submit marketplace
-<pre>
-you can sell resources and ships. 
-Note that you can sell one ship or one resources at at time.
-run a for loop if you wanna stack offerings.
-If the Market accepts your offer depends on your price and availability on your id_planet
-range cant be 0
-</pre>
-<pre>
-empire.submit_marketplace(offer, 
-                          price, 
-                          id,
-                          range)       returns bool
-
-empire.submit_marketplace(offer=resources(metal=100),
-                          price=resources(crystal=50),
-                          id=id,
-                          range=10)
-
-empire.submit_marketplace(offer=ships.large_transporter(10),
-                          price=resources(crystal=96000),
-                          id=id,
-                          range=10)
-</pre>
-
-### collect marketplace
-<pre>
-it will collect all your orders at once that are not collected yet buy & sell orders
-</pre>
-<pre>
-empire.collect_marketplace()        returns None (Ogame doesnt return a json return message anymore)
-</pre>
-
 ### get traider
 <pre>
 empire.traider(id)                  returns Exception("function not implemented yet PLS contribute")
@@ -397,7 +337,7 @@ empire.galaxy(coordinates)          returns list of class(object)
 ```python
 for planet in empire.galaxy(coordinates(randint(1,6), randint(1,499))):
     print(planet.list)
-    print(planet.name, planet.position, planet.player, planet.player_id, planet.status, planet.moon)
+    print(planet.name, planet.position, planet.player, planet.player_id, planet.rank, planet.status, planet.moon)
     if status.inactive in planet.status and status.vacation not in planet.status:
         #Farm Inactive
 ```        
