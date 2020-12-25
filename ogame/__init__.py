@@ -658,53 +658,59 @@ class OGame(object):
         ).json()
         bs4 = self.BS4(response['galaxy'])
 
-        positions = bs4.find_all_partial(rel='planet')
-        positions = [pos['rel'] for pos in positions]
-        positions = [re.search('planet(.*)', pos).group(1) for pos in positions]
-        positions = [const.coordinates(coords[0], coords[1], int(pos), const.destination.planet) for pos in positions]
-
-        planet_names = bs4.find_all_partial(rel='planet')
-        planet_names = [name.h1.span.text for name in planet_names]
+        def num_from_tag(tag):
+            """ 'player123' -> 123 """
+            numbers = re.search(r'[0-9]+', tag).group()
+            return int(numbers) if numbers else None
 
         players = bs4.find_all_partial(id='player')
-        player_names = [name.h1.span.text for name in players]
-        player_ids = [id['id'] for id in players]
-        player_ids = [int(re.search('player(.*)', id).group(1)) for id in player_ids]
+        player_name = {num_from_tag(player['id']): player.h1.span.text for player in players}
+        player_rank = {num_from_tag(player['id']): int(player.a.text)
+                for player in players if player.a.text.isdigit()}
 
-        player_rank = bs4.select(".rank a")
-        player_rank = {int(re.search('searchRelId=(.*)', a['href']).group(1)): int(a.text) for a in player_rank}
+        alliances = bs4.find_all_partial(id='alliance')
+        alliance_name = {num_from_tag(alliance['id']): alliance.h1.text.strip() for alliance in alliances}
 
-        planet_status = []
-        for status in bs4.find_all(class_='row'):
-            status = status['class']
+        planets = []
+        for row in bs4.select('#galaxytable .row'):
+            status = row['class']
             status.remove('row')
             if 'empty_filter' in status:
                 continue
-            elif len(status) is 0:
-                planet_status.append([const.status.yourself])
+
+            if len(status) is 0:
+                planet_status = [const.status.yourself]
+                pid = self.player_id
+                player_name[pid] = self.player
             else:
-                status = [re.search('(.*)_filter', sta).group(1) for sta in status]
-                planet_status.append(status)
+                planet_status = [re.search('(.*)_filter', sta).group(1) for sta in status]
 
-        moon_pos = bs4.find_all_partial(rel='moon')
-        moon_pos = [pos['rel'] for pos in moon_pos]
-        moon_pos = [int(re.search('moon(.*)', pos).group(1)) for pos in moon_pos]
+                player = row.find(rel=re.compile(r'player[0-9]+'))
+                if not player:
+                    continue
+                pid = num_from_tag(player['rel'][0])
+                if pid == 99999:
+                    # Destroyed Planet
+                    continue
 
-        planets = []
-        for i in range(len(player_ids)):
+            planet = int(row.find(class_='position').text)
+            planet_cord = const.coordinates(
+                    coords[0], coords[1], int(planet), const.destination.planet)
+            moon_pos = row.find(rel=re.compile(r'moon[0-9]*'))
+
+            alliance_id = row.find(rel=re.compile(r'alliance[0-9]+'))
+            alliance_id = num_from_tag(alliance_id['rel']) if alliance_id else None
 
             class Position:
-                position = positions[i]
-                name = planet_names[i]
-                player = player_names[i]
-                player_id = player_ids[i]
-                rank = player_rank.get(player_id, None)
-                status = planet_status[i]
-                if position[2] in moon_pos:
-                    moon = True
-                else:
-                    moon = False
-                list = [name, position, player, player_id, rank, status, moon]
+                position = planet_cord
+                name = row.find(id=re.compile(r'planet[0-9]+')).h1.span.text
+                player = player_name[pid]
+                player_id = pid
+                rank = player_rank.get(pid)
+                status = planet_status
+                moon = moon_pos is not None
+                alliance = alliance_name.get(alliance_id)
+                list = [name, position, player, player_id, rank, status, moon, alliance]
 
             planets.append(Position)
 
