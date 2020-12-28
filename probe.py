@@ -22,20 +22,21 @@ empire = OGame(login.get('Uni'), login.get('Username'), login.get('Password'))
 ##################################
 spyplanets = True
 printreport = True
-lastPage = 60
 
-galaxy_range = [1, 1] #[1, 6]
-system_range = [1, 200] #[1, 499]
+galaxy_range = [2, 2] #[1, 6]
+system_range = [1, 499] #[1, 499]
 #amountOfProbes = 11
 amountOfProbes = 7
 
-planetMILLET = empire.planet_ids()[0] # galaxy 3
-planetORTOVOX = empire.planet_ids()[1] # galaxy 1
-planetMAMMUT = empire.planet_ids()[2] # galaxy 2
-planetBase = planetORTOVOX
-maxFleets = 1
+planetMILLET = empire.planet_ids()[0] # galaxy 3:162
+planetORTOVOX = empire.planet_ids()[1] # galaxy 1:97
+planetMAMMUT = empire.planet_ids()[2] # galaxy 2:93
+planetARCTARYX = empire.planet_ids()[3] # galaxy 2:299
+planetBase = planetARCTARYX
+blacklist = [[2, 95, 4, 1], [2, 430, 7, 1]]
+maxFleets = 11
 
-spyreportGalaxy = 1
+spyreportGalaxy = 2
 
 ##################################
 # get inactive players           #
@@ -59,7 +60,7 @@ if spyplanets:
 
 
 ##################################
-# Send a spy probe to list         #
+# Send a spy probe to list       #
 ##################################
 if spyplanets:
     print()
@@ -96,7 +97,7 @@ if spyplanets:
 # print spy reports              #
 ##################################
 print()
-spyreports = sorted(empire.spyreports(lastpage=lastPage), key=lambda x: float(x.resourcesTotal), reverse=True) #sort list descending
+spyreports = sorted(empire.spyreports(), key=lambda x: float(x.resourcesTotal), reverse=True) #sort list descending
 
 #filter list
 filteredReport = []
