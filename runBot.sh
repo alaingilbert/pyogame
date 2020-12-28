@@ -1,10 +1,11 @@
 #!/bin/bash
 
 # Init text
-echo '############################################'
-echo '# Run the ogame bot'
-echo '# modified by edelblistar@kuppelwieser.net'
-echo '############################################'
+echo '########################################'
+echo '# Run the ogame bot                    #'
+echo '# modified by                          #'
+echo '# edelblistar@kuppelwieser.net         #'
+echo '########################################'
 echo ''
 
 # Remove ogame pip
