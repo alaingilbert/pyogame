@@ -2,5 +2,5 @@
 user.py
 *.bat
 *.pyc
-.venv
+venv
 
