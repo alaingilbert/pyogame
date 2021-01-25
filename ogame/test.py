@@ -1,7 +1,7 @@
 import unittest
 import time
 from random import randint
-from constants import *
+from ogame.constants import *
 
 
 class UnittestOgame(unittest.TestCase):

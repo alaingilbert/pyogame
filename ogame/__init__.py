@@ -109,10 +109,7 @@ class OGame(object):
         return parsed
 
     def test(self):
-        try:
-            import test
-        except ImportError:
-            import ogame.test as test
+        import ogame.test as test
         test.UnittestOgame.empire = self
         suite = unittest.TestLoader().loadTestsFromModule(test)
         return unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful()
