@@ -56,8 +56,9 @@ class UnittestOgame(unittest.TestCase):
             self.assertIsInstance(res.energy, int)
 
     def test_supply(self):
-        sup = self.empire.supply(self.ids[0])
-        self.assertGreater(sup.metal_mine.level, -1)
+        for id in self.empire.planet_ids():
+            sup = self.empire.supply(id)
+            self.assertGreater(sup.metal_mine.level, -1)
 
     def test_facilities(self):
         for id in self.empire.planet_ids():
@@ -68,27 +69,6 @@ class UnittestOgame(unittest.TestCase):
         for id in self.empire.moon_ids():
             fac = self.empire.moon_facilities(id)
             self.assertGreater(fac.robotics_factory.level, -1)
-
-    def test_marketplace(self):
-        for bid in self.empire.marketplace(self.ids[0]):
-            if bid.is_ships:
-                self.assertIsInstance(bid.id, int)
-            elif bid.is_resources:
-                self.assertIsInstance(bid.id, int)
-            self.assertIsInstance(bid.is_possible, bool)
-            if bid.is_possible:
-                self.assertEqual(self.empire.buy_marketplace(bid.id, self.ids[0]), True)
-                break
-
-    def test_submit_marketplace(self):
-        submit = self.empire.submit_marketplace(offer=resources(metal=100),
-                                                price=resources(crystal=50),
-                                                id=self.ids[0],
-                                                range=10)
-        self.assertEqual(submit, True)
-
-    def test_collect_marketplace(self):
-        self.assertIsInstance(self.empire.collect_marketplace(), bool)
 
     def test_research(self):
         res = self.empire.research()
