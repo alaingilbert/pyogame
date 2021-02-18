@@ -55,6 +55,20 @@ class speed(object):
     max = 10
     min = 1
 
+# TODO construct buildings class directly from list
+building_supply_names = (
+    'metal_mine', 'crystal_mine', 'deuterium_mine', 'solar_plant',
+    'fusion_plant', 'metal_storage', 'crystal_storage', 'deuterium_storage'
+)
+
+building_facility_names = (
+    'robotics_factory', 'shipyard', 'research_laboratory', 'alliance_depot',
+    'missile_silo', 'nanite_factory', 'terraformer', 'repair_dock'
+)
+
+building_facility_moon_names = (
+    'robotics_factory', 'shipyard', 'moon_base', 'sensor_phalanx', 'jump_gate'
+)
 
 class buildings:
     metal_mine = 1, 1, 'supplies'
