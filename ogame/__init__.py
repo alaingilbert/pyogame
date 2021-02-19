@@ -274,7 +274,7 @@ class OGame(object):
         return is_possible, in_construction
 
 
-    def _parse_component(self, component, expected, cp):
+    def _parse_structures(self, component, expected, cp):
         '''
         Find each "technology" and associated level or count
 
@@ -290,27 +290,27 @@ class OGame(object):
         assert component in response.url, response.url
         bs4 = self.BS4(response.text)
 
-        count_and_status = {}
+        amount_and_status = {}
         for tech in bs4.find_all(class_='technology', attrs={'data-technology': True, 'data-status': True}):
             tech_id = int(tech['data-technology'])
             # buildings, faciliting, research use 'level'
             # ships, defense use 'amount'
             a = (tech.find(class_='amount', attrs={'data-value': True}) or
                  tech.find(class_='level', attrs={'data-value': True}))
-            count_and_status[tech_id] = (int(a['data-value']), tech['data-status'])
+            amount_and_status[tech_id] = (int(a['data-value']), tech['data-status'])
 
-        found = set(count_and_status.keys())
+        found = set(amount_and_status.keys())
         expected = set(expected.values())
         assert expected == found or (component == 'supplies' and expected.issubset(found)), (
             "Didn't find all {} missing {}".format(component, expected - found))
 
-        return count_and_status
+        return amount_and_status
 
 
     def supply(self, id):
         buildings = {name: const.buildings.__dict__[name][0]
                 for name in const.building_supply_names}
-        parsed = self._parse_component('supplies', buildings, id)
+        parsed = self._parse_structures('supplies', buildings, id)
 
         class Supply:
             def __init__(self, level, status):
@@ -321,18 +321,18 @@ class OGame(object):
 
         class Supplies(object):
             def __init__(self, parsed):
-                self.counts = {}
+                self.levels = {}
                 for name, tech_id in buildings.items():
-                    count, status = parsed[tech_id]
-                    self.counts[tech_id] = count
-                    self.__dict__[name] = Supply(count, status)
+                    level, status = parsed[tech_id]
+                    self.levels[tech_id] = level
+                    self.__dict__[name] = Supply(level, status)
 
         return Supplies(parsed)
 
     def facilities(self, id):
         f_names = {name: const.buildings.__dict__[name][0]
                 for name in const.building_facility_names}
-        parsed = self._parse_component('facilities', f_names, id)
+        parsed = self._parse_structures('facilities', f_names, id)
 
         class Facility:
             def __init__(self, level, status):
@@ -343,11 +343,11 @@ class OGame(object):
 
         class Facilities(object):
             def __init__(self, parsed):
-                self.counts = {}
+                self.levels = {}
                 for name, tech_id in f_names.items():
-                    count, status = parsed[tech_id]
-                    self.counts[tech_id] = count
-                    self.__dict__[name] = Facility(count, status)
+                    level, status = parsed[tech_id]
+                    self.levels[tech_id] = level
+                    self.__dict__[name] = Facility(level, status)
 
         return Facilities(parsed)
 
@@ -355,7 +355,7 @@ class OGame(object):
     def moon_facilities(self, id):
         f_names = {name: const.buildings.__dict__[name][0]
                 for name in const.building_facility_moon_names}
-        parsed = self._parse_component('facilities', f_names, id)
+        parsed = self._parse_structures('facilities', f_names, id)
 
         class Facility:
             def __init__(self, level, status):
@@ -366,11 +366,11 @@ class OGame(object):
 
         class Facilities(object):
             def __init__(self, parsed):
-                self.counts = {}
+                self.levels = {}
                 for name, tech_id in f_names.items():
-                    count, status = parsed[tech_id]
-                    self.counts[tech_id] = count
-                    self.__dict__[name] = Facility(count, status)
+                    level, status = parsed[tech_id]
+                    self.levels[tech_id] = level
+                    self.__dict__[name] = Facility(level, status)
 
         return Facilities(parsed)
 
@@ -400,7 +400,7 @@ class OGame(object):
         raise NotImplementedError("function not implemented yet PLS contribute")
 
     def research(self):
-        # TODO: Replace with _parse_component
+        # TODO: Replace with _parse_structures
         response = self.session.get(
             url=self.index_php,
             params={'page': 'ingame', 'component': 'research', 'cp': OGame.planet_ids(self)[0]}
@@ -437,7 +437,7 @@ class OGame(object):
         return Researches
 
     def ships(self, id):
-        # TODO: Replace with _parse_component
+        # TODO: Replace with _parse_structures
         response = self.session.get(self.index_php + 'page=ingame&component=shipyard&cp={}'.format(id)).text
         bs4 = self.BS4(response)
 
@@ -484,7 +484,7 @@ class OGame(object):
         return Ships
 
     def defences(self, id):
-        # TODO: Replace with _parse_component
+        # TODO: Replace with _parse_structures
         response = self.session.get(self.index_php + 'page=ingame&component=defenses&cp={}'.format(id)).text
         bs4 = self.BS4(response)
         defences_amount = [int(level['data-value']) for level in bs4.find_all(class_='amount')]
