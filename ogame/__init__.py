@@ -273,77 +273,106 @@ class OGame(object):
             in_construction = False
         return is_possible, in_construction
 
+
+    def _parse_structures(self, component, expected, cp):
+        '''
+        Find each "technology" and associated level or count
+
+        Used by supply(), facilities(), defense(), ships(), research()
+
+        In the future it would make more sense to return NamedTuples instead of custom classes
+        for each of those functions
+        '''
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': component, 'cp': cp},
+        )
+        assert component in response.url, response.url
+        bs4 = self.BS4(response.text)
+
+        amount_and_status = {}
+        for tech in bs4.find_all(class_='technology', attrs={'data-technology': True, 'data-status': True}):
+            tech_id = int(tech['data-technology'])
+            # buildings, faciliting, research use 'level'
+            # ships, defense use 'amount'
+            a = (tech.find(class_='amount', attrs={'data-value': True}) or
+                 tech.find(class_='level', attrs={'data-value': True}))
+            amount_and_status[tech_id] = (int(a['data-value']), tech['data-status'])
+
+        found = set(amount_and_status.keys())
+        expected = set(expected.values())
+        assert expected == found or (component == 'supplies' and expected.issubset(found)), (
+            "Didn't find all {} missing {}".format(component, expected - found))
+
+        return amount_and_status
+
+
     def supply(self, id):
-        response = self.session.get(self.index_php + 'page=ingame&component=supplies&cp={}'.format(id)).text
-        bs4 = self.BS4(response)
-        levels = [int(level['data-value']) for level in bs4.find_all('span', {'data-value': True})]
-        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
+        buildings = {name: const.buildings.__dict__[name][0]
+                for name in const.building_supply_names}
+        parsed = self._parse_structures('supplies', buildings, id)
 
         class Supply:
-            def __init__(self, i):
-                self.level = levels[i]
-                self.data = OGame.collect_status(status[i])
+            def __init__(self, level, status):
+                self.level = level
+                self.data = OGame.collect_status(status)
                 self.is_possible = self.data[0]
                 self.in_construction = self.data[1]
 
         class Supplies(object):
-            metal_mine = Supply(0)
-            crystal_mine = Supply(1)
-            deuterium_mine = Supply(2)
-            solar_plant = Supply(3)
-            fusion_plant = Supply(4)
-            metal_storage = Supply(5)
-            crystal_storage = Supply(6)
-            deuterium_storage = Supply(7)
+            def __init__(self, parsed):
+                self.levels = {}
+                for name, tech_id in buildings.items():
+                    level, status = parsed[tech_id]
+                    self.levels[tech_id] = level
+                    self.__dict__[name] = Supply(level, status)
 
-        return Supplies
+        return Supplies(parsed)
 
     def facilities(self, id):
-        response = self.session.get(self.index_php + 'page=ingame&component=facilities&cp={}'.format(id)).text
-        bs4 = self.BS4(response)
-        levels = [int(level['data-value']) for level in bs4.find_all('span', {'class': 'level', 'data-value': True})]
-        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
+        f_names = {name: const.buildings.__dict__[name][0]
+                for name in const.building_facility_names}
+        parsed = self._parse_structures('facilities', f_names, id)
 
         class Facility:
-            def __init__(self, i):
-                self.level = levels[i]
-                self.data = OGame.collect_status(status[i])
+            def __init__(self, level, status):
+                self.level = level
+                self.data = OGame.collect_status(status)
                 self.is_possible = self.data[0]
                 self.in_construction = self.data[1]
 
         class Facilities(object):
-            robotics_factory = Facility(0)
-            shipyard = Facility(1)
-            research_laboratory = Facility(2)
-            alliance_depot = Facility(3)
-            missile_silo = Facility(4)
-            nanite_factory = Facility(5)
-            terraformer = Facility(6)
-            repair_dock = Facility(7)
+            def __init__(self, parsed):
+                self.levels = {}
+                for name, tech_id in f_names.items():
+                    level, status = parsed[tech_id]
+                    self.levels[tech_id] = level
+                    self.__dict__[name] = Facility(level, status)
 
-        return Facilities
+        return Facilities(parsed)
+
 
     def moon_facilities(self, id):
-        response = self.session.get('{}page=ingame&component=facilities&cp={}'.format(self.index_php, id)).text
-        bs4 = self.BS4(response)
-        levels = [int(level['data-value']) for level in bs4.find_all(class_='level')]
-        status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
+        f_names = {name: const.buildings.__dict__[name][0]
+                for name in const.building_facility_moon_names}
+        parsed = self._parse_structures('facilities', f_names, id)
 
         class Facility:
-            def __init__(self, i):
-                self.level = levels[i]
-                self.data = OGame.collect_status(status[i])
+            def __init__(self, level, status):
+                self.level = level
+                self.data = OGame.collect_status(status)
                 self.is_possible = self.data[0]
                 self.in_construction = self.data[1]
 
         class Facilities(object):
-            robotics_factory = Facility(0)
-            shipyard = Facility(1)
-            moon_base = Facility(2)
-            sensor_phalanx = Facility(3)
-            jump_gate = Facility(4)
+            def __init__(self, parsed):
+                self.levels = {}
+                for name, tech_id in f_names.items():
+                    level, status = parsed[tech_id]
+                    self.levels[tech_id] = level
+                    self.__dict__[name] = Facility(level, status)
 
-        return Facilities
+        return Facilities(parsed)
 
     def marketplace_listings(self, id):
         response = self.session.get(
@@ -371,6 +400,7 @@ class OGame(object):
         raise NotImplementedError("function not implemented yet PLS contribute")
 
     def research(self):
+        # TODO: Replace with _parse_structures
         response = self.session.get(
             url=self.index_php,
             params={'page': 'ingame', 'component': 'research', 'cp': OGame.planet_ids(self)[0]}
@@ -407,8 +437,10 @@ class OGame(object):
         return Researches
 
     def ships(self, id):
+        # TODO: Replace with _parse_structures
         response = self.session.get(self.index_php + 'page=ingame&component=shipyard&cp={}'.format(id)).text
         bs4 = self.BS4(response)
+
         ships_amount = [int(level['data-value']) for level in bs4.find_all(class_='amount')]
         status = [status['data-status'] for status in bs4.find_all('li', {'class': 'technology'})]
 
@@ -452,6 +484,7 @@ class OGame(object):
         return Ships
 
     def defences(self, id):
+        # TODO: Replace with _parse_structures
         response = self.session.get(self.index_php + 'page=ingame&component=defenses&cp={}'.format(id)).text
         bs4 = self.BS4(response)
         defences_amount = [int(level['data-value']) for level in bs4.find_all(class_='amount')]
