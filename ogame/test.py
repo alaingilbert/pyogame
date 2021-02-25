@@ -25,6 +25,8 @@ class UnittestOgame(unittest.TestCase):
 
         self.assertIsInstance(self.empire.character_class(), str)
 
+        self.assertIsInstance(self.empire.rank(), int)
+
         self.assertGreater(len(self.empire.planet_ids()), 0)
         planets_names = self.empire.planet_names()
         self.assertGreater(len(planets_names), 0)
