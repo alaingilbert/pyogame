@@ -130,9 +130,6 @@ class OGame(object):
     def server(self):
         class Server:
             version = self.landing_page.find('meta', {'name': 'ogame-version'})
-            version = list(re.split(r"\.|-", version['content']))
-            for i in range(0, 2):
-                version[i] = int(version[i])
 
             class Speed:
                 universe = self.landing_page.find(
@@ -235,7 +232,7 @@ class OGame(object):
         names = []
         for name in self.landing_page.find_all(class_='moonlink'):
             name = name['title']
-            names.append(re.search('<b>(.*) \[', name).group(1))
+            names.append(re.search(r'<b>(.*) \[', name).group(1))
         return names
 
     def celestial(self, id):
@@ -598,8 +595,7 @@ class OGame(object):
                     continue
 
             planet = int(row.find(class_='position').text)
-            planet_cord = const.coordinates(
-                coords[0], coords[1], int(planet), const.destination.planet)
+            planet_cord = const.coordinates(coords[0], coords[1], int(planet))
             moon_pos = row.find(rel=re.compile(r'moon[0-9]*'))
 
             alliance_id = row.find(rel=re.compile(r'alliance[0-9]+'))
@@ -637,9 +633,9 @@ class OGame(object):
     def shop(self):
         raise NotImplementedError("function not implemented yet PLS contribute")
 
-    def fleet_coordinates(self, event, coordsclass):
+    def fleet_coordinates(self, event, Coords):
         coordinate = [
-            coords.find(class_=coordsclass).a.text
+            coords.find(class_=Coords).a.text
             for coords in event
         ]
         coordinate = [
@@ -842,11 +838,11 @@ class OGame(object):
             url=self.index_php + 'page=ingame&component=fleetdispatch&cp={}'
                 .format(id)
         ).text
-        sendfleet_token = re.search(
+        send_fleet_token = re.search(
             'var fleetSendingToken = "(.*)"',
             response
         ).group(1)
-        form_data = {'token': sendfleet_token}
+        form_data = {'token': send_fleet_token}
 
         for ship in ships:
             ship_type = 'am{}'.format(ship[0])
