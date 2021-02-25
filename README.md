@@ -24,6 +24,8 @@ pip install git+https://github.com/alaingilbert/pyogame.git@develop
 ## get started
 [Code Snippets](https://github.com/alaingilbert/pyogame/wiki/Code-Snippets)
 
+[Code Style](https://github.com/alaingilbert/pyogame/wiki/Code-Style)
+
 ## Discord
 [Join Discord](https://discord.gg/CeBDgnR)
 
