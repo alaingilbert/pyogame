@@ -203,7 +203,7 @@ class OGame(object):
     def rank(self):
         rank = self.landing_page.find(id='bar')
         rank = rank.find_all('li')[1].text
-        rank = re.search('\((.*)\)', rank).group(1)
+        rank = re.search(r'\((.*)\)', rank).group(1)
         return int(rank)
 
     def planet_ids(self):
