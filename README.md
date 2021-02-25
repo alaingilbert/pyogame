@@ -5,8 +5,8 @@ OGame is a browser-based, money-management and space-war themed massively multip
 two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
-it supports ogame_version: `7.6.2`
-version `18`
+it supports ogame_version: `7.6.5`
+version `19`
 
 ## install
 <pre>
@@ -14,8 +14,7 @@ pip install ogame
 </pre>
 update
 <pre>
-pip uninstall ogame
-pip install ogame
+pip install ogame==7.6.5.19
 </pre>
 dont want to wait for new updates download direct from the develop branch
 <pre>
@@ -40,8 +39,7 @@ from ogame.constants import destination, coordinates, ships, mission, speed, bui
 empire = OGame(UNI, USER, PASSWORD)
 
 #optional
-empire = OGame(UNI, USER, PASSWORD, 
-                                    user_agent='NCSA_Mosaic/2.0 (Windows 3.1)', 
+empire = OGame(UNI, USER, PASSWORD, user_agent='NCSA_Mosaic/2.0 (Windows 3.1)', 
                                     proxy='https://proxy.com:port', 
                                     language='us'
 )
@@ -72,23 +70,23 @@ empire.neutral()                    returns bool
 
 ### get friendly
 <pre>
-empire.friendly()                    returns bool 
+empire.friendly()                   returns bool 
 </pre>
 
 ### get server (universe)
 <pre>
 server = empire.server()
-server.varsion                       returns list
-server.Speed.universe                returns int
-server.Speed.fleet                   returns int
-server.Donut.galaxy                  returns bool
-server.Donut.system                  returns bool
+server.version                      returns str
+server.Speed.universe               returns int
+server.Speed.fleet                  returns int
+server.Donut.galaxy                 returns bool
+server.Donut.system                 returns bool
 </pre>
 
 ### get characterclass
 <pre>
-Get the class of your Ogame Account['miner', 'explorer', 'warrior']
-empire.characterclass()             return string
+Get the class of your Ogame Account['miner', 'explorer', 'warrior', 'none]
+empire.character_class()            return string
 </pre>
 
 ### get rank
@@ -128,10 +126,12 @@ when you dont give it an destination it will default to planet
 </pre>
 ```python
 from ogame.constants import coordinates, destination
-pos = coordinates(galaxy=1,
-                  system=2,
-                  position=12,
-                  dest=destination.debris)
+pos = coordinates(
+    galaxy=1,
+    system=2,
+    position=12,
+    dest=destination.debris
+)
 
 coordinates(1, 2, 12, destination.moon)
 coordinates(1, 2, 12, destination.debris)

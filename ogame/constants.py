@@ -62,8 +62,8 @@ class buildings:
     deuterium_mine = 3, 1, 'supplies'
     solar_plant = 4, 1, 'supplies'
     fusion_plant = 12, 1, 'supplies'
-    def solar_satellite(self=1): return 212, self, 'supplies'
-    def crawler(self=1): return 217, self, 'supplies'
+    def solar_satellite(self: int = 1): return 212, self, 'supplies'
+    def crawler(self: int = 1): return 217, self, 'supplies'
     metal_storage = 22, 1, 'supplies'
     crystal_storage = 23, 1, 'supplies'
     deuterium_storage = 24, 1, 'supplies'
@@ -88,16 +88,16 @@ class buildings:
         if facilities[2] == 'facilities': return True
         else: return False
 
-    def rocket_launcher(self=1): return 401, self, 'defenses'
-    def laser_cannon_light(self=1): return 402, self, 'defenses'
-    def laser_cannon_heavy(self=1): return 403, self, 'defenses'
-    def gauss_cannon(self=1): return 404, self, 'defenses'
-    def ion_cannon(self=1): return 405, self, 'defenses'
-    def plasma_cannon(self=1): return 406, self, 'defenses'
-    def shield_dome_small(self=1): return 407, self, 'defenses'
-    def shield_dome_large(self=1): return 408, self, 'defenses'
-    def missile_interceptor(self=1): return 502, self, 'defenses'
-    def missile_interplanetary(self=1): return 503, self, 'defenses'
+    def rocket_launcher(self: int = 1): return 401, self, 'defenses'
+    def laser_cannon_light(self: int = 1): return 402, self, 'defenses'
+    def laser_cannon_heavy(self: int = 1): return 403, self, 'defenses'
+    def gauss_cannon(self: int = 1): return 404, self, 'defenses'
+    def ion_cannon(self: int = 1): return 405, self, 'defenses'
+    def plasma_cannon(self: int = 1): return 406, self, 'defenses'
+    def shield_dome_small(self: int = 1): return 407, self, 'defenses'
+    def shield_dome_large(self: int = 1): return 408, self, 'defenses'
+    def missile_interceptor(self: int = 1): return 502, self, 'defenses'
+    def missile_interplanetary(self: int = 1): return 503, self, 'defenses'
 
     def is_defenses(defenses):
         if defenses[2] == 'defenses': return True
@@ -124,22 +124,22 @@ class research(object):
 
 
 class ships(object):
-    def light_fighter(self=1): return 204, self, 'shipyard'
-    def heavy_fighter(self=1): return 205, self, 'shipyard'
-    def cruiser(self=1): return 206, self, 'shipyard'
-    def battleship(self=1): return 207, self, 'shipyard'
-    def interceptor(self=1): return 215, self, 'shipyard'
-    def bomber(self=1): return 211, self, 'shipyard'
-    def destroyer(self=1): return 213, self, 'shipyard'
-    def deathstar(self=1): return 214, self, 'shipyard'
-    def reaper(self=1): return 218, self, 'shipyard'
-    def explorer(self=1): return 219, self, 'shipyard'
-    def small_transporter(self=1): return 202, self, 'shipyard'
-    def large_transporter(self=1): return 203, self, 'shipyard'
-    def colonyShip(self=1): return 208, self, 'shipyard'
-    def recycler(self=1): return 209, self, 'shipyard'
-    def espionage_probe(self=1): return 210, self, 'shipyard'
-    def crawler(self=1): return 217, self, 'shipyard'
+    def light_fighter(self: int = 1): return 204, self, 'shipyard'
+    def heavy_fighter(self: int = 1): return 205, self, 'shipyard'
+    def cruiser(self: int = 1): return 206, self, 'shipyard'
+    def battleship(self: int = 1): return 207, self, 'shipyard'
+    def interceptor(self: int = 1): return 215, self, 'shipyard'
+    def bomber(self: int = 1): return 211, self, 'shipyard'
+    def destroyer(self: int = 1): return 213, self, 'shipyard'
+    def deathstar(self: int = 1): return 214, self, 'shipyard'
+    def reaper(self: int = 1): return 218, self, 'shipyard'
+    def explorer(self: int = 1): return 219, self, 'shipyard'
+    def small_transporter(self: int = 1): return 202, self, 'shipyard'
+    def large_transporter(self: int = 1): return 203, self, 'shipyard'
+    def colonyShip(self: int = 1): return 208, self, 'shipyard'
+    def recycler(self: int = 1): return 209, self, 'shipyard'
+    def espionage_probe(self: int = 1): return 210, self, 'shipyard'
+    def crawler(self: int = 1): return 217, self, 'shipyard'
 
     def is_ship(ship):
         if ship[2] == 'shipyard':
@@ -193,6 +193,7 @@ class status:
     recently = 'recently'
     offline = 'offline'
     yourself = 'yourself'
+    destroyed = 99999
 
 
 class diplomacy:

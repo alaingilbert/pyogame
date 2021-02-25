@@ -1,5 +1,4 @@
 import unittest
-import time
 from random import randint
 from ogame.constants import *
 
@@ -24,7 +23,9 @@ class UnittestOgame(unittest.TestCase):
         self.assertGreater(speed.universe, 0)
         self.assertGreater(speed.fleet, 0)
 
-        self.assertIsInstance(self.empire.characterclass(), str)
+        self.assertIsInstance(self.empire.character_class(), str)
+
+        self.assertIsInstance(self.empire.rank(), int)
 
         self.assertGreater(len(self.empire.planet_ids()), 0)
         planets_names = self.empire.planet_names()
@@ -97,16 +98,9 @@ class UnittestOgame(unittest.TestCase):
 
     def test_build(self):
         for id in self.ids:
-            defences = self.empire.defences(id)
-            rocket_before = defences.rocket_launcher.amount
             self.empire.build(buildings.rocket_launcher(1), id)
-            time.sleep(1)
             defences = self.empire.defences(id)
-            rocket_after = defences.rocket_launcher.amount
-            if rocket_before < rocket_after:
-                self.assertTrue(rocket_before < rocket_after)
-                return
-        self.assertTrue(False)
+            self.assertTrue(defences.rocket_launcher.in_construction)
 
     def test_phalanx(self):
         Super_Dangereous_TO_test = 'You will get Banned'
