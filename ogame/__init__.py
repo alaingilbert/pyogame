@@ -19,7 +19,6 @@ class OGame(object):
             token=None, user_agent=None, proxy='',
             language=None, server_number=None
     ):
-        self.forOgameVersion = [7, 6, 5]
         self.universe = universe
         self.username = username
         self.password = password
