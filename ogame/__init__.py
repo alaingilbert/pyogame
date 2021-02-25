@@ -554,20 +554,25 @@ class OGame(object):
         ).json()
         bs4 = BeautifulSoup4(response['galaxy'])
 
-        def num_from_tag(tag):
-            """ 'player123' -> 123 """
+        def playerId(tag):
             numbers = re.search(r'[0-9]+', tag).group()
-            return int(numbers) if numbers else None
+            return int(numbers)
 
         players = bs4.find_all_partial(id='player')
-        player_name = {num_from_tag(player['id']): player.h1.span.text for
-                       player in players}
-        player_rank = {num_from_tag(player['id']): int(player.a.text)
-                       for player in players if player.a.text.isdigit()}
+        player_name = {
+            playerId(player['id']): player.h1.span.text
+            for player in players
+        }
+        player_rank = {
+            playerId(player['id']): int(player.a.text)
+            for player in players if player.a.text.isdigit()
+        }
 
         alliances = bs4.find_all_partial(id='alliance')
-        alliance_name = {num_from_tag(alliance['id']): alliance.h1.text.strip()
-                         for alliance in alliances}
+        alliance_name = {
+            playerId(alliance['id']): alliance.h1.text.strip()
+            for alliance in alliances
+        }
 
         planets = []
         for row in bs4.select('#galaxytable .row'):
@@ -575,21 +580,21 @@ class OGame(object):
             status.remove('row')
             if 'empty_filter' in status:
                 continue
-
-            if len(status) == 0:
+            elif len(status) == 0:
                 planet_status = [const.status.yourself]
                 pid = self.player_id
                 player_name[pid] = self.player
             else:
-                planet_status = [re.search('(.*)_filter', sta).group(1) for sta
-                                 in status]
+                planet_status = [
+                    re.search('(.*)_filter', sta).group(1)
+                    for sta in status
+                ]
 
                 player = row.find(rel=re.compile(r'player[0-9]+'))
                 if not player:
                     continue
-                pid = num_from_tag(player['rel'][0])
-                if pid == 99999:
-                    # Destroyed Planet
+                pid = playerId(player['rel'][0])
+                if pid == const.status.destroyed:
                     continue
 
             planet = int(row.find(class_='position').text)
@@ -598,7 +603,7 @@ class OGame(object):
             moon_pos = row.find(rel=re.compile(r'moon[0-9]*'))
 
             alliance_id = row.find(rel=re.compile(r'alliance[0-9]+'))
-            alliance_id = num_from_tag(
+            alliance_id = playerId(
                 alliance_id['rel']) if alliance_id else None
 
             class Position:
@@ -877,7 +882,7 @@ class OGame(object):
 
     def return_fleet(self, fleet_id):
         self.session.get(
-            self.index_php + 'page=ingame&component=movement&return={}'
+            url=self.index_php + 'page=ingame&component=movement&return={}'
             .format(fleet_id)
         )
 

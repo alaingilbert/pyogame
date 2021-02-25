@@ -193,6 +193,7 @@ class status:
     recently = 'recently'
     offline = 'offline'
     yourself = 'yourself'
+    destroyed = 99999
 
 
 class diplomacy:
