@@ -195,7 +195,7 @@ class OGame(object):
         else:
             return False
 
-    def characterclass(self):
+    def character_class(self):
         character = self.landing_page.find_partial(
             class_='sprite characterclass medium')
         return character['class'][3]

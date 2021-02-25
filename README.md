@@ -72,23 +72,23 @@ empire.neutral()                    returns bool
 
 ### get friendly
 <pre>
-empire.friendly()                    returns bool 
+empire.friendly()                   returns bool 
 </pre>
 
 ### get server (universe)
 <pre>
 server = empire.server()
-server.varsion                       returns list
-server.Speed.universe                returns int
-server.Speed.fleet                   returns int
-server.Donut.galaxy                  returns bool
-server.Donut.system                  returns bool
+server.varsion                      returns list
+server.Speed.universe               returns int
+server.Speed.fleet                  returns int
+server.Donut.galaxy                 returns bool
+server.Donut.system                 returns bool
 </pre>
 
 ### get characterclass
 <pre>
 Get the class of your Ogame Account['miner', 'explorer', 'warrior']
-empire.characterclass()             return string
+empire.character_class()            return string
 </pre>
 
 ### get rank
