@@ -16,7 +16,8 @@ class OGame(object):
             universe,
             username,
             password,
-            token=None, user_agent=None, proxy='', language=None
+            token=None, user_agent=None, proxy='',
+            language=None, server_number=None
     ):
         self.forOgameVersion = [7, 6, 5]
         self.universe = universe
@@ -25,6 +26,7 @@ class OGame(object):
         self.user_agent = user_agent
         self.proxy = proxy
         self.language = language
+        self.server_number = server_number
         self.session = requests.Session()
         self.session.proxies.update({'https': self.proxy})
         self.token = token
@@ -60,27 +62,24 @@ class OGame(object):
             elif server['name'] == self.universe and self.language is None:
                 self.server_number = server['number']
                 break
+        assert self.server_number is not None, "Universe not found"
 
         accounts = self.session.get(
             url='https://lobby.ogame.gameforge.com/api/users/me/accounts'
         ).json()
-        try:
-            for account in accounts:
-                if account['server']['number'] == self.server_number \
-                        and account['server']['language'] == self.language:
-                    self.server_id = account['id']
-                    break
-                elif account['server']['number'] == self.server_number \
-                        and self.language is None:
-                    self.server_id = account['id']
-                    self.language = account['server']['language']
-                    break
-            self.index_php = 'https://s{}-{}.ogame.gameforge.com/' \
-                             'game/index.php?' \
-                .format(self.server_number, self.language)
-        except AttributeError:
-            raise Exception("Universe not found")
+        for account in accounts:
+            if account['server']['number'] == self.server_number \
+                    and account['server']['language'] == self.language:
+                self.server_id = account['id']
+                break
+            elif account['server']['number'] == self.server_number \
+                    and self.language is None:
+                self.server_id = account['id']
+                self.language = account['server']['language']
+                break
 
+        self.index_php = 'https://s{}-{}.ogame.gameforge.com/game/index.php?' \
+            .format(self.server_number, self.language)
         login_link = self.session.get(
             url='https://lobby.ogame.gameforge.com/api/users/me/loginLink?',
             params={'id': self.server_id,
@@ -113,15 +112,14 @@ class OGame(object):
             'autoGameAccountCreation': False
         }
         response = self.session.post(
-            'https://gameforge.com/api/v1/auth/thin/sessions', json=login_data
+            'https://gameforge.com/api/v1/auth/thin/sessions',
+            json=login_data
         )
-        if response.status_code != 201:
-            raise Exception('Bad Login')
-        else:
-            self.token = response.json()['token']
-            self.session.headers.update(
-                {'authorization': 'Bearer {}'.format(self.token)}
-            )
+        assert response.status_code == 201, 'Bad Login'
+        self.token = response.json()['token']
+        self.session.headers.update(
+            {'authorization': 'Bearer {}'.format(self.token)}
+        )
 
     def test(self):
         import ogame.test
