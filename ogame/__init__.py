@@ -933,8 +933,6 @@ class OGame(object):
         self.session.put(
             'https://lobby.ogame.gameforge.com/api/users/me/logout'
         )
-        self.token = None
-        self.session = requests.Session()
         return not OGame.is_logged_in(self)
 
 
