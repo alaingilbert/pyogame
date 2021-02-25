@@ -1,5 +1,4 @@
 import unittest
-import time
 from random import randint
 from ogame.constants import *
 
@@ -24,7 +23,7 @@ class UnittestOgame(unittest.TestCase):
         self.assertGreater(speed.universe, 0)
         self.assertGreater(speed.fleet, 0)
 
-        self.assertIsInstance(self.empire.characterclass(), str)
+        self.assertIsInstance(self.empire.character_class(), str)
 
         self.assertGreater(len(self.empire.planet_ids()), 0)
         planets_names = self.empire.planet_names()
