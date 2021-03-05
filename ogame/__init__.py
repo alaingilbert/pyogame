@@ -114,6 +114,8 @@ class OGame(object):
             'https://gameforge.com/api/v1/auth/thin/sessions',
             json=login_data
         )
+        print(response.status_code)
+        assert response.status_code != 409, 'Resolve the Captcha'
         assert response.status_code == 201, 'Bad Login'
         self.token = response.json()['token']
         self.session.headers.update(
