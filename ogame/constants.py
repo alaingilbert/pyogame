@@ -175,6 +175,47 @@ class ships(object):
             return ship[0]
 
 
+def fleet(
+        light_fighter=0,
+        heavy_fighter=0,
+        cruiser=0,
+        battleship=0,
+        interceptor=0,
+        bomber=0,
+        destroyer=0,
+        deathstar=0,
+        reaper=0,
+        explorer=0,
+        small_transporter=0,
+        large_transporter=0,
+        colonyShip=0,
+        recycler=0,
+        espionage_probe=0,
+        crawler=0
+):
+    fleetList = [
+        ships.light_fighter(light_fighter),
+        ships.heavy_fighter(heavy_fighter),
+        ships.cruiser(cruiser),
+        ships.battleship(battleship),
+        ships.interceptor(interceptor),
+        ships.bomber(bomber),
+        ships.destroyer(destroyer),
+        ships.deathstar(deathstar),
+        ships.reaper(reaper),
+        ships.explorer(explorer),
+        ships.small_transporter(small_transporter),
+        ships.large_transporter(large_transporter),
+        ships.colonyShip(colonyShip),
+        ships.recycler(recycler),
+        ships.espionage_probe(espionage_probe),
+        ships.crawler(crawler)
+    ]
+    fleetList = [ship for ship in fleetList if ship[1] != 0]
+    return fleetList
+
+
+
 def convert_tech(code, category):
     return code, 1, category
 
