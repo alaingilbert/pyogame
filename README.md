@@ -444,9 +444,10 @@ empire.send_fleet(mission=mission.expedition,
 
 ### return fleet
 <pre>
-empire.return_fleet(fleet_id):          returns None
+empire.return_fleet(fleet_id):          returns bool
 
-You can't return hostile Fleets :p use the friendly fleet function to avoid confusion
+You can't return hostile Fleets :p use the friendly fleet function to avoid confusion.
+True if the Fleet you want to return is possible to retreat
 </pre>
 
 

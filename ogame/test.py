@@ -57,9 +57,8 @@ class UnittestOgame(unittest.TestCase):
             self.assertIsInstance(res.energy, int)
 
     def test_supply(self):
-        for id in self.empire.planet_ids():
-            sup = self.empire.supply(id)
-            self.assertGreater(sup.metal_mine.level, -1)
+        sup = self.empire.supply(self.empire.planet_ids()[0])
+        self.assertTrue(0 < sup.metal_mine.level)
 
     def test_facilities(self):
         for id in self.empire.planet_ids():
@@ -97,10 +96,14 @@ class UnittestOgame(unittest.TestCase):
             self.assertIsInstance(fleet.id, int)
 
     def test_build(self):
-        for id in self.ids:
-            self.empire.build(buildings.rocket_launcher(1), id)
-            defences = self.empire.defences(id)
-            self.assertTrue(defences.rocket_launcher.in_construction)
+        self.empire.build(
+            what=buildings.crawler(5),
+            id=self.empire.planet_ids()[0]
+        )
+        crawler = self.empire.supply(
+            self.empire.planet_ids()[0]
+        ).crawler.in_construction
+        self.assertTrue(crawler.in_construction)
 
     def test_phalanx(self):
         Super_Dangereous_TO_test = 'You will get Banned'
@@ -119,14 +122,23 @@ class UnittestOgame(unittest.TestCase):
             self.assertIsInstance(report.fright, list)
 
     def test_send_fleet(self):
-        for planet in self.empire.galaxy(coordinates(randint(1, 6), randint(1, 499))):
-            send = self.empire.send_fleet(mission.spy, self.ids[0], planet.position, [ships.espionage_probe(1)])
-            self.assertIsInstance(send, bool)
+        for planet in self.empire.galaxy(
+                coordinates(randint(1, 6), randint(1, 499))
+        ):
+            send = self.empire.send_fleet(
+                mission.spy,
+                self.ids[0],
+                planet.position,
+                [ships.espionage_probe(1)]
+            )
+            if send:
+                self.assertEqual(send, True)
+            else:
+                self.empire.build(what=ships.espionage_probe(1), id=self.ids[0])
+                self.assertIsInstance(send, bool)
 
     def relogin(self):
-        self.assertEqual(self.empire.is_logged_in(), True)
-        self.assertEqual(self.empire.logout(), True)
-        self.assertEqual(self.empire.is_logged_in(), False)
-        self.assertEqual(self.empire.relogin(), True)
+        self.empire.logout()
+        self.empire.relogin()
         self.assertEqual(self.empire.is_logged_in(), True)
 

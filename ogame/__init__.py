@@ -266,7 +266,7 @@ class OGame(object):
             response
         )
         textContent3 = re.search(
-            r'textContent\[3] = "(.*)\\u00b0C (.*) (.*)\\u00b0C";',
+            r'textContent\[3] = "(.*) \\u00b0C (.*) (.*) \\u00b0C";',
             response
         )
 
@@ -844,7 +844,6 @@ class OGame(object):
                 ]
 
             reports.append(Report)
-
         return reports
 
     def send_fleet(
@@ -898,10 +897,23 @@ class OGame(object):
         return response['success']
 
     def return_fleet(self, fleet_id):
-        self.session.get(
-            url=self.index_php + 'page=ingame&component=movement&return={}'
-            .format(fleet_id)
-        )
+        response = self.session.get(
+            url=self.index_php + 'page=ingame&component=movement'
+        ).text
+        if "return={}".format(fleet_id) in response:
+            token = re.search(
+                'return={}'.format(fleet_id)+'&amp;token=(.*)" ', response
+            ).group(1).split('"')[0]
+            self.session.get(
+                url=''.join([
+                    self.index_php,
+                    'page=ingame&component=movement&return={}&token={}'
+                    .format(fleet_id, token)
+                ])
+            )
+            return True
+        else:
+            return False
 
     def build(self, what, id):
         type = what[0]
@@ -913,7 +925,7 @@ class OGame(object):
                 .format(component, id)
         ).text
         build_token = re.search(
-            "var urlQueueAdd = (.*)token=(.*)'",
+            "var urlQueueAdd = (.*)token=(.*)';",
             response
         ).group(2)
         self.session.get(
