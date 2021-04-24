@@ -266,7 +266,7 @@ class OGame(object):
             response
         )
         textContent3 = re.search(
-            r'textContent\[3] = "(.*) \\u00b0C (.*) (.*) \\u00b0C";',
+            r'"(.*)\\u00b0C (.*) (.*) ',
             response
         )
 

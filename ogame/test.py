@@ -96,14 +96,17 @@ class UnittestOgame(unittest.TestCase):
             self.assertIsInstance(fleet.id, int)
 
     def test_build(self):
+        before = self.empire.defences(
+            self.ids[0]
+        ).rocket_launcher.amount
         self.empire.build(
-            what=buildings.crawler(5),
+            what=buildings.rocket_launcher(),
             id=self.empire.planet_ids()[0]
         )
-        crawler = self.empire.supply(
-            self.empire.planet_ids()[0]
-        ).crawler.in_construction
-        self.assertTrue(crawler.in_construction)
+        after = self.empire.defences(
+            self.ids[0]
+        ).rocket_launcher.amount
+        self.assertTrue(before < after)
 
     def test_phalanx(self):
         Super_Dangereous_TO_test = 'You will get Banned'
