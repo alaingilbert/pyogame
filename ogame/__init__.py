@@ -294,9 +294,9 @@ class OGame(object):
             crystal = resources[1]
             deuterium = resources[2]
             day_production = bs4.find('tr', attrs={'class':'summary'}).find_all('td', attrs={'class':'undermark'})
-            day_production = [int(day_production[0].span['title']),
-                              int(day_production[1].span['title']),
-                              int(day_production[2].span['title']),]
+            day_production = [int(day_production[0].span['title'].replace('.','')),
+                              int(day_production[1].span['title'].replace('.','')),
+                              int(day_production[2].span['title'].replace('.','')),]
             darkmatter = to_int(bs4.find(id='resources_darkmatter')['data-raw'])
             energy = to_int(bs4.find(id='resources_energy')['data-raw'])
 
