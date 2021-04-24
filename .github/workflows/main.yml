@@ -6,7 +6,9 @@ jobs:
   test:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@develop
+      - uses: actions/checkout@v2
+        with:
+          ref: develop
       - name: python3.8
         uses: docker://python:3.8
       - name: dependecys
