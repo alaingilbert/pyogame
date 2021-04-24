@@ -14,8 +14,6 @@ jobs:
         uses: docker://python:3.8
       - name: dependecys
         run: pip install -r requirements.txt
-      - name: compile
-        uses: jannekem/run-python-script-action@v1
-        with:
-          script: |
-            from ogame import OGame
+      - name: valid
+        run: python -c "import ogame"
+
