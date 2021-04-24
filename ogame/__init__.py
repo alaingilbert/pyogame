@@ -1,4 +1,5 @@
 import re
+from pprint import pprint
 import requests
 import unittest
 from bs4 import BeautifulSoup
@@ -117,9 +118,9 @@ class OGame(object):
         if response.status_code == 409 and attempt < 10:
             self.solveCaptcha(
                 response.headers['gf-challenge-id']
-                .replace(';https://challenge.gameforge.com', '')
+                    .replace(';https://challenge.gameforge.com', '')
             )
-            self.login(attempt+1)
+            self.login(attempt + 1)
         elif 10 < attempt:
             assert response.status_code != 409, 'Resolve the Captcha'
         assert response.status_code == 201, 'Bad Login'
@@ -133,7 +134,7 @@ class OGame(object):
         self.session.headers['Connection'] = 'close'
         self.session.get(
             'https://image-drop-challenge.gameforge.com/challenge/{}/en-GB'
-            .format(challenge)
+                .format(challenge)
         )
         self.session.post(
             url='https://image-drop-challenge.gameforge.com/challenge/{}/en-GB'
@@ -183,7 +184,7 @@ class OGame(object):
     def attacked(self):
         response = self.session.get(
             url=self.index_php + 'page=componentOnly'
-                '&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
+                                 '&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         if 0 < response['hostile']:
@@ -194,7 +195,7 @@ class OGame(object):
     def neutral(self):
         response = self.session.get(
             url=self.index_php + 'page=componentOnly'
-                '&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
+                                 '&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         if 0 < response['neutral']:
@@ -205,7 +206,7 @@ class OGame(object):
     def friendly(self):
         response = self.session.get(
             url=self.index_php + 'page=componentOnly'
-                '&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
+                                 '&component=eventList&action=fetchEventBox&ajax=1&asJson=1',
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         if 0 < response['friendly']:
@@ -315,10 +316,10 @@ class OGame(object):
             metal = resources[0]
             crystal = resources[1]
             deuterium = resources[2]
-            day_production = bs4.find('tr', attrs={'class':'summary'}).find_all('td', attrs={'class':'undermark'})
-            day_production = [int(day_production[0].span['title'].replace('.','')),
-                              int(day_production[1].span['title'].replace('.','')),
-                              int(day_production[2].span['title'].replace('.','')),]
+            day_production = bs4.find('tr', attrs={'class': 'summary'}).find_all('td', attrs={'class': 'undermark'})
+            day_production = [int(day_production[0].span['title'].replace('.', '')),
+                              int(day_production[1].span['title'].replace('.', '')),
+                              int(day_production[2].span['title'].replace('.', ''))]
             darkmatter = to_int(bs4.find(id='resources_darkmatter')['data-raw'])
             energy = to_int(bs4.find(id='resources_energy')['data-raw'])
 
@@ -335,6 +336,27 @@ class OGame(object):
             return True
         else:
             return False
+
+    def techtree(self, id):
+        id = id(0)[0]
+        dico_tree = {}
+        r = self.session.get(
+            self.index_php + f'page=ajax&component=technologytree&ajax=1&technologyId={id}&tab=1'
+        ).text
+        bs3 = BeautifulSoup4(r)
+        i = bs3.find('div', {'class': 'content technologytree'}).find_all('div', {'class': 'techWrapper'})
+        for _ in i:
+            k = _.find_all('div', {'class': 'notBuilt'})
+            for l in k:
+                level = int(l['title'][ l['title'].find( '(' )+1 : l['title'].find( ')' )])
+                name = l.find('a')['data-tech-name']
+                if dico_tree.get(name):
+                    if dico_tree[name] < level:
+                        dico_tree[name] = level
+                else:
+                    dico_tree[name] = level
+        pprint(dico_tree)
+        return dico_tree
 
     def supply(self, id):
         response = self.session.get(
@@ -894,7 +916,7 @@ class OGame(object):
 
         response = self.session.post(
             url=self.index_php + 'page=ingame&component=fleetdispatch'
-                '&action=sendFleet&ajax=1&asJson=1',
+                                 '&action=sendFleet&ajax=1&asJson=1',
             data=form_data,
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
@@ -906,13 +928,13 @@ class OGame(object):
         ).text
         if "return={}".format(fleet_id) in response:
             token = re.search(
-                'return={}'.format(fleet_id)+'&amp;token=(.*)" ', response
+                'return={}'.format(fleet_id) + '&amp;token=(.*)" ', response
             ).group(1).split('"')[0]
             self.session.get(
                 url=''.join([
                     self.index_php,
                     'page=ingame&component=movement&return={}&token={}'
-                    .format(fleet_id, token)
+                        .format(fleet_id, token)
                 ])
             )
             return True
@@ -926,7 +948,7 @@ class OGame(object):
         response = self.session.get(
             url=self.index_php +
                 'page=ingame&component={}&cp={}'
-                .format(component, id)
+                    .format(component, id)
         ).text
         build_token = re.search(
             "var urlQueueAdd = (.*)token=(.*)';",
@@ -947,7 +969,7 @@ class OGame(object):
             url=self.index_php +
                 'page=ajax&component=repairlayer&component=repairlayer&ajax=1'
                 '&action=startRepairs&asJson=1&cp={}'
-                .format(id),
+                    .format(id),
             headers={'X-Requested-With': 'XMLHttpRequest'})
 
     def is_logged_in(self):
