@@ -966,6 +966,13 @@ class OGame(object):
                        self.user_agent, self.proxy)
         return OGame.is_logged_in(self)
 
+    def keep_going(self, function):
+        try:
+            function()
+        except:
+            self.relogin()
+        function()
+
     def logout(self):
         self.session.get(self.index_php + 'page=logout')
         self.session.put(

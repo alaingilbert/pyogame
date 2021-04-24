@@ -574,6 +574,17 @@ switch universes with the same login
 empire.relogin('UNI')
 </pre>
 
+### keep going
+If you are running code for long time you can decorate it with the keep going Decorator. 
+If the function gets logged out it will try to relogin and continuing execution.
+```python
+@empire.keep_going
+def run():
+    while True:
+        print(empire.attacked())
+        time.sleep(1)
+```
+
 ### logout
 <pre>                 
 empire.logout()                         returns Bool
