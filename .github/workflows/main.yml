@@ -1,0 +1,15 @@
+name: pyogame
+on:
+  push:
+    branches: [ develop ]
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@develop
+      - name: python3.8
+        uses: docker://python:3.8
+      - name: dependecys
+        run: pip install -r requirements.txt
+      - name: compile
+        run: python -m py_compile ogame/__init__.py
