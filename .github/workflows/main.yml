@@ -15,4 +15,7 @@ jobs:
       - name: dependecys
         run: pip install -r requirements.txt
       - name: compile
-        run: python -m py_compile ogame/__init__.py
+        uses: jannekem/run-python-script-action@v1
+        with:
+          script: |
+            from ogame import OGame
