@@ -341,6 +341,10 @@ class OGame(object):
             day_production = [int(day_production[0].span['title'].replace('.','')),
                               int(day_production[1].span['title'].replace('.','')),
                               int(day_production[2].span['title'].replace('.','')),]
+            storage = bs4.find_all('tr', attrs={'class':'alt'})[7].find_all('td', attrs={'class':'normalmark left2'})
+            storage = [int(storage[0].span['title'].replace('.','')),
+                       int(storage[1].span['title'].replace('.','')),
+                       int(storage[2].span['title'].replace('.','')),]
             darkmatter = to_int(bs4.find(id='resources_darkmatter')['data-raw'])
             energy = to_int(bs4.find(id='resources_energy')['data-raw'])
 
