@@ -298,28 +298,6 @@ class OGame(object):
                 coordinates.append(const.destination.moon)
                 return coordinates
 
-    def techtree(self, id):
-        id = id(0)[0]
-        dico_tree = {}
-        response = self.session.get(
-            self.index_php + f'page=ajax&component=technologytree&ajax=1&technologyId={id}&tab=1'
-        ).text
-        bs4 = BeautifulSoup4(response)
-        techtree = bs4.find('div', {'class': 'content technologytree'}).find_all('div', {'class': 'techWrapper'})
-        for items in techtree:
-            items_not_built = items.find_all('div', {'class': 'notBuilt'})
-            for item in items_not_built:
-                level = int(item['title'][item['title'].find('(')+1: item['title'].find(')')])
-                name = item.find('a')['data-tech-name']
-                if (
-                    dico_tree.get(name)
-                    and dico_tree[name] < level
-                    or not dico_tree.get(name)
-                ):
-                    dico_tree[name] = level
-        print(dico_tree)
-        return dico_tree
-
     def resources(self, id):
         response = self.session.get(
             self.index_php + 'page=resourceSettings&cp={}'.format(id)
@@ -472,7 +450,9 @@ class OGame(object):
         bs4 = BeautifulSoup4(response)
         levels = [
             int(level['data-value'])
-            for level in bs4.find_all(class_='level')
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
         ]
         technologyStatus = [
             status['data-status']
