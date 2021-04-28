@@ -337,9 +337,11 @@ class OGame(object):
             deuterium_mine = Supply(2)
             solar_plant = Supply(3)
             fusion_plant = Supply(4)
-            metal_storage = Supply(5)
-            crystal_storage = Supply(6)
-            deuterium_storage = Supply(7)
+            # solar_satellite = Supply(5)
+            # crawler = Supply(6)
+            metal_storage = Supply(7)
+            crystal_storage = Supply(8)
+            deuterium_storage = Supply(9)
 
         return Supplies
 
