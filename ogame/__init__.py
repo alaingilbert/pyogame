@@ -100,18 +100,18 @@ class OGame(object):
         )['content'])
 
     def login(self, attempt=0):
-        self.session.get('https://lobby.ogame.gameforge.com/')
+        self.session.get('https://gameforge.com/')
         login_data = {
-            'identity': self.username,
+            'email': self.username,
             'password': self.password,
             'locale': 'en_EN',
-            'gfLang': 'en',
-            'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
-            'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
-            'autoGameAccountCreation': False
+            # 'gfLang': 'en',
+            # 'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
+            # 'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
+            # 'autoGameAccountCreation': False
         }
         response = self.session.post(
-            'https://gameforge.com/api/v1/auth/thin/sessions',
+            'https://gameforge.com/api/v1/auth/sessions',
             json=login_data
         )
         if response.status_code == 409 and attempt < 10:
