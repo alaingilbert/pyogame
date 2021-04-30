@@ -3,6 +3,10 @@ import requests
 import unittest
 from bs4 import BeautifulSoup
 from datetime import datetime
+try:
+    from tech_tree import tech_tree
+except ImportError:
+    from ogame.tech_tree import tech_tree
 
 try:
     import constants as const
@@ -100,18 +104,18 @@ class OGame(object):
         )['content'])
 
     def login(self, attempt=0):
-        self.session.get('https://gameforge.com/')
+        self.session.get('https://lobby.ogame.gameforge.com/')
         login_data = {
-            'email': self.username,
+            'identity': self.username,
             'password': self.password,
             'locale': 'en_EN',
-            # 'gfLang': 'en',
-            # 'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
-            # 'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
-            # 'autoGameAccountCreation': False
+            'gfLang': 'en',
+            'platformGameId': '1dfd8e7e-6e1a-4eb1-8c64-03c3b62efd2f',
+            'gameEnvironmentId': '0a31d605-ffaf-43e7-aa02-d06df7116fc8',
+            'autoGameAccountCreation': False
         }
         response = self.session.post(
-            'https://gameforge.com/api/v1/auth/sessions',
+            'https://gameforge.com/api/v1/auth/thin/sessions',
             json=login_data
         )
         if response.status_code == 409 and attempt < 10:
@@ -372,6 +376,13 @@ class OGame(object):
             deuterium_storage = Supply(9)
 
         return Supplies
+
+    def techtrees(self, tech):
+        print(tech)
+        if tech_tree.get(tech):
+            return tech_tree[tech]
+        else:
+            return None
 
     def facilities(self, id):
         response = self.session.get(
