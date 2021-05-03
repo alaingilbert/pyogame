@@ -377,12 +377,6 @@ class OGame(object):
 
         return Supplies
 
-    def techtrees(self, tech):
-        print(tech)
-        if tech_tree.get(tech):
-            return tech_tree[tech]
-        else:
-            return None
 
     def facilities(self, id):
         response = self.session.get(
