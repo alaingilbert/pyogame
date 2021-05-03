@@ -718,11 +718,13 @@ class OGame(object):
         return self.fleet_expe_slots(slot)
 
     def fleet_expe_slots(self, slot):
-        current = int(slot.find('span', attrs={'class': 'current'}).text)
-        total = int(slot.find('span', attrs={'class': 'all'}).text)
-        free = total - current
-        print(f"occupé : {current}, total : {total}")
-        return total, current, free
+        try:
+            current = int(slot.find('span', attrs={'class': 'current'}).text)
+            total = int(slot.find('span', attrs={'class': 'all'}).text)
+            free = total - current
+            return total, current, free
+        except AttributeError:
+            return 0, 0, 0
 
     def friendly_fleet(self):
         if not self.friendly():
