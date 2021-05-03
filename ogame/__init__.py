@@ -377,7 +377,6 @@ class OGame(object):
 
         return Supplies
 
-
     def facilities(self, id):
         response = self.session.get(
             self.index_php + 'page=ingame&component=facilities&cp={}'
