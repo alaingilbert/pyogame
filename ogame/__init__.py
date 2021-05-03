@@ -323,7 +323,7 @@ class OGame(object):
             day_production = [int(day_production[0].span['title'].replace('.','')),
                               int(day_production[1].span['title'].replace('.','')),
                               int(day_production[2].span['title'].replace('.','')),]
-            storage = bs4.find_all('tr', attrs={'class':'alt'})[7].find_all('td', attrs={'class':'normalmark left2'})
+            storage = bs4.find_all('tr', attrs={'class':'alt'})[7].find_all('td', attrs={'class':'left2'})
             storage = [int(storage[0].span['title'].replace('.','')),
                        int(storage[1].span['title'].replace('.','')),
                        int(storage[2].span['title'].replace('.','')),]
@@ -698,6 +698,31 @@ class OGame(object):
             coordinates.append(coords)
 
         return coordinates
+
+    def fleet_slot(self):
+        response = self.session.get(
+            self.index_php + 'page=ingame&component=movement'
+        ).text
+        bs4 = BeautifulSoup4(response)
+        slot = bs4.find('span', attrs={'class':'fleetSlots'})
+        # pprint.pprint(slot)
+        return self.fleet_expe_slots(slot)
+
+    def expedition_slot(self):
+        response = self.session.get(
+            self.index_php + 'page=ingame&component=movement'
+        ).text
+        bs4 = BeautifulSoup4(response)
+        slot = bs4.find('span', attrs={'class': 'expSlots'})
+        # pprint.pprint(slot)
+        return self.fleet_expe_slots(slot)
+
+    def fleet_expe_slots(self, slot):
+        current = int(slot.find('span', attrs={'class': 'current'}).text)
+        total = int(slot.find('span', attrs={'class': 'all'}).text)
+        free = total - current
+        print(f"occupé : {current}, total : {total}")
+        return total, current, free
 
     def friendly_fleet(self):
         if not self.friendly():
