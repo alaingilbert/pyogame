@@ -3,10 +3,6 @@ import requests
 import unittest
 from bs4 import BeautifulSoup
 from datetime import datetime
-try:
-    from tech_tree import tech_tree
-except ImportError:
-    from ogame.tech_tree import tech_tree
 
 try:
     import constants as const
