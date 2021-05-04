@@ -690,30 +690,29 @@ class OGame(object):
 
     def fleet_slot(self):
         response = self.session.get(
-            self.index_php + 'page=ingame&component=movement'
+            self.index_php + 'page=ingame&component=fleetdispatch'
         ).text
         bs4 = BeautifulSoup4(response)
-        slot = bs4.find('span', attrs={'class':'fleetSlots'})
-        # pprint.pprint(slot)
-        return self.fleet_expe_slots(slot)
+        slot = bs4.find('div', attrs={'id':'slots', 'class': 'fleft'})
+        slot = slot.find_all('span', attrs={'class': 'tooltip advice'})
+        slot = slot[0].text
+        slot = slot[slot.find(':')+1:]
+        slot = slot.split('/')
+        slot = [int(slot[i]) for i in range(len(slot))]
+        return slot
 
     def expedition_slot(self):
         response = self.session.get(
-            self.index_php + 'page=ingame&component=movement'
+            self.index_php + 'page=ingame&component=fleetdispatch'
         ).text
         bs4 = BeautifulSoup4(response)
-        slot = bs4.find('span', attrs={'class': 'expSlots'})
-        # pprint.pprint(slot)
-        return self.fleet_expe_slots(slot)
-
-    def fleet_expe_slots(self, slot):
-        try:
-            current = int(slot.find('span', attrs={'class': 'current'}).text)
-            total = int(slot.find('span', attrs={'class': 'all'}).text)
-            free = total - current
-            return total, current, free
-        except AttributeError:
-            return 0, 0, 0
+        slot = bs4.find_all('div', attrs={'id': 'slots', 'class': 'fleft'})
+        slot = slot[0].find_all('div', attrs={'class': 'fleft'})
+        slot = slot[1].text.replace(' ','').replace('\n', '')
+        slot = slot[slot.find(':') + 1:]
+        slot = slot.split('/')
+        slot = [int(slot[i]) for i in range(len(slot))]
+        return slot
 
     def friendly_fleet(self):
         if not self.friendly():
