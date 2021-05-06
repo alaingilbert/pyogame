@@ -361,6 +361,16 @@ empire.officers()                   returns Exception("function not implemented 
 empire.shop()                       returns Exception("function not implemented yet PLS contribute")
 </pre>
 
+### get slot
+<pre>
+Get the actual free and total Fleet slots you have available
+</pre>
+```python
+slot = empire.slot_fleet()
+slot.fleet.free                     returns int
+slot.expedition.total
+```
+
 ### get fleet
 <pre>
 empire.fleet()                      returns list of class(object)
