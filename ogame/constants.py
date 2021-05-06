@@ -122,6 +122,12 @@ class research(object):
     shielding = 110, 1, 'research'
     armor = 111, 1, 'research'
 
+    def is_research(research):
+        if research[2] == 'research':
+            return True
+        else:
+            return False
+
 
 class ships(object):
     def light_fighter(self: int = 1): return 204, self, 'shipyard'
@@ -305,3 +311,23 @@ def price(technology, level=1):
         elif technology[0] == 408: return multipli_resources([50000, 50000, 0], technology[1])
         elif technology[0] == 502: return multipli_resources([8000, 2000, 0], technology[1])
         elif technology[0] == 503: return multipli_resources([12500, 2500, 10000], technology[1])
+
+    if research.is_research(technology):
+        if technology[0] == 113: return resources(crystal=800 * 2 ** level, deuterium=400 * 2 ** level)
+        elif technology[0] == 120: return resources(metal=200 * 2 ** level, crystal=100 * 2 ** level)
+        elif technology[0] == 121: return resources(1000 * 2 ** level, 300 * 2 ** level, 100 * 2 ** level)
+        elif technology[0] == 114: return resources(crystal=4000 * 2 ** level, deuterium=2000 * 2 ** level)
+        elif technology[0] == 122: return resources(2000 * 2 ** level, 4000 * 2 ** level, 1000 * 2 ** level)
+        elif technology[0] == 115: return resources(metal=400 * 2 ** level, deuterium=600 * 2 ** level)
+        elif technology[0] == 117: return resources(2000 * 2 ** level, 4000 * 2 ** level, 600 * 2 ** level)
+        elif technology[0] == 118: return resources(10000 * 2 ** level, 20000 * 2 ** level, 6000 * 2 ** level)
+        elif technology[0] == 106: return resources(200 * 2 ** level, 1000 * 2 ** level, 200 * 2 ** level)
+        elif technology[0] == 108: return resources(crystal=400 * 2 ** level, deuterium=600 * 2 ** level)
+        elif technology[0] == 124: return resources(4000 * 1.75 ** level, 8000 * 1.75 ** level, 4000 * 1.75 ** level)
+        elif technology[0] == 123: return resources(240000 * 2 ** level, 400000 * 2 ** level, 160000 * 2 ** level)
+        elif technology[0] == 109: return resources(metal=800 * 2 ** level, crystal=200 * 2 ** level)
+        elif technology[0] == 110: return resources(metal=200 * 2 ** level, crystal=600 * 2 ** level)
+        elif technology[0] == 111: return resources(metal=1000 * 2 ** level)
+
+
+
