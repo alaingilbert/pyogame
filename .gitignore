@@ -4,3 +4,5 @@ user.py
 *.pyc
 venv
 env
+my-credentials
+main.py
