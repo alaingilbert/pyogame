@@ -971,7 +971,7 @@ class OGame(object):
             function()
         except:
             self.relogin()
-        function()
+            function()
 
     def logout(self):
         self.session.get(self.index_php + 'page=logout')
