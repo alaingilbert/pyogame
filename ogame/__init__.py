@@ -688,31 +688,43 @@ class OGame(object):
 
         return coordinates
 
-    def fleet_slot(self):
+    def slot_fleet(self):
         response = self.session.get(
             self.index_php + 'page=ingame&component=fleetdispatch'
         ).text
         bs4 = BeautifulSoup4(response)
-        slot = bs4.find('div', attrs={'id':'slots', 'class': 'fleft'})
-        slot = slot.find_all('span', attrs={'class': 'tooltip'})
-        slot = slot[0].text
-        slot = slot[slot.find(':')+1:]
-        slot = slot.split('/')
-        slot = [int(slot[i]) for i in range(len(slot))]
-        return slot
+        slots = bs4.find('div', attrs={'id':'slots', 'class': 'fleft'})
+        slots = [
+            slot.text
+            for slot in slots.find_all(class_="tooltip advice")
+        ]
+        fleet = re.search(':(.*)/(.*)', slots[0])
+        fleet = [fleet.group(1), fleet.group(2)]
+        expedition = re.search(' (.*)/(.*)\\n', slots[1])
+        expedition = [
+            expedition.group(1).replace(' ', ''),
+            expedition.group(2)
+        ]
 
-    def expedition_slot(self):
-        response = self.session.get(
-            self.index_php + 'page=ingame&component=fleetdispatch'
-        ).text
-        bs4 = BeautifulSoup4(response)
-        slot = bs4.find_all('div', attrs={'id': 'slots', 'class': 'fleft'})
-        slot = slot[0].find_all('div', attrs={'class': 'fleft'})
-        slot = slot[1].text.replace(' ','').replace('\n', '')
-        slot = slot[slot.find(':') + 1:]
-        slot = slot.split('/')
-        slot = [int(slot[i]) for i in range(len(slot))]
-        return slot
+        class Fleet:
+            total = int(fleet[1])
+            free = total - int(fleet[0])
+
+        class Expedition:
+            total = int(expedition[1])
+            free = total - int(expedition[0])
+
+        class Slot:
+            fleet = Fleet
+            expedition = Expedition
+
+        return Slot
+
+    def fleet(self):
+        fleets = []
+        fleets.extend(self.hostile_fleet())
+        fleets.extend(self.friendly_fleet())
+        return fleets
 
     def friendly_fleet(self):
         if not self.friendly():
@@ -821,12 +833,6 @@ class OGame(object):
                         arrival, origin, destination]
 
             fleets.append(Fleets)
-        return fleets
-
-    def fleet(self):
-        fleets = []
-        fleets.extend(self.hostile_fleet())
-        fleets.extend(self.friendly_fleet())
         return fleets
 
     def phalanx(self, coordinates, id):
@@ -1003,7 +1009,7 @@ class OGame(object):
             function()
         except:
             self.relogin()
-        function()
+            function()
 
     def logout(self):
         self.session.get(self.index_php + 'page=logout')

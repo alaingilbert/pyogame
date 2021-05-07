@@ -5,8 +5,8 @@ OGame is a browser-based, money-management and space-war themed massively multip
 two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
-it supports ogame_version: `7.6.5`
-version `19`
+it supports ogame_version: `7.6.6`
+version `20`
 
 ## install
 <pre>
@@ -360,6 +360,16 @@ empire.officers()                   returns Exception("function not implemented 
 <pre>
 empire.shop()                       returns Exception("function not implemented yet PLS contribute")
 </pre>
+
+### get slot
+<pre>
+Get the actual free and total Fleet slots you have available
+</pre>
+```python
+slot = empire.slot_fleet()
+slot.fleet.free                     returns int
+slot.expedition.total
+```
 
 ### get fleet
 <pre>
