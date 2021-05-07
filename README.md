@@ -429,7 +429,7 @@ for fleet in empire.phalanx(moon_id, coordinates(2, 410, 7)):
 
 ### get spyreports
 <pre>
-empire.spyreports()                  returns list of class(object)
+empire.spyreports()                     returns list of class(object)
 </pre>
 
 ```python
@@ -439,11 +439,11 @@ for report in empire.spyreports():
 
 ### send fleet
 ```python
-from ogame.constants import coordinates, ships, mission, speed
+from ogame.constants import coordinates, mission, speed, fleet
 empire.send_fleet(mission=mission.expedition,
                   id=id,
                   where=coordinates(1, 12, 16),
-                  ships=[ships.small_transporter(1), ships.bomber(1)],
+                  ships=fleet(light_fighter=12, bomber=1, cruiser=100),
                   resources=[0, 0, 0],  # optional default no resources
                   speed=speed.max,      # optional default speed.max
                   holdingtime=2)        # optional default 0 will be needed by expeditions
