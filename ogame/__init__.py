@@ -694,7 +694,7 @@ class OGame(object):
         ).text
         bs4 = BeautifulSoup4(response)
         slot = bs4.find('div', attrs={'id':'slots', 'class': 'fleft'})
-        slot = slot.find_all('span', attrs={'class': 'tooltip advice'})
+        slot = slot.find_all('span', attrs={'class': 'tooltip'})
         slot = slot[0].text
         slot = slot[slot.find(':')+1:]
         slot = slot.split('/')
