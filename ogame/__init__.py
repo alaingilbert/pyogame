@@ -712,7 +712,7 @@ class OGame(object):
         slots = bs4.find('div', attrs={'id':'slots', 'class': 'fleft'})
         slots = [
             slot.text
-            for slot in slots.find_all(class_="tooltip advice")
+            for slot in slots.find_all(class_="tooltip")
         ]
         fleet = re.search(':(.*)/(.*)', slots[0])
         fleet = [fleet.group(1), fleet.group(2)]
