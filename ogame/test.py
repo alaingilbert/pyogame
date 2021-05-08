@@ -17,6 +17,7 @@ class UnittestOgame(unittest.TestCase):
     def test_Events(self):
         self.assertIsInstance(self.empire.attacked(), bool)
         self.assertIsInstance(self.empire.neutral(), bool)
+        self.assertIsInstance(self.empire.friendly(), bool)
 
     def test_Constants(self):
         speed = self.empire.server().Speed
@@ -36,6 +37,18 @@ class UnittestOgame(unittest.TestCase):
         self.assertGreater(len(self.empire.moon_names()), -1)
 
         self.collect_all_ids()
+
+        self.assertTrue(buildings.is_supplies(buildings.metal_mine))
+        self.assertTrue(buildings.is_facilities(buildings.shipyard))
+        self.assertTrue(buildings.is_defenses(buildings.rocket_launcher(10)))
+        self.assertTrue(research.is_research(research.energy))
+        self.assertTrue(ships.is_ship(ships.small_transporter(99)))
+        self.assertTrue(
+            ships.ship_name(ships.light_fighter()) == 'light_fighter'
+        )
+        self.assertTrue(ships.ship_amount(ships.light_fighter(99)) == 99)
+        self.assertEqual(resources(99, 99, 99), [99, 99, 99])
+        self.assertEqual([3459, 864, 0], price(buildings.metal_mine, level=10))
 
     def test_celestial(self):
         celestial = self.empire.celestial(id)
@@ -91,9 +104,23 @@ class UnittestOgame(unittest.TestCase):
     def test_ally(self):
         self.assertIsInstance(self.empire.ally(), list)
 
+    def test_slot_fleet(self):
+        slot = self.empire.slot_fleet()
+        self.assertGreater(slot.fleet.total, 0)
+
     def test_fleet(self):
+        UnittestOgame.test_send_fleet(self)
         for fleet in self.empire.fleet():
             self.assertIsInstance(fleet.id, int)
+            if fleet.mission == mission.spy:
+                self.assertTrue(fleet.mission == mission.spy)
+
+    def test_return_fleet(self):
+        UnittestOgame.test_send_fleet(self)
+        for fleet in self.empire.fleet():
+            if fleet.mission == mission.spy:
+                fleet_returning = self.empire.return_fleet(fleet.id)
+                self.assertTrue(fleet_returning)
 
     def test_build(self):
         before = self.empire.defences(
@@ -114,34 +141,50 @@ class UnittestOgame(unittest.TestCase):
     def test_send_message(self):
         send_message = False
         while not send_message:
-            for position in self.empire.galaxy(coordinates(randint(1, 6), randint(1, 499))):
+            for position in self.empire.galaxy(
+                    coordinates(randint(1, 6), randint(1, 499))
+            ):
                 if status.inactive in position.status:
-                    send_message = self.empire.send_message(position.player_id, 'Hello')
+                    send_message = self.empire.send_message(
+                        position.player_id,
+                        'Hello'
+                    )
                     break
         self.assertEqual(send_message, True)
 
     def test_spyreports(self):
+        UnittestOgame.test_send_fleet(self)
         for report in self.empire.spyreports():
             self.assertIsInstance(report.fright, list)
 
     def test_send_fleet(self):
-        for planet in self.empire.galaxy(
-                coordinates(randint(1, 6), randint(1, 499))
-        ):
-            send = self.empire.send_fleet(
-                mission.spy,
-                self.ids[0],
-                planet.position,
-                [ships.espionage_probe(1)]
-            )
-            if send:
-                self.assertEqual(send, True)
-            else:
-                self.empire.build(what=ships.espionage_probe(1), id=self.ids[0])
-                self.assertIsInstance(send, bool)
+        espionage_probe = self.empire.ships(self.ids[0]).espionage_probe.amount
+        if not 0 < espionage_probe:
+            self.empire.build(ships.espionage_probe())
+            while self.empire.ships(self.ids[0]).espionage_probe.amount <= 0:
+                continue
 
-    def relogin(self):
+        fleet_send = True
+        while fleet_send:
+            for planet in self.empire.galaxy(
+                    coordinates(randint(1, 6), randint(1, 499))
+            ):
+                if status.inactive in planet.status \
+                        and status.vacation not in planet.status:
+                    fleet_send = not self.empire.send_fleet(
+                        mission.spy,
+                        self.ids[0],
+                        where=planet.position,
+                        ships=fleet(espionage_probe=1)
+                    )
+                    break
+        self.assertTrue(not fleet_send)
+
+    def test_collect_rubble_field(self):
+        self.empire.collect_rubble_field(self.ids[0])
+
+    def test_relogin(self):
         self.empire.logout()
-        self.empire.relogin()
-        self.assertEqual(self.empire.is_logged_in(), True)
+        self.empire.keep_going(self.empire.relogin)
+        self.assertTrue(self.empire.is_logged_in())
 
