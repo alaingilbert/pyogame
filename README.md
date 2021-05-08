@@ -5,8 +5,8 @@ OGame is a browser-based, money-management and space-war themed massively multip
 two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
-it supports ogame_version: `7.6.5`
-version `19`
+it supports ogame_version: `7.6.6`
+version `20`
 
 ## install
 <pre>
@@ -14,7 +14,7 @@ pip install ogame
 </pre>
 update
 <pre>
-pip install ogame==7.6.5.19
+pip install ogame==7.6.6.20
 </pre>
 dont want to wait for new updates download direct from the develop branch
 <pre>
@@ -23,6 +23,8 @@ pip install git+https://github.com/alaingilbert/pyogame.git@develop
 
 ## get started
 [Code Snippets](https://github.com/alaingilbert/pyogame/wiki/Code-Snippets)
+
+[Code Style](https://github.com/alaingilbert/pyogame/wiki/Code-Style)
 
 ## Discord
 [Join Discord](https://discord.gg/CeBDgnR)
@@ -359,6 +361,16 @@ empire.officers()                   returns Exception("function not implemented 
 empire.shop()                       returns Exception("function not implemented yet PLS contribute")
 </pre>
 
+### get slot
+<pre>
+Get the actual free and total Fleet slots you have available
+</pre>
+```python
+slot = empire.slot_fleet()
+slot.fleet.free                     returns int
+slot.expedition.total
+```
+
 ### get fleet
 <pre>
 empire.fleet()                      returns list of class(object)
@@ -417,7 +429,7 @@ for fleet in empire.phalanx(moon_id, coordinates(2, 410, 7)):
 
 ### get spyreports
 <pre>
-empire.spyreports()                  returns list of class(object)
+empire.spyreports()                     returns list of class(object)
 </pre>
 
 ```python
@@ -427,11 +439,11 @@ for report in empire.spyreports():
 
 ### send fleet
 ```python
-from ogame.constants import coordinates, ships, mission, speed
+from ogame.constants import coordinates, mission, speed, fleet
 empire.send_fleet(mission=mission.expedition,
                   id=id,
                   where=coordinates(1, 12, 16),
-                  ships=[ships.small_transporter(1), ships.bomber(1)],
+                  ships=fleet(light_fighter=12, bomber=1, cruiser=100),
                   resources=[0, 0, 0],  # optional default no resources
                   speed=speed.max,      # optional default speed.max
                   holdingtime=2)        # optional default 0 will be needed by expeditions
@@ -442,9 +454,10 @@ empire.send_fleet(mission=mission.expedition,
 
 ### return fleet
 <pre>
-empire.return_fleet(fleet_id):          returns None
+empire.return_fleet(fleet_id):          returns bool
 
-You can't return hostile Fleets :p use the friendly fleet function to avoid confusion
+You can't return hostile Fleets :p use the friendly fleet function to avoid confusion.
+True if the Fleet you want to return is possible to retreat
 </pre>
 
 
@@ -570,6 +583,17 @@ empire.relogin()                        returns Bool
 switch universes with the same login
 empire.relogin('UNI')
 </pre>
+
+### keep going
+If you are running code for long time you can decorate it with the keep going Decorator. 
+If the function gets logged out it will try to relogin and continuing execution.
+```python
+@empire.keep_going
+def run():
+    while True:
+        print(empire.attacked())
+        time.sleep(1)
+```
 
 ### logout
 <pre>                 

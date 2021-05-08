@@ -99,7 +99,7 @@ class OGame(object):
             'meta', {'name': 'ogame-planet-id'}
         )['content'])
 
-    def login(self):
+    def login(self, attempt=0):
         self.session.get('https://lobby.ogame.gameforge.com/')
         login_data = {
             'identity': self.username,
@@ -114,10 +114,32 @@ class OGame(object):
             'https://gameforge.com/api/v1/auth/thin/sessions',
             json=login_data
         )
+        if response.status_code == 409 and attempt < 10:
+            self.solveCaptcha(
+                response.headers['gf-challenge-id']
+                .replace(';https://challenge.gameforge.com', '')
+            )
+            self.login(attempt+1)
+        elif 10 < attempt:
+            assert response.status_code != 409, 'Resolve the Captcha'
         assert response.status_code == 201, 'Bad Login'
         self.token = response.json()['token']
         self.session.headers.update(
             {'authorization': 'Bearer {}'.format(self.token)}
+        )
+
+    def solveCaptcha(self, challenge):
+        self.session.headers['Cookie'] = ''
+        self.session.headers['Connection'] = 'close'
+        self.session.get(
+            'https://image-drop-challenge.gameforge.com/challenge/{}/en-GB'
+            .format(challenge)
+        )
+        self.session.post(
+            url='https://image-drop-challenge.gameforge.com/challenge/{}/en-GB'
+                .format(challenge),
+            headers={'Content-Type': 'application/json'},
+            data='{"answer":3}'
         )
 
     def test(self):
@@ -244,7 +266,7 @@ class OGame(object):
             response
         )
         textContent3 = re.search(
-            r'textContent\[3] = "(.*)\\u00b0C (.*) (.*)\\u00b0C";',
+            r'"(.*)\\u00b0C (.*) (.*) ',
             response
         )
 
@@ -293,6 +315,30 @@ class OGame(object):
             metal = resources[0]
             crystal = resources[1]
             deuterium = resources[2]
+            day_production = bs4.find(
+                'tr',
+                attrs={'class':'summary'}
+            ).find_all(
+                'td',
+                attrs={'class':'undermark'}
+            )
+            day_production = [
+                int(day_production[0].span['title'].replace('.','')),
+                int(day_production[1].span['title'].replace('.','')),
+                int(day_production[2].span['title'].replace('.',''))
+            ]
+            storage = bs4.find_all(
+                'tr',
+                attrs={'class': 'alt'}
+            )[7].find_all(
+                'td',
+                attrs={'class': 'left2'}
+            )
+            storage = [
+                int(storage[0].span['title'].replace('.', '')),
+                int(storage[1].span['title'].replace('.', '')),
+                int(storage[2].span['title'].replace('.', ''))
+            ]
             darkmatter = to_int(bs4.find(id='resources_darkmatter')['data-raw'])
             energy = to_int(bs4.find(id='resources_energy')['data-raw'])
 
@@ -337,9 +383,9 @@ class OGame(object):
             deuterium_mine = Supply(2)
             solar_plant = Supply(3)
             fusion_plant = Supply(4)
-            metal_storage = Supply(5)
-            crystal_storage = Supply(6)
-            deuterium_storage = Supply(7)
+            metal_storage = Supply(7)
+            crystal_storage = Supply(8)
+            deuterium_storage = Supply(9)
 
         return Supplies
 
@@ -420,7 +466,9 @@ class OGame(object):
         bs4 = BeautifulSoup4(response)
         levels = [
             int(level['data-value'])
-            for level in bs4.find_all(class_='level')
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
         ]
         technologyStatus = [
             status['data-status']
@@ -656,6 +704,44 @@ class OGame(object):
 
         return coordinates
 
+    def slot_fleet(self):
+        response = self.session.get(
+            self.index_php + 'page=ingame&component=fleetdispatch'
+        ).text
+        bs4 = BeautifulSoup4(response)
+        slots = bs4.find('div', attrs={'id':'slots', 'class': 'fleft'})
+        slots = [
+            slot.text
+            for slot in slots.find_all(class_="tooltip")
+        ]
+        fleet = re.search(':(.*)/(.*)', slots[0])
+        fleet = [fleet.group(1), fleet.group(2)]
+        expedition = re.search(' (.*)/(.*)\\n', slots[1])
+        expedition = [
+            expedition.group(1).replace(' ', ''),
+            expedition.group(2)
+        ]
+
+        class Fleet:
+            total = int(fleet[1])
+            free = total - int(fleet[0])
+
+        class Expedition:
+            total = int(expedition[1])
+            free = total - int(expedition[0])
+
+        class Slot:
+            fleet = Fleet
+            expedition = Expedition
+
+        return Slot
+
+    def fleet(self):
+        fleets = []
+        fleets.extend(self.hostile_fleet())
+        fleets.extend(self.friendly_fleet())
+        return fleets
+
     def friendly_fleet(self):
         if not self.friendly():
             return []
@@ -765,12 +851,6 @@ class OGame(object):
             fleets.append(Fleets)
         return fleets
 
-    def fleet(self):
-        fleets = []
-        fleets.extend(self.hostile_fleet())
-        fleets.extend(self.friendly_fleet())
-        return fleets
-
     def phalanx(self, coordinates, id):
         raise NotImplemented(
             'Phalanx get you banned if used with invalid parameters')
@@ -822,7 +902,6 @@ class OGame(object):
                 ]
 
             reports.append(Report)
-
         return reports
 
     def send_fleet(
@@ -876,10 +955,23 @@ class OGame(object):
         return response['success']
 
     def return_fleet(self, fleet_id):
-        self.session.get(
-            url=self.index_php + 'page=ingame&component=movement&return={}'
-            .format(fleet_id)
-        )
+        response = self.session.get(
+            url=self.index_php + 'page=ingame&component=movement'
+        ).text
+        if "return={}".format(fleet_id) in response:
+            token = re.search(
+                'return={}'.format(fleet_id)+'&amp;token=(.*)" ', response
+            ).group(1).split('"')[0]
+            self.session.get(
+                url=''.join([
+                    self.index_php,
+                    'page=ingame&component=movement&return={}&token={}'
+                    .format(fleet_id, token)
+                ])
+            )
+            return True
+        else:
+            return False
 
     def build(self, what, id):
         type = what[0]
@@ -891,7 +983,7 @@ class OGame(object):
                 .format(component, id)
         ).text
         build_token = re.search(
-            "var urlQueueAdd = (.*)token=(.*)'",
+            "var urlQueueAdd = (.*)token=(.*)';",
             response
         ).group(2)
         self.session.get(
@@ -928,13 +1020,18 @@ class OGame(object):
                        self.user_agent, self.proxy)
         return OGame.is_logged_in(self)
 
+    def keep_going(self, function):
+        try:
+            function()
+        except:
+            self.relogin()
+            function()
+
     def logout(self):
         self.session.get(self.index_php + 'page=logout')
         self.session.put(
             'https://lobby.ogame.gameforge.com/api/users/me/logout'
         )
-        self.token = None
-        self.session = requests.Session()
         return not OGame.is_logged_in(self)
 
 

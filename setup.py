@@ -3,13 +3,13 @@ from distutils.core import setup
 setup(
     name='ogame',
     packages=['ogame'],
-    version='7.6.5.19',
+    version='7.6.6.20',
     license='MIT',
     description='lib for the popular browsergame ogame',
     author='PapeprPieceCode',
     author_email='marcos.gam@hotmail.com',
-    url='https://github.com/PiecePaperCode/pyogame2',
-    download_url='https://github.com/alaingilbert/pyogame',
+    url='https://github.com/alaingilbert/pyogame',
+    download_url='https://github.com/alaingilbert/pyogame.git',
     keywords=['OGame', 'lib', 'for bots', 'bot'],
     install_requires=['requests', 'bs4', 'html5lib'],
     classifiers=[
