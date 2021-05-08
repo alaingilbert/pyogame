@@ -14,7 +14,7 @@ pip install ogame
 </pre>
 update
 <pre>
-pip install ogame==7.6.5.19
+pip install ogame==7.6.6.20
 </pre>
 dont want to wait for new updates download direct from the develop branch
 <pre>
