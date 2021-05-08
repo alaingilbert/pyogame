@@ -118,7 +118,7 @@ class UnittestOgame(unittest.TestCase):
     def test_return_fleet(self):
         UnittestOgame.test_send_fleet(self)
         for fleet in self.empire.fleet():
-            if fleet.mission == mission.spy:
+            if fleet.mission == mission.spy and not fleet.returns:
                 fleet_returning = self.empire.return_fleet(fleet.id)
                 self.assertTrue(fleet_returning)
 
