@@ -241,6 +241,13 @@ class OGame(object):
             if planet_name == name:
                 return id
 
+    def name_by_planet_id(self, id):
+        for _id, planet_name in zip(
+                OGame.planet_ids(self), OGame.planet_names(self)
+        ):
+            if id == _id:
+                return planet_name
+
     def moon_ids(self):
         moons = []
         for moon in self.landing_page.find_all(class_='moonlink'):
@@ -712,7 +719,7 @@ class OGame(object):
         slots = bs4.find('div', attrs={'id':'slots', 'class': 'fleft'})
         slots = [
             slot.text
-            for slot in slots.find_all(class_="tooltip")
+            for slot in slots.find_all(class_="fleft")
         ]
         fleet = re.search(':(.*)/(.*)', slots[0])
         fleet = [fleet.group(1), fleet.group(2)]
