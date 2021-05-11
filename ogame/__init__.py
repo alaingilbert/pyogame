@@ -224,6 +224,14 @@ class OGame(object):
         rank = re.search(r'\((.*)\)', rank).group(1)
         return int(rank)
 
+    def numbers_planets(self):
+        class Planets:
+            nb_planets = self.landing_page.find('p', attrs={'class': 'textCenter'}).find('span').text
+            free = int(nb_planets.split('/')[1]) - int(nb_planets.split('/')[0])
+            total = int(nb_planets.split('/')[1])
+
+        return Planets
+
     def planet_ids(self):
         ids = []
         for celestial in self.landing_page.find_all(class_='smallplanet'):
