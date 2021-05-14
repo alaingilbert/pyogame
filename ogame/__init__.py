@@ -281,7 +281,7 @@ class OGame(object):
             response
         )
         textContent3 = re.search(
-            r'"(.*)\\u00b0C (.*) (.*) ',
+            r'textContent\[3] = "(.*) \\u00b0C \\u00e0 (.*)\\u00b0C"',
             response
         )
 
@@ -292,7 +292,7 @@ class OGame(object):
             free = total - used
             temperature = [
                 int(textContent3.group(1)),
-                int(textContent3.group(3))
+                int(textContent3.group(2))
             ]
             coordinates = OGame.celestial_coordinates(self, id)
 
@@ -887,19 +887,86 @@ class OGame(object):
         else:
             return False
 
-    def spyreports(self):
-        response = self.session.get(
+    def rename_planet(self, id, new_name):
+        self.session.get(
             url=self.index_php,
-            params={'page': 'messages',
-                    'tab': 20,
-                    'ajax': 1}
-        ).text
-        bs4 = BeautifulSoup4(response)
-        report_links = [
-            link['href']
-            for link in bs4.find_all_partial(href='page=messages&messageId')
-        ]
+            params={'cp': id})
+        response = self.session.get(self.index_php,
+                                    params={'page': 'planetlayer'},
+                                    headers={'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}).text
+        token_rename = re.search("name='token' value='(.*)'", response).group(1)
+        print(token_rename)
+        param = {'page': 'planetRename'}
+        data = {
+            'newPlanetName': new_name,
+            'token': token_rename}
+        response = self.session.post(
+            url=self.index_php,
+            params=param,
+            data=data,
+            headers={'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}
+        )
 
+    def abandon_planet(self, id):
+        self.session.get(
+            url=self.index_php,
+            params={'cp': id})
+        header = {'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}
+        response = self.session.get(self.index_php,
+                                    params={'page': 'planetlayer'},
+                                    headers=header).text
+        response = response[response.find('input type="hidden" name="abandon" value="'):]
+        code_abandon = re.search('name="abandon" value="(.*)"', response).group(1)
+        token_abandon = re.search("name='token' value='(.*)'", response).group(1)
+        response = self.session.post(url=self.index_php,
+                                     params={
+                                         'page': 'checkPassword'
+                                     },
+                                     data={
+                                         'abandon': code_abandon,
+                                         'token': token_abandon,
+                                         'password': self.password,
+                                     },
+                                     headers=header).json()
+        new_token = None
+        if (
+                response.get("password_checked")
+                and response["password_checked"] == True
+        ):
+            new_token = response["newToken"]
+        if new_token:
+            self.session.post(url=self.index_php,
+                              params={
+                                  'page': 'planetGiveup'
+                              },
+                              data={
+                                  'abandon': code_abandon,
+                                  'token': new_token,
+                                  'password': self.password,
+                              },
+                              headers=header).json()
+
+    def spyreports(self, lastDateOfReport=None, firstpage=1, lastpage=30):
+        # get links for the last 30 pages
+        report_links = []
+        while firstpage <= lastpage:
+            try:
+                response = self.session.get(
+                    url=self.index_php,
+                    params={'page': 'messages',
+                            'tab': 20,
+                            'action': 107,
+                            'messageId': -1,
+                            'pagination': firstpage,
+                            'ajax': 1}
+                ).text
+            except:
+                break
+            bs4 = BeautifulSoup4(response)
+            for link in bs4.find_all_partial(href='page=messages&messageId'):
+                if link['href'] not in report_links:
+                    report_links.extend([link['href'] for link in bs4.find_all_partial(href='page=messages&messageId')])
+            firstpage += 1
         reports = []
         for link in report_links:
             response = self.session.get(link).text
