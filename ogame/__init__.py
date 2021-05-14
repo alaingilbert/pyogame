@@ -284,6 +284,11 @@ class OGame(object):
             r'textContent\[3] = "(.*) \\u00b0C \\u00e0 (.*)\\u00b0C"',
             response
         )
+        if textContent3 is None:
+            textContent3 = re.search(
+                r'textContent\[3] = "(.*)\\u00b0C to (.*)\\u00b0C"',
+                response
+            )
 
         class Celestial:
             diameter = int(textContent1.group(1).replace('.', ''))
