@@ -283,15 +283,17 @@ class OGame(object):
             r'textContent\[1] = "(.*)km \(<span>(.*)<(.*)<span>(.*)<',
             response
         )
-        textContent3 = re.search(
-            r'textContent\[3] = "(.*) \\u00b0C \\u00e0 (.*)\\u00b0C"',
-            response
-        )
-        if textContent3 is None:
-            textContent3 = re.search(
-                r'textContent\[3] = "(.*)\\u00b0C to (.*)\\u00b0C"',
+        querys = [
+            re.compile(r'textContent\[3] = "(.*) \\u00b0C \\u00e0(.*)(.*)\\'),
+            re.compile(r'textContent\[3] = "(.*) \\u00b0C (.*) (.*) \\u00b0C"'),
+        ]
+        textContent3 = None
+        for query in querys:
+            textContent3 = query.search(
                 response
             )
+            if textContent3 is not None:
+                break
 
         class Celestial:
             diameter = int(textContent1.group(1).replace('.', ''))
@@ -300,7 +302,7 @@ class OGame(object):
             free = total - used
             temperature = [
                 int(textContent3.group(1)),
-                int(textContent3.group(2))
+                int(textContent3.group(3))
             ]
             coordinates = OGame.celestial_coordinates(self, id)
 

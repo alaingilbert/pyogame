@@ -164,7 +164,7 @@ class UnittestOgame(unittest.TestCase):
     def test_send_fleet(self):
         espionage_probe = self.empire.ships(self.ids[0]).espionage_probe.amount
         if not 0 < espionage_probe:
-            self.empire.build(ships.espionage_probe())
+            self.empire.build(ships.espionage_probe(), self.ids[0])
             while self.empire.ships(self.ids[0]).espionage_probe.amount <= 0:
                 continue
 
