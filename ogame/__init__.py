@@ -224,14 +224,6 @@ class OGame(object):
         rank = re.search(r'\((.*)\)', rank).group(1)
         return int(rank)
 
-    def numbers_planets(self):
-        class Planets:
-            nb_planets = self.landing_page.find('p', attrs={'class': 'textCenter'}).find('span').text
-            free = int(nb_planets.split('/')[1]) - int(nb_planets.split('/')[0])
-            total = int(nb_planets.split('/')[1])
-
-        return Planets
-
     def planet_ids(self):
         ids = []
         for celestial in self.landing_page.find_all(class_='smallplanet'):
@@ -270,6 +262,17 @@ class OGame(object):
             name = name['title']
             names.append(re.search(r'<b>(.*) \[', name).group(1))
         return names
+
+    def slot_celestial(self):
+        class Slot:
+            planets = self.landing_page.find(
+                'p',
+                attrs={'class': 'textCenter'}
+            ).find('span').text.split('/')
+            planets = [int(planet) for planet in planets]
+            free = planets[1] - planets[0]
+            total = planets[1]
+        return Slot
 
     def celestial(self, id):
         response = self.session.get(

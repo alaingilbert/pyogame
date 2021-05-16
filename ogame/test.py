@@ -50,6 +50,10 @@ class UnittestOgame(unittest.TestCase):
         self.assertEqual(resources(99, 99, 99), [99, 99, 99])
         self.assertEqual([3459, 864, 0], price(buildings.metal_mine, level=10))
 
+    def test_slot_celestial(self):
+        slot = self.empire.slot_celestial()
+        self.assertGreater(slot.total, 0)
+
     def test_celestial(self):
         celestial = self.empire.celestial(id)
         self.assertGreater(celestial.diameter, 0)
