@@ -139,8 +139,15 @@ coordinates(1, 2, 12, destination.moon)
 coordinates(1, 2, 12, destination.debris)
 coordinates(1, 2, 12, destination.planet) or coordinates(1, 2, 12)
 ```
+### get slot celestials
+returns how many planet slots are free to colonize
+<pre>
+slot = empire.slot_celestial()          returns class
+slot.free                               returns int
+slot.total                              returns int
+</pre>
 
-### get celestial data
+### get celestial
 works with planet's and moon's
 <pre>
 celestial = empire.celestial(id)        returns class

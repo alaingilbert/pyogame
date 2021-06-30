@@ -224,6 +224,13 @@ class OGame(object):
         rank = re.search(r'\((.*)\)', rank).group(1)
         return int(rank)
 
+    def numbers_planets(self):
+        class Planets:
+            nb_planets = self.landing_page.find('p', attrs={'class': 'textCenter'}).find('span').text
+            free = int(nb_planets.split('/')[1]) - int(nb_planets.split('/')[0])
+            total = int(nb_planets.split('/')[1])
+        return Planets
+
     def planet_ids(self):
         ids = []
         for celestial in self.landing_page.find_all(class_='smallplanet'):
@@ -263,6 +270,17 @@ class OGame(object):
             names.append(re.search(r'<b>(.*) \[', name).group(1))
         return names
 
+    def slot_celestial(self):
+        class Slot:
+            planets = self.landing_page.find(
+                'p',
+                attrs={'class': 'textCenter'}
+            ).find('span').text.split('/')
+            planets = [int(planet) for planet in planets]
+            free = planets[1] - planets[0]
+            total = planets[1]
+        return Slot
+
     def celestial(self, id):
         response = self.session.get(
             url=self.index_php + 'page=ingame&component=overview',
@@ -272,10 +290,17 @@ class OGame(object):
             r'textContent\[1] = "(.*)km \(<span>(.*)<(.*)<span>(.*)<',
             response
         )
-        textContent3 = re.search(
-            r'"(.*)\\u00b0C (.*) (.*) ',
-            response
-        )
+        querys = [
+            re.compile(r'textContent\[3] = "(.*) \\u00b0C \\u00e0(.*)(.*)\\'),
+            re.compile(r'textContent\[3] = "(.*) \\u00b0C (.*) (.*) \\u00b0C"'),
+        ]
+        textContent3 = None
+        for query in querys:
+            textContent3 = query.search(
+                response
+            )
+            if textContent3 is not None:
+                break
 
         class Celestial:
             diameter = int(textContent1.group(1).replace('.', ''))
@@ -284,7 +309,7 @@ class OGame(object):
             free = total - used
             temperature = [
                 int(textContent3.group(1)),
-                int(textContent3.group(3))
+                int(textContent3.group(2))
             ]
             coordinates = OGame.celestial_coordinates(self, id)
 
@@ -334,13 +359,11 @@ class OGame(object):
                 int(day_production[1].span['title'].replace('.','')),
                 int(day_production[2].span['title'].replace('.',''))
             ]
-            storage = bs4.find_all(
-                'tr',
-                attrs={'class': 'alt'}
-            )[7].find_all(
-                'td',
-                attrs={'class': 'left2'}
-            )
+            storage = bs4.find_all('tr')
+            for stor in storage:
+                if len(stor.find_all('td', attrs={'class': 'left2'})) != 0:
+                    storage = stor.find_all('td', attrs={'class': 'left2'})
+                    break
             storage = [
                 int(storage[0].span['title'].replace('.', '')),
                 int(storage[1].span['title'].replace('.', '')),
@@ -439,7 +462,7 @@ class OGame(object):
         bs4 = BeautifulSoup4(response)
         levels = [
             int(level['data-value'])
-            for level in bs4.find_all(class_='level')
+            for level in bs4.find_all(class_=['targetlevel', 'level']) if level.get('data-value')
         ]
         technologyStatus = [
             status['data-status']
@@ -464,11 +487,11 @@ class OGame(object):
     def traider(self, id):
         raise NotImplementedError("function not implemented yet PLS contribute")
 
-    def research(self):
+    def research(self, id):
         response = self.session.get(
             url=self.index_php,
             params={'page': 'ingame', 'component': 'research',
-                    'cp': OGame.planet_ids(self)[0]}
+                    'cp': id}
         ).text
         bs4 = BeautifulSoup4(response)
         levels = [
@@ -879,19 +902,86 @@ class OGame(object):
         else:
             return False
 
-    def spyreports(self):
-        response = self.session.get(
+    def rename_planet(self, id, new_name):
+        self.session.get(
             url=self.index_php,
-            params={'page': 'messages',
-                    'tab': 20,
-                    'ajax': 1}
-        ).text
-        bs4 = BeautifulSoup4(response)
-        report_links = [
-            link['href']
-            for link in bs4.find_all_partial(href='page=messages&messageId')
-        ]
+            params={'cp': id})
+        response = self.session.get(self.index_php,
+                                    params={'page': 'planetlayer'},
+                                    headers={'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}).text
+        token_rename = re.search("name='token' value='(.*)'", response).group(1)
+        param = {'page': 'planetRename'}
+        data = {
+            'newPlanetName': new_name,
+            'token': token_rename}
+        response = self.session.post(
+            url=self.index_php,
+            params=param,
+            data=data,
+            headers={'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}
+        ).json()
+        return response['status']
 
+    def abandon_planet(self, id):
+        self.session.get(
+            url=self.index_php,
+            params={'cp': id})
+        header = {'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}
+        response = self.session.get(self.index_php,
+                                    params={'page': 'planetlayer'},
+                                    headers=header).text
+        response = response[response.find('input type="hidden" name="abandon" value="'):]
+        code_abandon = re.search('name="abandon" value="(.*)"', response).group(1)
+        token_abandon = re.search("name='token' value='(.*)'", response).group(1)
+        response = self.session.post(url=self.index_php,
+                                     params={
+                                         'page': 'checkPassword'
+                                     },
+                                     data={
+                                         'abandon': code_abandon,
+                                         'token': token_abandon,
+                                         'password': self.password,
+                                     },
+                                     headers=header).json()
+        new_token = None
+        if (
+                response.get("password_checked")
+                and response["password_checked"] == True
+        ):
+            new_token = response["newToken"]
+        if new_token:
+            self.session.post(url=self.index_php,
+                              params={
+                                  'page': 'planetGiveup'
+                              },
+                              data={
+                                  'abandon': code_abandon,
+                                  'token': new_token,
+                                  'password': self.password,
+                              },
+                              headers=header).json()
+
+    def spyreports(self, lastDateOfReport=None, firstpage=1, lastpage=30):
+        # get links for the last 30 pages
+        report_links = []
+        while firstpage <= lastpage:
+            try:
+                response = self.session.get(
+                    url=self.index_php,
+                    params={'page': 'messages',
+                            'tab': 20,
+                            'action': 107,
+                            'messageId': -1,
+                            'pagination': firstpage,
+                            'ajax': 1}
+                ).text
+            except:
+                break
+            bs4 = BeautifulSoup4(response)
+            for link in bs4.find_all_partial(href='page=messages&messageId'):
+                if link['href'] not in report_links:
+                    report_links.extend([link['href'] for link in bs4.find_all_partial(href='page=messages&messageId')])
+            firstpage += 1
         reports = []
         for link in report_links:
             response = self.session.get(link).text
@@ -923,16 +1013,13 @@ class OGame(object):
             url=self.index_php + 'page=ingame&component=fleetdispatch&cp={}'
                 .format(id)
         ).text
-        send_fleet_token = re.search(
-            'var fleetSendingToken = "(.*)"',
-            response
-        ).group(1)
-        form_data = {'token': send_fleet_token}
-
+        send_fleet_token = re.search('var fleetSendingToken = "(.*)"', response)
+        if send_fleet_token is None:
+            send_fleet_token = re.search('var token = "(.*)"', response)
+        form_data = {'token': send_fleet_token.group(1)}
         for ship in ships:
             ship_type = 'am{}'.format(ship[0])
             form_data.update({ship_type: ship[1]})
-
         form_data.update(
             {
                 'galaxy': where[0],
@@ -952,7 +1039,6 @@ class OGame(object):
                 'holdingtime': holdingtime
             }
         )
-
         response = self.session.post(
             url=self.index_php + 'page=ingame&component=fleetdispatch'
                 '&action=sendFleet&ajax=1&asJson=1',
