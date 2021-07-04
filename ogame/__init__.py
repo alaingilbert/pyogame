@@ -93,10 +93,10 @@ class OGame(object):
         self.landing_page = BeautifulSoup4(self.landing_page)
 
         self.player = self.landing_page.find(
-            'meta', {'name': 'ogame-planet-name'}
+            'meta', {'name': 'ogame-player-name'}
         )['content']
         self.player_id = int(self.landing_page.find(
-            'meta', {'name': 'ogame-planet-id'}
+            'meta', {'name': 'ogame-player-id'}
         )['content'])
 
     def login(self, attempt=0):
