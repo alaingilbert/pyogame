@@ -99,7 +99,7 @@ class OGame(object):
             'meta', {'name': 'ogame-player-id'}
         )['content'])
 
-    def login(self, attempt=0):
+    def login(self):
         self.session.get('https://lobby.ogame.gameforge.com/')
         login_data = {
             'identity': self.username,
@@ -114,13 +114,14 @@ class OGame(object):
             'https://gameforge.com/api/v1/auth/thin/sessions',
             json=login_data
         )
-        if response.status_code == 409 and attempt < 20:
+        if response.status_code == 409:
             self.solveCaptcha(
                 response.headers['gf-challenge-id']
                 .replace(';https://challenge.gameforge.com', '')
             )
-            self.login(attempt+1)
-        # assert response.status_code == 409, 'Resolve the Captcha'
+            self.login()
+            return True
+        assert response.status_code != 409, 'Resolve the Captcha'
         assert response.status_code == 201, 'Bad Login'
         self.token = response.json()['token']
         self.session.headers.update(
@@ -128,18 +129,15 @@ class OGame(object):
         )
 
     def solveCaptcha(self, challenge):
-        self.session.headers['Cookie'] = ''
-        self.session.headers['Connection'] = 'close'
-        self.session.get(
-            'https://image-drop-challenge.gameforge.com/challenge/{}/en-GB'
-            .format(challenge)
-        )
-        self.session.post(
+        response = self.session.post(
             url='https://image-drop-challenge.gameforge.com/challenge/{}/en-GB'
                 .format(challenge),
-            headers={'Content-Type': 'application/json'},
-            data='{"answer":3}'
-        )
+            json={"answer": 0}
+        ).json()
+        if response['status'] == 'solved':
+            return True
+        else:
+            self.solveCaptcha(challenge)
 
     def test(self):
         import ogame.test
