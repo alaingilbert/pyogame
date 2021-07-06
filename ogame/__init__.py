@@ -114,14 +114,13 @@ class OGame(object):
             'https://gameforge.com/api/v1/auth/thin/sessions',
             json=login_data
         )
-        if response.status_code == 409 and attempt < 10:
+        if response.status_code == 409 and attempt < 20:
             self.solveCaptcha(
                 response.headers['gf-challenge-id']
                 .replace(';https://challenge.gameforge.com', '')
             )
             self.login(attempt+1)
-        elif 10 < attempt:
-            assert response.status_code != 409, 'Resolve the Captcha'
+        assert response.status_code != 409, 'Resolve the Captcha'
         assert response.status_code == 201, 'Bad Login'
         self.token = response.json()['token']
         self.session.headers.update(
