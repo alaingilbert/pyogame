@@ -120,7 +120,7 @@ class OGame(object):
                 .replace(';https://challenge.gameforge.com', '')
             )
             self.login(attempt+1)
-        assert response.status_code != 409, 'Resolve the Captcha'
+        # assert response.status_code == 409, 'Resolve the Captcha'
         assert response.status_code == 201, 'Bad Login'
         self.token = response.json()['token']
         self.session.headers.update(
