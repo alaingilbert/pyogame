@@ -50,6 +50,10 @@ class UnittestOgame(unittest.TestCase):
         self.assertEqual(resources(99, 99, 99), [99, 99, 99])
         self.assertEqual([3459, 864, 0], price(buildings.metal_mine, level=10))
 
+    def test_slot_celestial(self):
+        slot = self.empire.slot_celestial()
+        self.assertGreater(slot.total, 0)
+
     def test_celestial(self):
         celestial = self.empire.celestial(id)
         self.assertGreater(celestial.diameter, 0)
@@ -160,7 +164,7 @@ class UnittestOgame(unittest.TestCase):
     def test_send_fleet(self):
         espionage_probe = self.empire.ships(self.ids[0]).espionage_probe.amount
         if not 0 < espionage_probe:
-            self.empire.build(ships.espionage_probe())
+            self.empire.build(ships.espionage_probe(), self.ids[0])
             while self.empire.ships(self.ids[0]).espionage_probe.amount <= 0:
                 continue
 
