@@ -128,7 +128,9 @@ class OGame(object):
             {'authorization': 'Bearer {}'.format(self.token)}
         )
 
+
     def solveCaptcha(self, challenge):
+
         response = self.session.post(
             url='https://image-drop-challenge.gameforge.com/challenge/{}/en-GB'
                 .format(challenge),
@@ -138,6 +140,7 @@ class OGame(object):
             return True
         else:
             self.solveCaptcha(challenge)
+
 
     def test(self):
         import ogame.test
