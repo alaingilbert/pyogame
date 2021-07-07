@@ -1,4 +1,3 @@
-import pprint
 import re
 import requests
 import unittest
@@ -988,158 +987,22 @@ class OGame(object):
             firstpage += 1
         reports = []
         for link in report_links:
-            try:
-                try:
-                    response = self.session.get(link).text
-                    bs4 = BeautifulSoup4(response)
-                except:
-                    return self.spyreports(lastDateOfReport, firstpage, lastpage)
-                if bs4 == '':
-                    continue
-                if bs4.find('span', attrs={'class': 'status_abbr_inactive'}):
-                    # technologys = [tech['class'][0] for tech in bs4.find_all('img')]
-                    # ships = bs4.find('ul', {'data-type': 'ships'})
-                    # buildings = bs4.find('ul', {'data-type': 'buildings'})
-                    # research = bs4.find('ul', {'data-type': 'research'})
-                    # amounts = [tech.parent.parent.find_all('span')[1].text for tech in bs4.find_all('img')]
-                    resources = bs4.find_all(class_='resource_list_el tooltipCustom')
+            response = self.session.get(link).text
+            bs4 = BeautifulSoup4(response)
+            technologys = [tech['class'][0] for tech in bs4.find_all('img')]
+            amounts = [
+                tech.parent.parent.find_all('span')[1].text
+                for tech in bs4.find_all('img')
+            ]
 
-                    # planet properties
-                    planetNameCords = bs4.find('figure')
-                    reportDate = bs4.find(class_='msg_date fright').text
-                    if planetNameCords is None:  # is "Spionagebericht von Zerstörter Planet"
-                        continue
-                    if lastDateOfReport is not None:
-                        if lastDateOfReport <= datetime.strptime(reportDate, '%d.%m.%Y %H:%M:%S'):
-                            continue
+            class Report:
+                fright = [
+                    (tech, amount)
+                    for tech, amount in zip(technologys, amounts)
+                ]
 
-                    # defense
-                    defenseContent = bs4.find('ul', {'data-type': 'defense'})
-                    fleetContent = bs4.find('ul', {'data-type': 'ships'})
-                    fleetBuildingIDs = fleetContent.find_all('img')
-                    defenseBuildingIDs = defenseContent.find_all('img')
-                    defenseVars = defenseContent.find_all('span')
-
-                    class Report:
-                        fright_date = reportDate
-                        planet = planetNameCords.parent.text.rsplit(' ', 1)[0]
-                        cords = planetNameCords.parent.text.rsplit(' ', 1)[1]
-                        if planetNameCords.attrs.get('title') == 'Planet':
-                            cords = cords.replace(']', '')
-                            cords = cords + ':1]'
-                        elif planetNameCords.attrs.get('title') == 'Moon':
-                            cords = cords.replace(']', '')
-                            cords = cords + ':1]'
-
-                        # resources
-                        metal = resources[0]['title'].replace('.', '') if resources[0]['title'] else '-1'
-                        crystal = resources[1]['title'].replace('.', '') if resources[1]['title'] else '-1'
-                        deuterium = resources[2]['title'].replace('.', '') if resources[2]['title'] else '-1'
-                        resourcesTotal = 0
-                        if metal != '-1':
-                            resourcesTotal += int(metal)
-                        if crystal != '-1':
-                            resourcesTotal += int(crystal)
-                        if deuterium != '-1':
-                            resourcesTotal += int(deuterium)
-
-                        # defense
-                        defenseScore = 0
-                        defense = []
-                        if len(defenseBuildingIDs) > 0:
-                            i = 0
-                            j = 0
-                            while i < len(defenseBuildingIDs):
-                                defenseID = defenseBuildingIDs[i]['class'][0]
-                                defenseName = defenseVars[j].text
-                                defenseValue = int(defenseVars[j + 1].text)
-                                defense.append([defenseID, defenseName, defenseValue])
-
-                                # wiki: https://ogame.fandom.com/wiki/Defense
-                                if (defenseID == 'defense401'):  # Raktenwerfer
-                                    defenseScore += 2000 * defenseValue
-                                elif (defenseID == 'defense402'):  # Leichtes Läsergeschütz
-                                    defenseScore += 2000 * defenseValue
-                                elif (defenseID == 'defense403'):  # Schweres Läsergeschütz
-                                    defenseScore += 8000 * defenseValue
-                                elif (defenseID == 'defense405'):  # Ionengeschütz
-                                    defenseScore += 8000 * defenseValue
-                                elif (defenseID == 'defense404'):  # Gaußkanone
-                                    defenseScore += 35000 * defenseValue
-                                elif (defenseID == 'defense406'):  # Plasma Kanone
-                                    defenseScore += 100000 * defenseValue
-                                elif (defenseID == 'defense407'):  # kleine Schildkuppel
-                                    defenseScore += 20000 * defenseValue
-                                elif (defenseID == 'defense408'):  # große Schildkuppel
-                                    defenseScore += 100000 * defenseValue
-                                elif (defenseID == 'defense502'):  # Abfangraketen
-                                    defenseScore += 8000 * defenseValue
-                                elif (defenseID == 'defense502'):  # Interplanetarrakete
-                                    defenseScore += 15000 * defenseValue
-                                else:
-                                    print('defense score is unknown')
-                                i += 1
-                                j += 2
-                        else:
-                            if defenseContent.text.find(
-                                    'Wir konnten für diesen Typ keine verlässlichen Daten beim Scannen ermitteln.') != -1:
-                                defenseScore = -1
-                            else:
-                                defenseScore = 0
-                        fleet_score = 0
-                        if len(fleetBuildingIDs) > 0:
-                            fleet_score = 1
-
-                    reports.append(Report)
-                else:
-                    print('No spy report. It is a', bs4.find(class_='msg_sender').text)
-            except:
-                print("An exception occurred in link: ", link)
+            reports.append(Report)
         return reports
-
-    def delete_all_spyreports(self):
-        # get links for the last 30 pages
-        for _ in range(20, 25):
-            try:
-                response = self.session.get(
-                    url=self.index_php,
-                    params={'page': 'messages',
-                            'tabid': _,
-                            'messageId': -1,
-                            'action': 103,
-                            'ajax': 1}
-                ).text
-            except:
-                return self.delete_all_spyreports()
-        try:
-            response = self.session.get(
-                url=self.index_php,
-                params={'page': 'messages',
-                        'tabid': 25,
-                        'messageId': -1,
-                        'action': 105,
-                        'ajax': 1}
-            ).text
-        #     https://s177-fr.ogame.gameforge.com/game/index.php?page=messages
-        except:
-            return self.delete_all_spyreports()
-        return response
-
-    def delete_all_economy_message(self):
-        # get links for the last 30 pages
-        try:
-            response = self.session.get(
-                url=self.index_php,
-                params={'page': 'messages',
-                        'tabid': 20,
-                        'messageId': -1,
-                        'action': 103,
-                        'ajax': 1}
-                #   https://s176-en.ogame.gameforge.com/game/index.php?page=messages&tab=3&ajax=1
-            ).text
-        except:
-            return self.delete_all_economy_message()
-        return response
 
     def send_fleet(
             self,
