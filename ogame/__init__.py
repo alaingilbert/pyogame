@@ -294,6 +294,7 @@ class OGame(object):
         )
         querys = [
             re.compile(r'textContent\[3] = "(.*) \\u00b0C \\u00e0(.*)(.*)\\'),
+            re.compile(r'textContent\[3] = "(.*)\\u00b0C to (.*)\\u00b0C"'),
             re.compile(r'textContent\[3] = "(.*) \\u00b0C (.*) (.*) \\u00b0C"'),
         ]
         textContent3 = None
