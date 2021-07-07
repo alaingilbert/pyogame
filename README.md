@@ -102,6 +102,8 @@ empire.planet_ids()                 returns list
 
 empire.id_by_planet_name('name')    returns int
 
+empire.name_by_planet_id(id)        return string
+
 empire.planet_names()               returns list
 </pre>
 
@@ -112,6 +114,21 @@ empire.moon_ids()                   returns list
 empire.moon_names()                 returns list
 
 **keep in mind to prefer planets id's moon id dont works on every function**
+</pre>
+
+### abandon planet
+<pre>
+empire.abandon_planet(id)           returns bool
+
+** keep in mind that this is truly final, that no more fleets are needed at the 
+departure or destination of this planet and that there is no construction or research underway on it.
+</pre>
+
+### rename planet
+<pre>
+empire.rename_planet(id,'new_name') returns bool
+
+** keep in mind that the name must contain at least two characters **
 </pre>
 
 ### coordinates
@@ -183,6 +200,7 @@ empire.resources(id)                    returns class(object)
 res = empire.resources(id)
 res.resources                           returns resources
 res.day_production                      returns resources
+res.storage                             returns resources
 res.darkmatter                          returns int
 res.energy                              returns int
 res.metal                               returns int
@@ -265,9 +283,9 @@ empire.traider(id)                  returns Exception("function not implemented 
 
 ### get research
 <pre>
-empire.research()                   returns class(object) 
+empire.research(id)                   returns class(object) 
 
-res = empire.research()
+res = empire.research(id)
 
 res.energy.level
 res.energy.is_possible
@@ -374,8 +392,10 @@ Get the actual free and total Fleet slots you have available
 </pre>
 ```python
 slot = empire.slot_fleet()
-slot.fleet.free                     returns int
-slot.expedition.total
+slot.fleet.total                     returns int
+slot.fleet.free                      returns int
+slot.expedition.total                returns int
+slot.expedition.free                 returns int
 ```
 
 ### get fleet
@@ -444,7 +464,7 @@ for report in empire.spyreports():
     print(report.fright)
 ```
 
-### send fleet
+### send fleet (for both version 7.6 and 8.0.0)
 ```python
 from ogame.constants import coordinates, mission, speed, fleet
 empire.send_fleet(mission=mission.expedition,
