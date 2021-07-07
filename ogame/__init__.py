@@ -100,7 +100,6 @@ class OGame(object):
         )['content'])
 
     def login(self):
-        print('solving')
         self.session.get('https://lobby.ogame.gameforge.com/')
         login_data = {
             'identity': self.username,
@@ -116,7 +115,6 @@ class OGame(object):
             json=login_data
         )
         if response.status_code == 409:
-            print('solving captcha')
             self.solve_captcha(
                 response.headers['gf-challenge-id']
                 .replace(';https://challenge.gameforge.com', '')
