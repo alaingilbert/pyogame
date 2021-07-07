@@ -115,7 +115,7 @@ class OGame(object):
             json=login_data
         )
         if response.status_code == 409:
-            self.solveCaptcha(
+            self.solve_captcha(
                 response.headers['gf-challenge-id']
                 .replace(';https://challenge.gameforge.com', '')
             )
@@ -128,9 +128,12 @@ class OGame(object):
             {'authorization': 'Bearer {}'.format(self.token)}
         )
 
-
-    def solveCaptcha(self, challenge):
-
+    def solve_captcha(self, challenge):
+        response = self.session.get(
+            url='https://image-drop-challenge.gameforge.com/challenge/{}/en-GB'
+                .format(challenge)
+        ).json()
+        assert response['status'] == 'presented'
         response = self.session.post(
             url='https://image-drop-challenge.gameforge.com/challenge/{}/en-GB'
                 .format(challenge),
@@ -139,8 +142,7 @@ class OGame(object):
         if response['status'] == 'solved':
             return True
         else:
-            self.solveCaptcha(challenge)
-
+            self.solve_captcha(challenge)
 
     def test(self):
         import ogame.test
