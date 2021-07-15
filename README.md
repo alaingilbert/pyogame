@@ -5,8 +5,8 @@ OGame is a browser-based, money-management and space-war themed massively multip
 two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
-it supports ogame_version: `7.6.6`
-version `20`
+it supports ogame_version: `8.1.0`
+version `21`
 
 ## install
 <pre>
@@ -14,7 +14,7 @@ pip install ogame
 </pre>
 update
 <pre>
-pip install ogame==7.6.6.20
+pip install ogame==8.1.0.21
 </pre>
 dont want to wait for new updates download direct from the develop branch
 <pre>
@@ -102,6 +102,8 @@ empire.planet_ids()                 returns list
 
 empire.id_by_planet_name('name')    returns int
 
+empire.name_by_planet_id(id)        return string
+
 empire.planet_names()               returns list
 </pre>
 
@@ -112,6 +114,21 @@ empire.moon_ids()                   returns list
 empire.moon_names()                 returns list
 
 **keep in mind to prefer planets id's moon id dont works on every function**
+</pre>
+
+### abandon planet
+<pre>
+empire.abandon_planet(id)           returns bool
+
+** keep in mind that this is truly final, that no more fleets are needed at the 
+departure or destination of this planet and that there is no construction or research underway on it.
+</pre>
+
+### rename planet
+<pre>
+empire.rename_planet(id,'new_name') returns bool
+
+** keep in mind that the name must contain at least two characters **
 </pre>
 
 ### coordinates
@@ -139,8 +156,15 @@ coordinates(1, 2, 12, destination.moon)
 coordinates(1, 2, 12, destination.debris)
 coordinates(1, 2, 12, destination.planet) or coordinates(1, 2, 12)
 ```
+### get slot celestials
+returns how many planet slots are free to colonize
+<pre>
+slot = empire.slot_celestial()          returns class
+slot.free                               returns int
+slot.total                              returns int
+</pre>
 
-### get celestial data
+### get celestial
 works with planet's and moon's
 <pre>
 celestial = empire.celestial(id)        returns class
@@ -176,6 +200,7 @@ empire.resources(id)                    returns class(object)
 res = empire.resources(id)
 res.resources                           returns resources
 res.day_production                      returns resources
+res.storage                             returns resources
 res.darkmatter                          returns int
 res.energy                              returns int
 res.metal                               returns int
@@ -258,9 +283,9 @@ empire.traider(id)                  returns Exception("function not implemented 
 
 ### get research
 <pre>
-empire.research()                   returns class(object) 
+empire.research(id)                   returns class(object) 
 
-res = empire.research()
+res = empire.research(id)
 
 res.energy.level
 res.energy.is_possible
@@ -367,8 +392,10 @@ Get the actual free and total Fleet slots you have available
 </pre>
 ```python
 slot = empire.slot_fleet()
-slot.fleet.free                     returns int
-slot.expedition.total
+slot.fleet.total                     returns int
+slot.fleet.free                      returns int
+slot.expedition.total                returns int
+slot.expedition.free                 returns int
 ```
 
 ### get fleet
@@ -430,6 +457,7 @@ for fleet in empire.phalanx(moon_id, coordinates(2, 410, 7)):
 ### get spyreports
 <pre>
 empire.spyreports()                     returns list of class(object)
+empire.spyreports(firstpage=1, lastpage=30)
 </pre>
 
 ```python
@@ -437,7 +465,7 @@ for report in empire.spyreports():
     print(report.fright)
 ```
 
-### send fleet
+### send fleet (for both version 7.6 and 8.0.0)
 ```python
 from ogame.constants import coordinates, mission, speed, fleet
 empire.send_fleet(mission=mission.expedition,

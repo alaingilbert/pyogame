@@ -93,13 +93,13 @@ class OGame(object):
         self.landing_page = BeautifulSoup4(self.landing_page)
 
         self.player = self.landing_page.find(
-            'meta', {'name': 'ogame-planet-name'}
+            'meta', {'name': 'ogame-player-name'}
         )['content']
         self.player_id = int(self.landing_page.find(
-            'meta', {'name': 'ogame-planet-id'}
+            'meta', {'name': 'ogame-player-id'}
         )['content'])
 
-    def login(self, attempt=0):
+    def login(self):
         self.session.get('https://lobby.ogame.gameforge.com/')
         login_data = {
             'identity': self.username,
@@ -114,33 +114,35 @@ class OGame(object):
             'https://gameforge.com/api/v1/auth/thin/sessions',
             json=login_data
         )
-        if response.status_code == 409 and attempt < 10:
-            self.solveCaptcha(
+        if response.status_code == 409:
+            self.solve_captcha(
                 response.headers['gf-challenge-id']
                 .replace(';https://challenge.gameforge.com', '')
             )
-            self.login(attempt+1)
-        elif 10 < attempt:
-            assert response.status_code != 409, 'Resolve the Captcha'
+            self.login()
+            return True
+        assert response.status_code != 409, 'Resolve the Captcha'
         assert response.status_code == 201, 'Bad Login'
         self.token = response.json()['token']
         self.session.headers.update(
             {'authorization': 'Bearer {}'.format(self.token)}
         )
 
-    def solveCaptcha(self, challenge):
-        self.session.headers['Cookie'] = ''
-        self.session.headers['Connection'] = 'close'
-        self.session.get(
-            'https://image-drop-challenge.gameforge.com/challenge/{}/en-GB'
-            .format(challenge)
-        )
-        self.session.post(
+    def solve_captcha(self, challenge):
+        response = self.session.get(
+            url='https://image-drop-challenge.gameforge.com/challenge/{}/en-GB'
+                .format(challenge)
+        ).json()
+        assert response['status'] == 'presented'
+        response = self.session.post(
             url='https://image-drop-challenge.gameforge.com/challenge/{}/en-GB'
                 .format(challenge),
-            headers={'Content-Type': 'application/json'},
-            data='{"answer":3}'
-        )
+            json={"answer": 0}
+        ).json()
+        if response['status'] == 'solved':
+            return True
+        else:
+            self.solve_captcha(challenge)
 
     def test(self):
         import ogame.test
@@ -158,7 +160,7 @@ class OGame(object):
                 )
                 universe = int(universe['content'])
                 fleet = self.landing_page.find(
-                    'meta', {'name': 'ogame-universe-speed-fleet'}
+                    'meta', {'name': 'ogame-universe-speed-fleet-peaceful'}
                 )
                 fleet = int(fleet['content'])
 
@@ -241,6 +243,13 @@ class OGame(object):
             if planet_name == name:
                 return id
 
+    def name_by_planet_id(self, id):
+        for _id, planet_name in zip(
+                OGame.planet_ids(self), OGame.planet_names(self)
+        ):
+            if id == _id:
+                return planet_name
+
     def moon_ids(self):
         moons = []
         for moon in self.landing_page.find_all(class_='moonlink'):
@@ -256,6 +265,17 @@ class OGame(object):
             names.append(re.search(r'<b>(.*) \[', name).group(1))
         return names
 
+    def slot_celestial(self):
+        class Slot:
+            planets = self.landing_page.find(
+                'p',
+                attrs={'class': 'textCenter'}
+            ).find('span').text.split('/')
+            planets = [int(planet) for planet in planets]
+            free = planets[1] - planets[0]
+            total = planets[1]
+        return Slot
+
     def celestial(self, id):
         response = self.session.get(
             url=self.index_php + 'page=ingame&component=overview',
@@ -265,10 +285,18 @@ class OGame(object):
             r'textContent\[1] = "(.*)km \(<span>(.*)<(.*)<span>(.*)<',
             response
         )
-        textContent3 = re.search(
-            r'"(.*)\\u00b0C (.*) (.*) ',
-            response
-        )
+        querys = [
+            re.compile(r'textContent\[3] = "(.*) \\u00b0C \\u00e0(.*)(.*)\\'),
+            re.compile(r'textContent\[3] = "(.*)\\u00b0C to (.*)\\u00b0C"'),
+            re.compile(r'textContent\[3] = "(.*) \\u00b0C (.*) (.*) \\u00b0C"'),
+        ]
+        textContent3 = None
+        for query in querys:
+            textContent3 = query.search(
+                response
+            )
+            if textContent3 is not None:
+                break
 
         class Celestial:
             diameter = int(textContent1.group(1).replace('.', ''))
@@ -277,7 +305,7 @@ class OGame(object):
             free = total - used
             temperature = [
                 int(textContent3.group(1)),
-                int(textContent3.group(3))
+                int(textContent3.group(2))
             ]
             coordinates = OGame.celestial_coordinates(self, id)
 
@@ -327,13 +355,11 @@ class OGame(object):
                 int(day_production[1].span['title'].replace('.','')),
                 int(day_production[2].span['title'].replace('.',''))
             ]
-            storage = bs4.find_all(
-                'tr',
-                attrs={'class': 'alt'}
-            )[7].find_all(
-                'td',
-                attrs={'class': 'left2'}
-            )
+            storage = bs4.find_all('tr')
+            for stor in storage:
+                if len(stor.find_all('td', attrs={'class': 'left2'})) != 0:
+                    storage = stor.find_all('td', attrs={'class': 'left2'})
+                    break
             storage = [
                 int(storage[0].span['title'].replace('.', '')),
                 int(storage[1].span['title'].replace('.', '')),
@@ -432,7 +458,7 @@ class OGame(object):
         bs4 = BeautifulSoup4(response)
         levels = [
             int(level['data-value'])
-            for level in bs4.find_all(class_='level')
+            for level in bs4.find_all(class_=['targetlevel', 'level']) if level.get('data-value')
         ]
         technologyStatus = [
             status['data-status']
@@ -457,11 +483,13 @@ class OGame(object):
     def traider(self, id):
         raise NotImplementedError("function not implemented yet PLS contribute")
 
-    def research(self):
+    def research(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
         response = self.session.get(
             url=self.index_php,
             params={'page': 'ingame', 'component': 'research',
-                    'cp': OGame.planet_ids(self)[0]}
+                    'cp': id}
         ).text
         bs4 = BeautifulSoup4(response)
         levels = [
@@ -712,7 +740,7 @@ class OGame(object):
         slots = bs4.find('div', attrs={'id':'slots', 'class': 'fleft'})
         slots = [
             slot.text
-            for slot in slots.find_all(class_="tooltip")
+            for slot in slots.find_all(class_="fleft")
         ]
         fleet = re.search(':(.*)/(.*)', slots[0])
         fleet = [fleet.group(1), fleet.group(2)]
@@ -872,19 +900,89 @@ class OGame(object):
         else:
             return False
 
-    def spyreports(self):
-        response = self.session.get(
+    def rename_planet(self, id, new_name):
+        self.session.get(
             url=self.index_php,
-            params={'page': 'messages',
-                    'tab': 20,
-                    'ajax': 1}
-        ).text
-        bs4 = BeautifulSoup4(response)
-        report_links = [
-            link['href']
-            for link in bs4.find_all_partial(href='page=messages&messageId')
-        ]
+            params={'cp': id})
+        response = self.session.get(self.index_php,
+                                    params={'page': 'planetlayer'},
+                                    headers={'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}).text
+        token_rename = re.search("name='token' value='(.*)'", response).group(1)
+        param = {'page': 'planetRename'}
+        data = {
+            'newPlanetName': new_name,
+            'token': token_rename}
+        response = self.session.post(
+            url=self.index_php,
+            params=param,
+            data=data,
+            headers={'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}
+        ).json()
+        return response['status']
 
+    def abandon_planet(self, id):
+        self.session.get(
+            url=self.index_php,
+            params={'cp': id})
+        header = {'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}
+        response = self.session.get(
+            self.index_php,
+            params={'page': 'planetlayer'},
+            headers=header
+        ).text
+        response = response[response.find('input type="hidden" name="abandon" value="'):]
+        code_abandon = re.search('name="abandon" value="(.*)"', response).group(1)
+        token_abandon = re.search("name='token' value='(.*)'", response).group(1)
+        response = self.session.post(
+            url=self.index_php,
+            params={'page': 'checkPassword'},
+            data={
+             'abandon': code_abandon,
+             'token': token_abandon,
+             'password': self.password,
+            },
+            headers=header).json()
+        new_token = None
+        if response.get("password_checked") and response["password_checked"]:
+            new_token = response["newToken"]
+        if new_token:
+            self.session.post(
+                url=self.index_php,
+                params={
+                    'page': 'planetGiveup'
+                },
+                data={
+                    'abandon': code_abandon,
+                    'token': new_token,
+                    'password': self.password,
+                },
+                headers=header).json()
+            self.session.get(url=self.index_php)
+            return True
+        else:
+            return False
+
+    def spyreports(self, firstpage=1, lastpage=30):
+        # get links for the last 30 pages
+        report_links = []
+        while firstpage <= lastpage:
+            try:
+                response = self.session.get(
+                    url=self.index_php,
+                    params={'page': 'messages',
+                            'tab': 20,
+                            'action': 107,
+                            'messageId': -1,
+                            'pagination': firstpage,
+                            'ajax': 1}
+                ).text
+            except:
+                break
+            bs4 = BeautifulSoup4(response)
+            for link in bs4.find_all_partial(href='page=messages&messageId'):
+                if link['href'] not in report_links:
+                    report_links.extend([link['href'] for link in bs4.find_all_partial(href='page=messages&messageId')])
+            firstpage += 1
         reports = []
         for link in report_links:
             response = self.session.get(link).text
@@ -916,16 +1014,13 @@ class OGame(object):
             url=self.index_php + 'page=ingame&component=fleetdispatch&cp={}'
                 .format(id)
         ).text
-        send_fleet_token = re.search(
-            'var fleetSendingToken = "(.*)"',
-            response
-        ).group(1)
-        form_data = {'token': send_fleet_token}
-
+        send_fleet_token = re.search('var fleetSendingToken = "(.*)"', response)
+        if send_fleet_token is None:
+            send_fleet_token = re.search('var token = "(.*)"', response)
+        form_data = {'token': send_fleet_token.group(1)}
         for ship in ships:
             ship_type = 'am{}'.format(ship[0])
             form_data.update({ship_type: ship[1]})
-
         form_data.update(
             {
                 'galaxy': where[0],
@@ -945,7 +1040,6 @@ class OGame(object):
                 'holdingtime': holdingtime
             }
         )
-
         response = self.session.post(
             url=self.index_php + 'page=ingame&component=fleetdispatch'
                 '&action=sendFleet&ajax=1&asJson=1',

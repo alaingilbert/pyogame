@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='ogame',
     packages=['ogame'],
-    version='7.6.6.20',
+    version='8.1.0.21',
     license='MIT',
     description='lib for the popular browsergame ogame',
     author='PapeprPieceCode',
@@ -18,6 +18,6 @@ setup(
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
 )
