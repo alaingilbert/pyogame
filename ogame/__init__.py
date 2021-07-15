@@ -294,6 +294,7 @@ class OGame(object):
         )
         querys = [
             re.compile(r'textContent\[3] = "(.*) \\u00b0C \\u00e0(.*)(.*)\\'),
+            re.compile(r'textContent\[3] = "(.*)\\u00b0C to (.*)\\u00b0C"'),
             re.compile(r'textContent\[3] = "(.*) \\u00b0C (.*) (.*) \\u00b0C"'),
         ]
         textContent3 = None
@@ -962,6 +963,7 @@ class OGame(object):
                                   'password': self.password,
                               },
                               headers=header).json()
+            self.session.get(url=self.index_php)
 
     def spyreports(self, lastDateOfReport=None, firstpage=1, lastpage=30):
         # get links for the last 30 pages
