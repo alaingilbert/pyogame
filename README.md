@@ -30,7 +30,7 @@ pip install git+https://github.com/alaingilbert/pyogame.git@develop
 [Join Discord](https://discord.gg/CeBDgnR)
 
 ## You wanna try a finished bot
-~~[pyogame.net](https://pyogame.net)~~
+[pyogame.net](https://pyogame.net)~~
 
 ## functions
 ### login
