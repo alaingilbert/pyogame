@@ -457,6 +457,7 @@ for fleet in empire.phalanx(moon_id, coordinates(2, 410, 7)):
 ### get spyreports
 <pre>
 empire.spyreports()                     returns list of class(object)
+empire.spyreports(firstpage=1, lastpage=30)
 </pre>
 
 ```python

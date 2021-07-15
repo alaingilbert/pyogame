@@ -160,7 +160,7 @@ class OGame(object):
                 )
                 universe = int(universe['content'])
                 fleet = self.landing_page.find(
-                    'meta', {'name': 'ogame-universe-speed-fleet'}
+                    'meta', {'name': 'ogame-universe-speed-fleet-peaceful'}
                 )
                 fleet = int(fleet['content'])
 
@@ -225,13 +225,6 @@ class OGame(object):
         rank = rank.find_all('li')[1].text
         rank = re.search(r'\((.*)\)', rank).group(1)
         return int(rank)
-
-    def numbers_planets(self):
-        class Planets:
-            nb_planets = self.landing_page.find('p', attrs={'class': 'textCenter'}).find('span').text
-            free = int(nb_planets.split('/')[1]) - int(nb_planets.split('/')[0])
-            total = int(nb_planets.split('/')[1])
-        return Planets
 
     def planet_ids(self):
         ids = []
@@ -490,7 +483,9 @@ class OGame(object):
     def traider(self, id):
         raise NotImplementedError("function not implemented yet PLS contribute")
 
-    def research(self, id):
+    def research(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
         response = self.session.get(
             url=self.index_php,
             params={'page': 'ingame', 'component': 'research',
@@ -930,42 +925,44 @@ class OGame(object):
             url=self.index_php,
             params={'cp': id})
         header = {'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}
-        response = self.session.get(self.index_php,
-                                    params={'page': 'planetlayer'},
-                                    headers=header).text
+        response = self.session.get(
+            self.index_php,
+            params={'page': 'planetlayer'},
+            headers=header
+        ).text
         response = response[response.find('input type="hidden" name="abandon" value="'):]
         code_abandon = re.search('name="abandon" value="(.*)"', response).group(1)
         token_abandon = re.search("name='token' value='(.*)'", response).group(1)
-        response = self.session.post(url=self.index_php,
-                                     params={
-                                         'page': 'checkPassword'
-                                     },
-                                     data={
-                                         'abandon': code_abandon,
-                                         'token': token_abandon,
-                                         'password': self.password,
-                                     },
-                                     headers=header).json()
+        response = self.session.post(
+            url=self.index_php,
+            params={'page': 'checkPassword'},
+            data={
+             'abandon': code_abandon,
+             'token': token_abandon,
+             'password': self.password,
+            },
+            headers=header).json()
         new_token = None
-        if (
-                response.get("password_checked")
-                and response["password_checked"] == True
-        ):
+        if response.get("password_checked") and response["password_checked"]:
             new_token = response["newToken"]
         if new_token:
-            self.session.post(url=self.index_php,
-                              params={
-                                  'page': 'planetGiveup'
-                              },
-                              data={
-                                  'abandon': code_abandon,
-                                  'token': new_token,
-                                  'password': self.password,
-                              },
-                              headers=header).json()
+            self.session.post(
+                url=self.index_php,
+                params={
+                    'page': 'planetGiveup'
+                },
+                data={
+                    'abandon': code_abandon,
+                    'token': new_token,
+                    'password': self.password,
+                },
+                headers=header).json()
             self.session.get(url=self.index_php)
+            return True
+        else:
+            return False
 
-    def spyreports(self, lastDateOfReport=None, firstpage=1, lastpage=30):
+    def spyreports(self, firstpage=1, lastpage=30):
         # get links for the last 30 pages
         report_links = []
         while firstpage <= lastpage:

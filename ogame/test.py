@@ -136,8 +136,8 @@ class UnittestOgame(unittest.TestCase):
         )
         after = self.empire.defences(
             self.ids[0]
-        ).rocket_launcher.amount
-        self.assertTrue(before < after)
+        ).rocket_launcher
+        self.assertTrue(before < after.amount or after.in_construction)
 
     def test_phalanx(self):
         Super_Dangereous_TO_test = 'You will get Banned'
