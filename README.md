@@ -5,7 +5,7 @@ OGame is a browser-based, money-management and space-war themed massively multip
 two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
-it supports ogame_version: `7.6.6`
+it supports ogame_version: `8.1.0`
 version `21`
 
 ## install
@@ -14,7 +14,7 @@ pip install ogame
 </pre>
 update
 <pre>
-pip install ogame==7.6.6.20
+pip install ogame==8.1.0.21
 </pre>
 dont want to wait for new updates download direct from the develop branch
 <pre>
