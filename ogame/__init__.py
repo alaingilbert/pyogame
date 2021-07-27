@@ -399,7 +399,7 @@ class OGame(object):
 
         return Resources
 
-    def resources_settings(self, id, settings):
+    def resources_settings(self, id, settings={}):
         response = self.session.get(
             self.index_php + 'page=resourceSettings&cp={}'.format(id)
         ).text
@@ -1156,16 +1156,10 @@ class OGame(object):
                 spied_research.update({tech_name: tech_amount})
             setattr(Report, 'research', spied_research)
             setattr(Report, 'list', [
-                Report.name,
-                Report.position,
-                Report.metal,
-                Report.crystal,
-                Report.deuterium,
-                Report.resources,
-                Report.fleet,
-                Report.defenses,
-                Report.buildings,
-                Report.research
+                Report.name, Report.position, Report.datetime,
+                Report.metal, Report.crystal, Report.deuterium,
+                Report.resources, Report.fleet, Report.defenses,
+                Report.buildings, Report.research
             ])
 
             reports.append(Report)
