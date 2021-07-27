@@ -182,6 +182,20 @@ works with planet's and moon's
 empire.celestial_coordinates(id)        returns list
 </pre>
 
+### get celestial queue
+get research time and building and shipyard construction time
+works with planet's and moon's
+<pre>
+empire.celestial_queue(id)              returns list
+</pre>
+
+```python
+queue = empire.celestial_queue(id)
+print(queue.research)
+print(queue.buildings)
+print(queue.shipyard)
+```
+
 ### resources
 <pre>
 resources have the format [metal, crystal, deuterium]
@@ -208,6 +222,38 @@ res.crystal                             returns int
 res.deuterium                           returns int
 </pre>
 
+### get/set resources settings
+<pre>
+empire.resources_settings(id)                    returns class(object)
+empire.resources_settings(id, settings)          returns class(object)
+</pre>
+
+```python
+current_settings = empire.resources_settings(id)
+
+print(
+       current_settings.list,
+       current_settings.metal_mine,
+       current_settings.crystal_mine,
+       current_settings.deuterium_mine,
+       current_settings.solar_plant,
+       current_settings.fusion_plant,
+       current_settings.solar_satellite,
+       current_settings.crawler
+     )
+
+new_settings = empire.resources_settings(id,
+        settings={
+            "metal_mine": speed.max,
+            "crystal_mine": speed.min,
+            "fusion_plant": 0,
+            "solar_satellite": speed._50,
+        }
+    )
+
+print(new_settings.list)
+```
+
 ### get prices
 <pre>
 get prices of buildings or ships. Level is mandatory if you pass buildings that exist only once like mines.
@@ -231,7 +277,6 @@ sup = empire.supply(id)
 sup.metal_mine.level                    returns int
 sup.metal_mine.is_possible              returns bool (possible to build)
 sup.metal_mine.in_construction          returns bool
-sup.metal_mine.cost                     returns resources
 
 sup.crystal_mine
 sup.deuterium_mine
@@ -367,7 +412,29 @@ for planet in empire.galaxy(coordinates(randint(1,6), randint(1,499))):
     print(planet.name, planet.position, planet.player, planet.player_id, planet.rank, planet.status, planet.moon)
     if status.inactive in planet.status and status.vacation not in planet.status:
         #Farm Inactive
-```        
+```
+
+### get debris in galaxy
+<pre>
+empire.galaxy_debris(coordinates)          returns list of class(object)
+
+or use planet coordinates to get only the target debris
+
+empire.galaxy_debris(planet_coordinates)   returns class(object)
+</pre>
+```python
+for position in empire.galaxy_debris(coordinates(1, 20)):
+    print(position.list)
+    print(position.position, position.has_debris, position.resources, position.metal, position.crystal, position.deuterium)
+    if position.has_debris:
+        # Can send recyclers
+
+position = empire.galaxy_debris(coordinates(1, 20, 12))
+print(position.list)
+print(position.position, position.has_debris, position.resources, position.metal, position.crystal, position.deuterium)
+if position.has_debris:
+    # Can send recyclers
+```
 
 ### get ally
 <pre>
@@ -462,7 +529,18 @@ empire.spyreports(firstpage=1, lastpage=30)
 
 ```python
 for report in empire.spyreports():
-    print(report.fright)
+    print(report.name)
+    print(report.position)
+    print(report.datetime)
+    print(report.metal)
+    print(report.crystal)
+    print(report.deuterium)
+    print(report.resources)
+    print(report.fleet)
+    print(report.defenses)
+    print(report.buildings)
+    print(report.research)
+    print(report.list)
 ```
 
 ### send fleet (for both version 7.6 and 8.0.0)
