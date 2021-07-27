@@ -39,9 +39,18 @@ class UnittestOgame(unittest.TestCase):
         self.collect_all_ids()
 
         self.assertTrue(buildings.is_supplies(buildings.metal_mine))
+        self.assertTrue(
+            buildings.building_name(buildings.metal_mine()) == 'metal_mine'
+        )
         self.assertTrue(buildings.is_facilities(buildings.shipyard))
         self.assertTrue(buildings.is_defenses(buildings.rocket_launcher(10)))
+        self.assertTrue(
+            buildings.defense_name(buildings.rocket_launcher()) == 'rocket_launcher'
+        )
         self.assertTrue(research.is_research(research.energy))
+        self.assertTrue(
+            research.research_name(research.energy()) == 'energy'
+        )
         self.assertTrue(ships.is_ship(ships.small_transporter(99)))
         self.assertTrue(
             ships.ship_name(ships.light_fighter()) == 'light_fighter'
@@ -66,12 +75,27 @@ class UnittestOgame(unittest.TestCase):
             self.assertIsInstance(celestial_coordinates, list)
             self.assertEqual(len(celestial_coordinates), 4)
 
+    def test_celestial_queue(self):
+        for id in self.ids:
+            celestial_queue = self.empire.celestial_queue(id)
+            self.assertIsInstance(celestial_queue.list, list)
+
     def test_resources(self):
         for id in self.ids:
             res = self.empire.resources(id)
             self.assertIsInstance(res.resources, list)
             self.assertGreater(res.darkmatter, 0)
             self.assertIsInstance(res.energy, int)
+
+    def test_resources_settings(self):
+        for id in self.ids:
+            settings = self.empire.resources_settings(id,
+                settings={"fusion_plant": 0, "metal_mine": 5}
+            )
+            self.assertIsInstance(settings.fusion_plant, int)
+            self.assertEqual(settings.fusion_plant, 0)
+            self.assertIsInstance(settings.metal_mine, int)
+            self.assertEqual(settings.metal_mine, 50)
 
     def test_supply(self):
         sup = self.empire.supply(self.empire.planet_ids()[0])
@@ -104,6 +128,13 @@ class UnittestOgame(unittest.TestCase):
             self.assertIsInstance(position.player, str)
             self.assertIsInstance(position.list, list)
             self.assertIsInstance(position.moon, bool)
+
+    def test_galaxy_debris(self):
+        for position in self.empire.galaxy_debris(coordinates(1, 1)):
+            self.assertIsInstance(position.position, list)
+            self.assertIsInstance(position.has_debris, bool)
+            self.assertIsInstance(position.metal, int)
+            self.assertEqual(position.deuterium, 0)
 
     def test_ally(self):
         self.assertIsInstance(self.empire.ally(), list)
@@ -157,9 +188,12 @@ class UnittestOgame(unittest.TestCase):
         self.assertEqual(send_message, True)
 
     def test_spyreports(self):
-        UnittestOgame.test_send_fleet(self)
         for report in self.empire.spyreports():
-            self.assertIsInstance(report.fright, list)
+            self.assertIsInstance(report.name, str)
+            self.assertIsInstance(report.position, list)
+            self.assertIsInstance(report.metal, int)
+            self.assertIsInstance(report.resources, list)
+            self.assertIsInstance(report.fleet, dict)
 
     def test_send_fleet(self):
         espionage_probe = self.empire.ships(self.ids[0]).espionage_probe.amount
@@ -191,4 +225,3 @@ class UnittestOgame(unittest.TestCase):
         self.empire.logout()
         self.empire.keep_going(self.empire.relogin)
         self.assertTrue(self.empire.is_logged_in())
-
