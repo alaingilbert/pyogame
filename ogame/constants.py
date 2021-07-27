@@ -88,6 +88,29 @@ class buildings:
         if facilities[2] == 'facilities': return True
         else: return False
 
+    def building_name(building):
+        if building[0] == 14: return 'robotics_factory'
+        elif building[0] == 21: return 'shipyard'
+        elif building[0] == 31: return 'research_laboratory'
+        elif building[0] == 34: return 'alliance_depot'
+        elif building[0] == 44: return 'missile_silo'
+        elif building[0] == 15: return 'nanite_factory'
+        elif building[0] == 33: return 'terraformer'
+        elif building[0] == 36: return 'repair_dock'
+        elif building[0] == 41: return 'moon_base'
+        elif building[0] == 42: return 'sensor_phalanx'
+        elif building[0] == 43: return 'jump_gate'
+        elif building[0] == 1: return 'metal_mine'
+        elif building[0] == 2: return 'crystal_mine'
+        elif building[0] == 3: return 'deuterium_mine'
+        elif building[0] == 4: return 'solar_plant'
+        elif building[0] == 12: return 'fusion_plant'
+        elif building[0] == 212: return 'solar_satellite'
+        elif building[0] == 217: return 'crawler'
+        elif building[0] == 22: return 'metal_storage'
+        elif building[0] == 23: return 'crystal_storage'
+        elif building[0] == 24: return 'deuterium_storage'
+
     def rocket_launcher(self: int = 1): return 401, self, 'defenses'
     def laser_cannon_light(self: int = 1): return 402, self, 'defenses'
     def laser_cannon_heavy(self: int = 1): return 403, self, 'defenses'
@@ -103,6 +126,18 @@ class buildings:
         if defenses[2] == 'defenses': return True
         else: return False
 
+    def defense_name(defense):
+        if buildings.is_defenses(defense):
+            if defense[0] == 401: return 'rocket_launcher'
+            elif defense[0] == 402: return 'laser_cannon_light'
+            elif defense[0] == 403: return 'laser_cannon_heavy'
+            elif defense[0] == 404: return 'gauss_cannon'
+            elif defense[0] == 405: return 'ion_cannon'
+            elif defense[0] == 406: return 'plasma_cannon'
+            elif defense[0] == 407: return 'shield_dome_small'
+            elif defense[0] == 408: return 'shield_dome_large'
+            elif defense[0] == 502: return 'missile_interceptor'
+            elif defense[0] == 503: return 'missile_interplanetary'
 
 class research(object):
     energy = 113, 1, 'research'
@@ -128,6 +163,24 @@ class research(object):
         else:
             return False
 
+    def research_name(res):
+        if research.is_research(res):
+            if res[0] == 113: return 'energy'
+            elif res[0] == 120: return 'laser'
+            elif res[0] == 121: return 'ion'
+            elif res[0] == 114: return 'hyperspace'
+            elif res[0] == 122: return 'plasma'
+            elif res[0] == 115: return 'combustion_drive'
+            elif res[0] == 117: return 'impulse_drive'
+            elif res[0] == 118: return 'hyperspace_drive'
+            elif res[0] == 106: return 'espionage'
+            elif res[0] == 108: return 'computer'
+            elif res[0] == 124: return 'astrophysics'
+            elif res[0] == 123: return 'research_network'
+            elif res[0] == 199: return 'graviton'
+            elif res[0] == 109: return 'weapons'
+            elif res[0] == 110: return 'shielding'
+            elif res[0] == 111: return 'armor'
 
 class ships(object):
     def light_fighter(self: int = 1): return 204, self, 'shipyard'
