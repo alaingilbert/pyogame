@@ -422,13 +422,14 @@ class OGame(object):
             select = bs4.find('select', {'name': name})
             selected_value = select.find('option', selected=True)['value']
             settings_form.update({name: selected_value})
-        inv_names = {v: k for k, v in names.items()}
-        for name, speed in settings.items():
-            settings_form.update({inv_names[name]: speed * 10})
-        response = self.session.post(
-            self.index_php + 'page=resourceSettings&cp={}'.format(id),
-            data=settings_form
-        )
+        if settings:
+            inv_names = {v: k for k, v in names.items()}
+            for name, speed in settings.items():
+                settings_form.update({inv_names[name]: speed * 10})
+            response = self.session.post(
+                self.index_php + 'page=resourceSettings&cp={}'.format(id),
+                data=settings_form
+            )
         class Settings:
             pass
         settings_list = []
