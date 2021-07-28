@@ -183,7 +183,7 @@ empire.celestial_coordinates(id)        returns list
 </pre>
 
 ### get celestial queue
-get research time and building and shipyard construction time
+get research, building and shipyard construction time
 works with planet's and moon's
 <pre>
 empire.celestial_queue(id)              returns list
