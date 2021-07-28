@@ -187,14 +187,13 @@ get research time and building and shipyard construction time
 works with planet's and moon's
 <pre>
 empire.celestial_queue(id)              returns list
-</pre>
 
-```python
 queue = empire.celestial_queue(id)
-print(queue.research)
-print(queue.buildings)
-print(queue.shipyard)
-```
+queue.list                              returns list
+queue.research                          returns datetime
+queue.buildings                         returns datetime
+queue.shipyard                          returns datetime
+</pre>
 
 ### resources
 <pre>
@@ -224,34 +223,44 @@ res.deuterium                           returns int
 
 ### get/set resources settings
 <pre>
-empire.resources_settings(id)                    returns class(object)
-empire.resources_settings(id, settings)          returns class(object)
+empire.resources_settings(id)                       returns class(object)
+empire.resources_settings(id, settings)             returns class(object)
+
+settings = empire.resources_settings(id, settings)
+settings.list                                       returns list
+settings.metal_mine                                 returns int
+settings.crystal_mine                               returns int
+settings.deuterium_mine                             returns int
+settings.solar_plant                                returns int
+settings.fusion_plant                               returns int
+settings.solar_satellite                            returns int
+settings.crawler                                    returns int
 </pre>
 
 ```python
-current_settings = empire.resources_settings(id)
+settings = empire.resources_settings(id)
 
 print(
-       current_settings.list,
-       current_settings.metal_mine,
-       current_settings.crystal_mine,
-       current_settings.deuterium_mine,
-       current_settings.solar_plant,
-       current_settings.fusion_plant,
-       current_settings.solar_satellite,
-       current_settings.crawler
+       settings.list,
+       settings.metal_mine,
+       settings.crystal_mine,
+       settings.deuterium_mine,
+       settings.solar_plant,
+       settings.fusion_plant,
+       settings.solar_satellite,
+       settings.crawler
      )
 
-new_settings = empire.resources_settings(id,
+settings = empire.resources_settings(id,
         settings={
-            "metal_mine": speed.max,
-            "crystal_mine": speed.min,
-            "fusion_plant": 0,
-            "solar_satellite": speed._50,
+            buildings.metal_mine: speed.max,
+            buildings.crystal_mine: speed.min,
+            buildings.fusion_plant: 0,
+            buildings.solar_satellite: speed._50,
         }
     )
 
-print(new_settings.list)
+print(settings.list)
 ```
 
 ### get prices
@@ -416,11 +425,20 @@ for planet in empire.galaxy(coordinates(randint(1,6), randint(1,499))):
 
 ### get debris in galaxy
 <pre>
-empire.galaxy_debris(coordinates)          returns list of class(object)
+empire.galaxy_debris(coordinates)               returns list of class(object)
 
 or use planet coordinates to get only the target debris
 
-empire.galaxy_debris(planet_coordinates)   returns class(object)
+empire.galaxy_debris(planet_coordinates)        returns class(object)
+
+pos = empire.galaxy_debris(planet_coordinates)
+pos.list                                        returns list
+pos.position                                    returns list
+pos.has_debris                                  returns bool
+pos.resources                                   returns list
+pos.metal                                       returns int
+pos.crystal                                     returns int
+pos.deuterium                                   returns int
 </pre>
 ```python
 for position in empire.galaxy_debris(coordinates(1, 20)):
@@ -523,23 +541,26 @@ for fleet in empire.phalanx(moon_id, coordinates(2, 410, 7)):
 
 ### get spyreports
 <pre>
-empire.spyreports()                     returns list of class(object)
-empire.spyreports(firstpage=1, lastpage=30)
+empire.spyreports()                           returns list of class(object)
+empire.spyreports(firstpage=1, lastpage=30)   returns list of class(object)
+
+reports = empire.spyreports()
+report = reports[0]
+report.name                                   returns str
+report.position                               returns list
+report.datetime                               returns datetime
+report.metal                                  returns int
+report.crystal                                returns int
+report.deuterium                              returns int
+report.fleet                                  returns dict
+report.defenses                               returns dict
+report.buildings                              returns dict
+report.research                               returns dict
+report.list                                   returns list
 </pre>
 
 ```python
 for report in empire.spyreports():
-    print(report.name)
-    print(report.position)
-    print(report.datetime)
-    print(report.metal)
-    print(report.crystal)
-    print(report.deuterium)
-    print(report.resources)
-    print(report.fleet)
-    print(report.defenses)
-    print(report.buildings)
-    print(report.research)
     print(report.list)
 ```
 
