@@ -1102,7 +1102,13 @@ class OGame(object):
             bs4 = BeautifulSoup4(response)
             for link in bs4.find_all_partial(href='page=messages&messageId'):
                 if link['href'] not in report_links:
-                    report_links.extend([link['href'] for link in bs4.find_all_partial(href='page=messages&messageId')])
+                    report_links.extend(
+                        [
+                            link['href']
+                            for link in bs4.find_all_partial(
+                                href='page=messages&messageId')
+                        ]
+                    )
             firstpage += 1
         reports = []
         for link in report_links:
@@ -1114,6 +1120,7 @@ class OGame(object):
             planet_coords = bs4.find('span', 'msg_title').find('a').text
             r = re.compile(r'(.*?)\ \[(.*?)\]')
             report_datetime = bs4.find('span', 'msg_date').text
+
             class Report:
                 name = r.match(planet_coords).group(1)
                 position = r.match(planet_coords).group(2)

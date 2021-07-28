@@ -31,7 +31,9 @@ class UnittestOgame(unittest.TestCase):
         self.assertGreater(len(self.empire.planet_ids()), 0)
         planets_names = self.empire.planet_names()
         self.assertGreater(len(planets_names), 0)
-        self.assertIsInstance(self.empire.id_by_planet_name(planets_names[0]), int)
+        self.assertIsInstance(
+            self.empire.id_by_planet_name(planets_names[0]), int
+        )
 
         self.assertGreater(len(self.empire.moon_ids()), -1)
         self.assertGreater(len(self.empire.moon_names()), -1)
@@ -40,16 +42,18 @@ class UnittestOgame(unittest.TestCase):
 
         self.assertTrue(buildings.is_supplies(buildings.metal_mine))
         self.assertTrue(
-            buildings.building_name(buildings.metal_mine()) == 'metal_mine'
+            buildings.building_name(buildings.metal_mine) == 'metal_mine'
         )
         self.assertTrue(buildings.is_facilities(buildings.shipyard))
         self.assertTrue(buildings.is_defenses(buildings.rocket_launcher(10)))
         self.assertTrue(
-            buildings.defense_name(buildings.rocket_launcher()) == 'rocket_launcher'
+            buildings.defense_name(
+                buildings.rocket_launcher()
+            ) == 'rocket_launcher'
         )
         self.assertTrue(research.is_research(research.energy))
         self.assertTrue(
-            research.research_name(research.energy()) == 'energy'
+            research.research_name(research.energy) == 'energy'
         )
         self.assertTrue(ships.is_ship(ships.small_transporter(99)))
         self.assertTrue(
@@ -88,28 +92,28 @@ class UnittestOgame(unittest.TestCase):
             self.assertIsInstance(res.energy, int)
 
     def test_resources_settings(self):
-        for id in self.ids:
-            settings = self.empire.resources_settings(id,
-                settings={"fusion_plant": 0, "metal_mine": 5}
-            )
-            self.assertIsInstance(settings.fusion_plant, int)
-            self.assertEqual(settings.fusion_plant, 0)
-            self.assertIsInstance(settings.metal_mine, int)
-            self.assertEqual(settings.metal_mine, 50)
+        settings = self.empire.resources_settings(
+            self.ids[0],
+            settings={buildings.metal_mine: speed.min}
+        )
+        self.assertEqual(settings.metal_mine, 10)
+        settings = self.empire.resources_settings(
+            self.ids[0],
+            settings={buildings.metal_mine: speed.max}
+        )
+        self.assertEqual(settings.metal_mine, 100)
 
     def test_supply(self):
-        sup = self.empire.supply(self.empire.planet_ids()[0])
+        sup = self.empire.supply(self.ids[0])
         self.assertTrue(0 < sup.metal_mine.level)
 
     def test_facilities(self):
-        for id in self.empire.planet_ids():
-            fac = self.empire.facilities(id)
-            self.assertGreater(fac.robotics_factory.level, -1)
+        fac = self.empire.facilities(self.ids[0])
+        self.assertTrue(0 < fac.robotics_factory.level)
 
     def test_moon_facilities(self):
-        for id in self.empire.moon_ids():
-            fac = self.empire.moon_facilities(id)
-            self.assertGreater(fac.robotics_factory.level, -1)
+        fac = self.empire.moon_facilities(self.ids[0])
+        self.assertTrue(0 < fac.robotics_factory.level)
 
     def test_research(self):
         res = self.empire.research()
@@ -223,5 +227,5 @@ class UnittestOgame(unittest.TestCase):
 
     def test_relogin(self):
         self.empire.logout()
-        self.empire.keep_going(self.empire.relogin)
+        self.empire.relogin()
         self.assertTrue(self.empire.is_logged_in())

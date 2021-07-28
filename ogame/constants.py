@@ -139,6 +139,7 @@ class buildings:
             elif defense[0] == 502: return 'missile_interceptor'
             elif defense[0] == 503: return 'missile_interplanetary'
 
+
 class research(object):
     energy = 113, 1, 'research'
     laser = 120, 1, 'research'
