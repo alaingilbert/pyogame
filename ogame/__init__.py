@@ -317,15 +317,21 @@ class OGame(object):
             params={'cp': id}
         ).text
         research_time = re.search(r'var restTimeresearch = ([0-9]+)', response)
-        if research_time is not None:
+        if research_time is None:
+            research_time = datetime.fromtimestamp(0)
+        else:
             research_time = int(research_time.group(1))
             research_time = datetime.fromtimestamp(research_time)
         build_time = re.search(r'var restTimebuilding = ([0-9]+)', response)
-        if build_time is not None:
+        if build_time is None:
+            build_time = datetime.fromtimestamp(0)
+        else:
             build_time = int(build_time.group(1))
             build_time = datetime.fromtimestamp(build_time)
         shipyard_time = re.search(r'var restTimeship2 = ([0-9]+)', response)
-        if shipyard_time is not None:
+        if shipyard_time is None:
+            shipyard_time = datetime.fromtimestamp(0)
+        else:
             shipyard_time = int(shipyard_time.group(1))
             shipyard_time = datetime.now() + timedelta(seconds=shipyard_time)
         class Queue:
