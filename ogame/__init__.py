@@ -22,7 +22,7 @@ class OGame(object):
         self.universe = universe
         self.username = username
         self.password = password
-        self.user_agent = user_agent
+        self.user_agent = {'User-Agent': user_agent}
         self.proxy = proxy
         self.language = language
         self.server_number = server_number
