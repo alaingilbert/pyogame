@@ -399,7 +399,7 @@ class OGame(object):
 
         return Resources
 
-    def resources_settings(self, id, settings={}):
+    def resources_settings(self, id, settings=None):
         response = self.session.get(
             self.index_php + 'page=resourceSettings&cp={}'.format(id)
         ).text
@@ -409,23 +409,19 @@ class OGame(object):
         }
         token = bs4.find('input', {'name':'token'})['value']
         settings_form.update({'token': token})
-        names = {
-            'last1': 'metal_mine',
-            'last2': 'crystal_mine',
-            'last3': 'deuterium_mine',
-            'last4': 'solar_plant',
-            'last12': 'fusion_plant',
-            'last212': 'solar_satellite',
-            'last217': 'crawler'
-        }
-        for name in names:
-            select = bs4.find('select', {'name': name})
+        names = [
+            'last1', 'last2', 'last3', 'last4',
+            'last12','last212','last217'
+        ]
+        for building_name in names:
+            select = bs4.find('select', {'name': building_name})
             selected_value = select.find('option', selected=True)['value']
-            settings_form.update({name: selected_value})
-        if settings:
-            inv_names = {v: k for k, v in names.items()}
-            for name, speed in settings.items():
-                settings_form.update({inv_names[name]: speed * 10})
+            settings_form.update({building_name: selected_value})
+        if settings is not None:
+            for building, speed in settings.items():
+                settings_form.update(
+                    {"last{}".format(building[0]): speed * 10}
+                )
             response = self.session.post(
                 self.index_php + 'page=resourceSettings&cp={}'.format(id),
                 data=settings_form
@@ -433,9 +429,13 @@ class OGame(object):
         class Settings:
             pass
         settings_list = []
-        for name, value in settings_form.items():
-            if name in names:
-                setattr(Settings, names[name], value)
+        for key, value in settings_form.items():
+            if key in names:
+                building_id = int(key.replace('last', ''))
+                building_name = const.buildings.building_name(
+                    (building_id, 1, 'supplies')
+                )
+                setattr(Settings, building_name, value)
                 settings_list.append(value)
         setattr(Settings, 'list', settings_list)
         return Settings
