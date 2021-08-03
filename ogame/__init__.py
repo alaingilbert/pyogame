@@ -432,18 +432,27 @@ class OGame(object):
                 self.index_php + 'page=resourceSettings&cp={}'.format(id),
                 data=settings_form
             )
-        class Settings:
-            pass
-        settings_list = []
+        settings_data = {}
         for key, value in settings_form.items():
             if key in names:
                 building_id = int(key.replace('last', ''))
                 building_name = const.buildings.building_name(
                     (building_id, 1, 'supplies')
                 )
-                setattr(Settings, building_name, value)
-                settings_list.append(value)
-        setattr(Settings, 'list', settings_list)
+                settings_data[building_name] = value
+        class Settings:
+            metal_mine = settings_data["metal_mine"]
+            crystal_mine = settings_data["crystal_mine"]
+            deuterium_mine = settings_data["deuterium_mine"]
+            solar_plant = settings_data["solar_plant"]
+            fusion_plant = settings_data["fusion_plant"]
+            solar_satellite = settings_data["solar_satellite"]
+            crawler = settings_data["crawler"]
+            list = [
+                metal_mine, crystal_mine, deuterium_mine,
+                solar_plant, fusion_plant, solar_satellite,
+                crawler
+            ]
         return Settings
 
     def isPossible(self: str):
@@ -778,7 +787,7 @@ class OGame(object):
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).json()
         bs4 = BeautifulSoup4(response['galaxy'])
-        debri_fields = []
+        debris_fields = []
         debris_rows = bs4.find_all('td', {'class': 'debris'})
         for row in debris_rows:
             debris = True
@@ -813,8 +822,8 @@ class OGame(object):
                 ]
             if len(coords) >= 3 and coords[2] == Position.position[2]:
                 return Position
-            debri_fields.append(Position)
-        return debri_fields
+            debris_fields.append(Position)
+        return debris_fields
 
     def ally(self):
         alliance = self.landing_page.find(name='ogame-alliance-name')
@@ -1117,64 +1126,68 @@ class OGame(object):
             ul = bs4.find('ul', {'data-type': 'resources'})
             if ul is None:
                 continue
-            planet_coords = bs4.find('span', 'msg_title').find('a').text
-            r = re.compile(r'(.*?)\ \[(.*?)\]')
+            planet_coords = bs4.find('span', 'msg_title').find('a')
+            if planet_coords is None:
+                continue
+            planet_coords = re.search(r'(.*?) \[(.*?)\]', planet_coords.text)
             report_datetime = bs4.find('span', 'msg_date').text
-
-            class Report:
-                name = r.match(planet_coords).group(1)
-                position = r.match(planet_coords).group(2)
-                datetime = report_datetime
+            api_code = bs4.find('span', 'icon_apikey')['title']
+            api_code = re.search(r'value=\'(.+?)\'', api_code).group(1)
+            resources_data = {}
             for li in ul.find_all('li'):
                 resource_name = li.find('div')['class']
                 resource_name.remove('resourceIcon')
-                resource_name = resource_name[0]
-                resource_amount = int(li['title'].replace('.', ''))
-                setattr(Report, resource_name, resource_amount)
-            setattr(Report, 'resources', [
-                Report.metal,
-                Report.crystal,
-                Report.deuterium
-            ])
+                resources_data[resource_name[0]] = int(li['title'].replace('.', ''))
             spied_fleet = {}
-            r = re.compile('([a-zA-Z]+)([0-9]+)')
             ul = bs4.find('ul', {'data-type': 'ships'})
             for li in ul.find_all('li'):
-                tech_id = int(r.match(li.find('img')['class'][0]).group(2))
-                tech_name = const.ships.ship_name([tech_id, None, 'shipyard'])
+                tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
                 tech_amount = int(li.find('span', 'fright').text.replace('.', ''))
+                if tech_id in [212, 217]:
+                    tech_name = const.buildings.building_name((tech_id, None, None))
+                else:
+                    tech_name = const.ships.ship_name((tech_id, None, 'shipyard'))
                 spied_fleet.update({tech_name: tech_amount})
-            setattr(Report, 'fleet', spied_fleet)
             spied_defences = {}
             ul = bs4.find('ul', {'data-type': 'defense'})
             for li in ul.find_all('li'):
-                tech_id = int(r.match(li.find('img')['class'][0]).group(2))
-                tech_name = const.buildings.defense_name([tech_id, None, 'defenses'])
+                tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
+                tech_name = const.buildings.defense_name((tech_id, None, 'defenses'))
                 tech_amount = int(li.find('span', 'fright').text.replace('.', ''))
                 spied_defences.update({tech_name: tech_amount})
-            setattr(Report, 'defenses', spied_defences)
             spied_buildings = {}
             ul = bs4.find('ul', {'data-type': 'buildings'})
             for li in ul.find_all('li'):
-                tech_id = int(r.match(li.find('img')['class'][0]).group(2))
-                tech_name = const.buildings.building_name([tech_id, None, None])
+                tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
+                tech_name = const.buildings.building_name((tech_id, None, None))
                 tech_level = int(li.find('span', 'fright').text.replace('.', ''))
                 spied_buildings.update({tech_name: tech_level})
-            setattr(Report, 'buildings', spied_buildings)
             spied_research = {}
             ul = bs4.find('ul', {'data-type': 'research'})
             for li in ul.find_all('li'):
-                tech_id = int(r.match(li.find('img')['class'][0]).group(2))
-                tech_name = const.research.research_name([tech_id, None, 'research'])
+                tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
+                tech_name = const.research.research_name((tech_id, None, 'research'))
                 tech_amount = int(li.find('span', 'fright').text.replace('.', ''))
                 spied_research.update({tech_name: tech_amount})
-            setattr(Report, 'research', spied_research)
-            setattr(Report, 'list', [
-                Report.name, Report.position, Report.datetime,
-                Report.metal, Report.crystal, Report.deuterium,
-                Report.resources, Report.fleet, Report.defenses,
-                Report.buildings, Report.research
-            ])
+
+            class Report:
+                name = planet_coords.group(1)
+                position = planet_coords.group(2)
+                datetime = report_datetime
+                metal = resources_data["metal"]
+                crystal = resources_data["crystal"]
+                deuterium = resources_data["deuterium"]
+                resources = [metal, crystal, deuterium]
+                fleet = spied_fleet
+                defenses = spied_defences
+                buildings = spied_buildings
+                research = spied_research
+                api = api_code
+                list = [
+                    name, position, datetime, metal,
+                    crystal, deuterium, resources, fleet,
+                    defenses, buildings, research, api
+                ]
 
             reports.append(Report)
         return reports

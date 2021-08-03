@@ -30,7 +30,7 @@ pip install git+https://github.com/alaingilbert/pyogame.git@develop
 [Join Discord](https://discord.gg/CeBDgnR)
 
 ## You wanna try a finished bot
-[pyogame.net](https://pyogame.net)~~
+[pyogame.net](https://pyogame.net)
 
 ## functions
 ### login
@@ -548,7 +548,7 @@ reports = empire.spyreports()
 report = reports[0]
 report.name                                   returns str
 report.position                               returns list
-report.datetime                               returns datetime
+report.datetime                               returns str
 report.metal                                  returns int
 report.crystal                                returns int
 report.deuterium                              returns int
@@ -556,6 +556,7 @@ report.fleet                                  returns dict
 report.defenses                               returns dict
 report.buildings                              returns dict
 report.research                               returns dict
+report.api                                    returns str
 report.list                                   returns list
 </pre>
 
