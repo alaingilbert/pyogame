@@ -2,7 +2,7 @@ import re
 import requests
 import unittest
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 
 try:
     import constants as const
@@ -311,6 +311,41 @@ class OGame(object):
 
         return Celestial
 
+    def celestial_queue(self, id):
+        response = self.session.get(
+            url=self.index_php + 'page=ingame&component=overview',
+            params={'cp': id}
+        ).text
+        research_time = re.search(r'var restTimeresearch = ([0-9]+)', response)
+        if research_time is None:
+            research_time = datetime.fromtimestamp(0)
+        else:
+            research_time = int(research_time.group(1))
+            research_time = datetime.fromtimestamp(research_time)
+        build_time = re.search(r'var restTimebuilding = ([0-9]+)', response)
+        if build_time is None:
+            build_time = datetime.fromtimestamp(0)
+        else:
+            build_time = int(build_time.group(1))
+            build_time = datetime.fromtimestamp(build_time)
+        shipyard_time = re.search(r'var restTimeship2 = ([0-9]+)', response)
+        if shipyard_time is None:
+            shipyard_time = datetime.fromtimestamp(0)
+        else:
+            shipyard_time = int(shipyard_time.group(1))
+            shipyard_time = datetime.now() + timedelta(seconds=shipyard_time)
+        class Queue:
+            research = research_time
+            buildings = build_time
+            shipyard = shipyard_time
+            list = [
+                research,
+                buildings,
+                shipyard
+            ]
+        return Queue
+
+
     def celestial_coordinates(self, id):
         for celestial in self.landing_page.find_all(class_='smallplanet'):
             planet = celestial.find(class_='planetlink')
@@ -369,6 +404,56 @@ class OGame(object):
             energy = to_int(bs4.find(id='resources_energy')['data-raw'])
 
         return Resources
+
+    def resources_settings(self, id, settings=None):
+        response = self.session.get(
+            self.index_php + 'page=resourceSettings&cp={}'.format(id)
+        ).text
+        bs4 = BeautifulSoup4(response)
+        settings_form = {
+            'saveSettings': 1,
+        }
+        token = bs4.find('input', {'name':'token'})['value']
+        settings_form.update({'token': token})
+        names = [
+            'last1', 'last2', 'last3', 'last4',
+            'last12','last212','last217'
+        ]
+        for building_name in names:
+            select = bs4.find('select', {'name': building_name})
+            selected_value = select.find('option', selected=True)['value']
+            settings_form.update({building_name: selected_value})
+        if settings is not None:
+            for building, speed in settings.items():
+                settings_form.update(
+                    {"last{}".format(building[0]): speed * 10}
+                )
+            response = self.session.post(
+                self.index_php + 'page=resourceSettings&cp={}'.format(id),
+                data=settings_form
+            )
+        settings_data = {}
+        for key, value in settings_form.items():
+            if key in names:
+                building_id = int(key.replace('last', ''))
+                building_name = const.buildings.building_name(
+                    (building_id, 1, 'supplies')
+                )
+                settings_data[building_name] = value
+        class Settings:
+            metal_mine = settings_data["metal_mine"]
+            crystal_mine = settings_data["crystal_mine"]
+            deuterium_mine = settings_data["deuterium_mine"]
+            solar_plant = settings_data["solar_plant"]
+            fusion_plant = settings_data["fusion_plant"]
+            solar_satellite = settings_data["solar_satellite"]
+            crawler = settings_data["crawler"]
+            list = [
+                metal_mine, crystal_mine, deuterium_mine,
+                solar_plant, fusion_plant, solar_satellite,
+                crawler
+            ]
+        return Settings
 
     def isPossible(self: str):
         if self == 'on':
@@ -695,6 +780,51 @@ class OGame(object):
 
         return planets
 
+    def galaxy_debris(self, coords):
+        response = self.session.post(
+            url=self.index_php + 'page=ingame&component=galaxyContent&ajax=1',
+            data={'galaxy': coords[0], 'system': coords[1]},
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        ).json()
+        bs4 = BeautifulSoup4(response['galaxy'])
+        debris_fields = []
+        debris_rows = bs4.find_all('td', {'class': 'debris'})
+        for row in debris_rows:
+            debris = True
+            row['class'].remove('debris')
+            if 'js_no_action' in row['class']:
+                debris = False
+                row['class'].remove('js_no_action')
+            debris_cord = int(row['class'][0].replace('js_debris', ''))
+            debris_cord = const.coordinates(
+                coords[0],
+                coords[1],
+                int(debris_cord), const.destination.debris
+            )
+            debris_resources = [0, 0, 0]
+            if debris:
+                debris_resources = row.find_all('li', {'class': 'debris-content'})
+                debris_resources = [
+                    int(debris_resources[0].text.split(':')[1].replace('.','')),
+                    int(debris_resources[1].text.split(':')[1].replace('.','')),
+                    0
+                ]
+            class Position:
+                position = debris_cord
+                has_debris = debris
+                resources = debris_resources
+                metal = resources[0]
+                crystal = resources[1]
+                deuterium = resources[2]
+                list = [
+                    position, has_debris, resources,
+                    metal, crystal, deuterium
+                ]
+            if len(coords) >= 3 and coords[2] == Position.position[2]:
+                return Position
+            debris_fields.append(Position)
+        return debris_fields
+
     def ally(self):
         alliance = self.landing_page.find(name='ogame-alliance-name')
         if alliance:
@@ -981,22 +1111,82 @@ class OGame(object):
             bs4 = BeautifulSoup4(response)
             for link in bs4.find_all_partial(href='page=messages&messageId'):
                 if link['href'] not in report_links:
-                    report_links.extend([link['href'] for link in bs4.find_all_partial(href='page=messages&messageId')])
+                    report_links.extend(
+                        [
+                            link['href']
+                            for link in bs4.find_all_partial(
+                                href='page=messages&messageId')
+                        ]
+                    )
             firstpage += 1
         reports = []
         for link in report_links:
             response = self.session.get(link).text
             bs4 = BeautifulSoup4(response)
-            technologys = [tech['class'][0] for tech in bs4.find_all('img')]
-            amounts = [
-                tech.parent.parent.find_all('span')[1].text
-                for tech in bs4.find_all('img')
-            ]
+            ul = bs4.find('ul', {'data-type': 'resources'})
+            if ul is None:
+                continue
+            planet_coords = bs4.find('span', 'msg_title').find('a')
+            if planet_coords is None:
+                continue
+            planet_coords = re.search(r'(.*?) \[(.*?)\]', planet_coords.text)
+            report_datetime = bs4.find('span', 'msg_date').text
+            api_code = bs4.find('span', 'icon_apikey')['title']
+            api_code = re.search(r'value=\'(.+?)\'', api_code).group(1)
+            resources_data = {}
+            for li in ul.find_all('li'):
+                resource_name = li.find('div')['class']
+                resource_name.remove('resourceIcon')
+                resources_data[resource_name[0]] = int(li['title'].replace('.', ''))
+            spied_fleet = {}
+            ul = bs4.find('ul', {'data-type': 'ships'})
+            for li in ul.find_all('li'):
+                tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
+                tech_amount = int(li.find('span', 'fright').text.replace('.', ''))
+                if tech_id in [212, 217]:
+                    tech_name = const.buildings.building_name((tech_id, None, None))
+                else:
+                    tech_name = const.ships.ship_name((tech_id, None, 'shipyard'))
+                spied_fleet.update({tech_name: tech_amount})
+            spied_defences = {}
+            ul = bs4.find('ul', {'data-type': 'defense'})
+            for li in ul.find_all('li'):
+                tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
+                tech_name = const.buildings.defense_name((tech_id, None, 'defenses'))
+                tech_amount = int(li.find('span', 'fright').text.replace('.', ''))
+                spied_defences.update({tech_name: tech_amount})
+            spied_buildings = {}
+            ul = bs4.find('ul', {'data-type': 'buildings'})
+            for li in ul.find_all('li'):
+                tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
+                tech_name = const.buildings.building_name((tech_id, None, None))
+                tech_level = int(li.find('span', 'fright').text.replace('.', ''))
+                spied_buildings.update({tech_name: tech_level})
+            spied_research = {}
+            ul = bs4.find('ul', {'data-type': 'research'})
+            for li in ul.find_all('li'):
+                tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
+                tech_name = const.research.research_name((tech_id, None, 'research'))
+                tech_amount = int(li.find('span', 'fright').text.replace('.', ''))
+                spied_research.update({tech_name: tech_amount})
 
             class Report:
-                fright = [
-                    (tech, amount)
-                    for tech, amount in zip(technologys, amounts)
+                name = planet_coords.group(1)
+                position = planet_coords.group(2)
+                datetime = report_datetime
+                metal = resources_data["metal"]
+                crystal = resources_data["crystal"]
+                deuterium = resources_data["deuterium"]
+                resources = [metal, crystal, deuterium]
+                fleet = spied_fleet
+                defenses = spied_defences
+                buildings = spied_buildings
+                research = spied_research
+                api = api_code
+                list = [
+                    name, position, datetime, metal,
+                    crystal, deuterium, resources, fleet,
+                    defenses, buildings, research, api
                 ]
 
             reports.append(Report)
