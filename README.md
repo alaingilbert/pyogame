@@ -6,7 +6,7 @@ two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
 it supports ogame_version: `8.1.0`
-version `21`
+version `22`
 
 ## install
 <pre>
