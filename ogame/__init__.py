@@ -345,7 +345,6 @@ class OGame(object):
             ]
         return Queue
 
-
     def celestial_coordinates(self, id):
         for celestial in self.landing_page.find_all(class_='smallplanet'):
             planet = celestial.find(class_='planetlink')
@@ -428,7 +427,7 @@ class OGame(object):
                 settings_form.update(
                     {"last{}".format(building[0]): speed * 10}
                 )
-            response = self.session.post(
+            self.session.post(
                 self.index_php + 'page=resourceSettings&cp={}'.format(id),
                 data=settings_form
             )
@@ -440,6 +439,7 @@ class OGame(object):
                     (building_id, 1, 'supplies')
                 )
                 settings_data[building_name] = value
+
         class Settings:
             metal_mine = settings_data["metal_mine"]
             crystal_mine = settings_data["crystal_mine"]
@@ -809,6 +809,7 @@ class OGame(object):
                     int(debris_resources[1].text.split(':')[1].replace('.','')),
                     0
                 ]
+
             class Position:
                 position = debris_cord
                 has_debris = debris
@@ -1003,8 +1004,10 @@ class OGame(object):
                 arrival = arrival_times[i]
                 origin = origins[i]
                 destination = destinations[i]
-                list = [id, mission, diplomacy, player_name, player_id, returns,
-                        arrival, origin, destination]
+                list = [
+                    id, mission, diplomacy, player_name, player_id, returns,
+                    arrival, origin, destination
+                ]
 
             fleets.append(Fleets)
         return fleets
@@ -1034,9 +1037,14 @@ class OGame(object):
         self.session.get(
             url=self.index_php,
             params={'cp': id})
-        response = self.session.get(self.index_php,
-                                    params={'page': 'planetlayer'},
-                                    headers={'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}).text
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'planetlayer'},
+            headers={
+                'Referer': f'{self.index_php}page=ingame'
+                           f'&component=overview&cp={id}'
+            }
+        ).text
         token_rename = re.search("name='token' value='(.*)'", response).group(1)
         param = {'page': 'planetRename'}
         data = {
@@ -1046,32 +1054,44 @@ class OGame(object):
             url=self.index_php,
             params=param,
             data=data,
-            headers={'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}
+            headers={
+                'Referer': f'{self.index_php}page=ingame'
+                           f'&component=overview&cp={id}'
+            }
         ).json()
         return response['status']
 
     def abandon_planet(self, id):
         self.session.get(
             url=self.index_php,
-            params={'cp': id})
-        header = {'Referer': f'{self.index_php}page=ingame&component=overview&cp={id}'}
+            params={'cp': id}
+        )
+        header = {
+            'Referer': f'{self.index_php}page=ingame'
+                       f'&component=overview&cp={id}'
+        }
         response = self.session.get(
             self.index_php,
             params={'page': 'planetlayer'},
             headers=header
         ).text
         response = response[response.find('input type="hidden" name="abandon" value="'):]
-        code_abandon = re.search('name="abandon" value="(.*)"', response).group(1)
-        token_abandon = re.search("name='token' value='(.*)'", response).group(1)
+        code_abandon = re.search(
+            'name="abandon" value="(.*)"', response
+        ).group(1)
+        token_abandon = re.search(
+            "name='token' value='(.*)'", response
+        ).group(1)
         response = self.session.post(
             url=self.index_php,
             params={'page': 'checkPassword'},
             data={
-             'abandon': code_abandon,
-             'token': token_abandon,
-             'password': self.password,
+                'abandon': code_abandon,
+                'token': token_abandon,
+                'password': self.password,
             },
-            headers=header).json()
+            headers=header
+        ).json()
         new_token = None
         if response.get("password_checked") and response["password_checked"]:
             new_token = response["newToken"]
@@ -1144,29 +1164,39 @@ class OGame(object):
                 tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
                 tech_amount = int(li.find('span', 'fright').text.replace('.', ''))
                 if tech_id in [212, 217]:
-                    tech_name = const.buildings.building_name((tech_id, None, None))
+                    tech_name = const.buildings.building_name(
+                        (tech_id, None, None)
+                    )
                 else:
-                    tech_name = const.ships.ship_name((tech_id, None, 'shipyard'))
+                    tech_name = const.ships.ship_name(
+                        (tech_id, None, 'shipyard')
+                    )
                 spied_fleet.update({tech_name: tech_amount})
             spied_defences = {}
             ul = bs4.find('ul', {'data-type': 'defense'})
             for li in ul.find_all('li'):
                 tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
-                tech_name = const.buildings.defense_name((tech_id, None, 'defenses'))
+                tech_name = const.buildings.defense_name(
+                    (tech_id, None, 'defenses')
+                )
                 tech_amount = int(li.find('span', 'fright').text.replace('.', ''))
                 spied_defences.update({tech_name: tech_amount})
             spied_buildings = {}
             ul = bs4.find('ul', {'data-type': 'buildings'})
             for li in ul.find_all('li'):
                 tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
-                tech_name = const.buildings.building_name((tech_id, None, None))
+                tech_name = const.buildings.building_name(
+                    (tech_id, None, None)
+                )
                 tech_level = int(li.find('span', 'fright').text.replace('.', ''))
                 spied_buildings.update({tech_name: tech_level})
             spied_research = {}
             ul = bs4.find('ul', {'data-type': 'research'})
             for li in ul.find_all('li'):
                 tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
-                tech_name = const.research.research_name((tech_id, None, 'research'))
+                tech_name = const.research.research_name(
+                    (tech_id, None, 'research')
+                )
                 tech_amount = int(li.find('span', 'fright').text.replace('.', ''))
                 spied_research.update({tech_name: tech_amount})
 
