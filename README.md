@@ -669,7 +669,8 @@ ships.espionage_probe(int)
 ### do research
 ```python
 from ogame.constants import research
-empire.build(what=research.energy, id=id)
+empire.build(what=research.energy,
+             id=id)
 
 research.energy
 research.laser
@@ -689,6 +690,36 @@ research.shielding
 research.armor
 ```
 <pre>                 
+                                        returns None
+</pre>
+
+### deconstruct
+Buildings
+```python
+from ogame.constants import buildings
+empire.deconstruct(what=buildings.metal_mine,
+                   id=id)
+
+buildings.metal_mine
+buildings.crystal_mine
+buildings.deuterium_mine
+buildings.solar_plant
+buildings.fusion_plant
+buildings.metal_storage
+buildings.crystal_storage
+buildings.deuterium_storage
+
+buildings.robotics_factory
+buildings.shipyard
+buildings.research_laboratory
+buildings.missile_silo
+buildings.nanite_factory
+
+buildings.sensor_phalanx
+buildings.jump_gate
+```
+<pre> 
+
                                         returns None
 </pre>
 
