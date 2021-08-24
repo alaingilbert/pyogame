@@ -416,7 +416,7 @@ class OGame(object):
         settings_form.update({'token': token})
         names = [
             'last1', 'last2', 'last3', 'last4',
-            'last12','last212','last217'
+            'last12', 'last212', 'last217'
         ]
         for building_name in names:
             select = bs4.find('select', {'name': building_name})
@@ -425,7 +425,7 @@ class OGame(object):
         if settings is not None:
             for building, speed in settings.items():
                 settings_form.update(
-                    {"last{}".format(building[0]): speed * 10}
+                    {'last{}'.format(building[0]): speed * 10}
                 )
             self.session.post(
                 self.index_php + 'page=resourceSettings&cp={}'.format(id),
@@ -441,13 +441,13 @@ class OGame(object):
                 settings_data[building_name] = value
 
         class Settings:
-            metal_mine = settings_data["metal_mine"]
-            crystal_mine = settings_data["crystal_mine"]
-            deuterium_mine = settings_data["deuterium_mine"]
-            solar_plant = settings_data["solar_plant"]
-            fusion_plant = settings_data["fusion_plant"]
-            solar_satellite = settings_data["solar_satellite"]
-            crawler = settings_data["crawler"]
+            metal_mine = settings_data['metal_mine']
+            crystal_mine = settings_data['crystal_mine']
+            deuterium_mine = settings_data['deuterium_mine']
+            solar_plant = settings_data['solar_plant']
+            fusion_plant = settings_data['fusion_plant']
+            solar_satellite = settings_data['solar_satellite']
+            crawler = settings_data['crawler']
             list = [
                 metal_mine, crystal_mine, deuterium_mine,
                 solar_plant, fusion_plant, solar_satellite,
@@ -871,7 +871,7 @@ class OGame(object):
         slots = bs4.find('div', attrs={'id':'slots', 'class': 'fleft'})
         slots = [
             slot.text
-            for slot in slots.find_all(class_="fleft")
+            for slot in slots.find_all(class_='fleft')
         ]
         fleet = re.search(':(.*)/(.*)', slots[0])
         fleet = [fleet.group(1), fleet.group(2)]
@@ -909,10 +909,10 @@ class OGame(object):
         ).text
         bs4 = BeautifulSoup4(response)
         fleetDetails = bs4.find_all(class_='fleetDetails')
-        fleet_ids = bs4.find_all_partial(id="fleet")
+        fleet_ids = bs4.find_all_partial(id='fleet')
         fleet_ids = [id['id'] for id in fleet_ids]
         fleet_ids = [
-            int(re.search('fleet(.*)', id).group(1))
+            re.search('fleet(.*)', id).group(1)
             for id in fleet_ids
         ]
 
@@ -967,7 +967,7 @@ class OGame(object):
 
         fleet_ids = [id['id'] for id in eventFleet]
         fleet_ids = [
-            int(re.search('eventRow-(.*)', id).group(1))
+            re.search('eventRow-(.*)', id).group(1)
             for id in fleet_ids
         ]
 
@@ -1143,8 +1143,8 @@ class OGame(object):
         for link in report_links:
             response = self.session.get(link).text
             bs4 = BeautifulSoup4(response)
-            ul = bs4.find('ul', {'data-type': 'resources'})
-            if ul is None:
+            resources_list = bs4.find('ul', {'data-type': 'resources'})
+            if resources_list is None:
                 continue
             planet_coords = bs4.find('span', 'msg_title').find('a')
             if planet_coords is None:
@@ -1154,64 +1154,49 @@ class OGame(object):
             api_code = bs4.find('span', 'icon_apikey')['title']
             api_code = re.search(r'value=\'(.+?)\'', api_code).group(1)
             resources_data = {}
-            for li in ul.find_all('li'):
-                resource_name = li.find('div')['class']
+            for resource in resources_list.find_all('li'):
+                resource_name = resource.find('div')['class']
                 resource_name.remove('resourceIcon')
-                resources_data[resource_name[0]] = int(li['title'].replace('.', ''))
-            spied_fleet = {}
-            ul = bs4.find('ul', {'data-type': 'ships'})
-            for li in ul.find_all('li'):
-                tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
-                tech_amount = int(li.find('span', 'fright').text.replace('.', ''))
-                if tech_id in [212, 217]:
-                    tech_name = const.buildings.building_name(
-                        (tech_id, None, None)
-                    )
-                else:
-                    tech_name = const.ships.ship_name(
-                        (tech_id, None, 'shipyard')
-                    )
-                spied_fleet.update({tech_name: tech_amount})
-            spied_defences = {}
-            ul = bs4.find('ul', {'data-type': 'defense'})
-            for li in ul.find_all('li'):
-                tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
-                tech_name = const.buildings.defense_name(
-                    (tech_id, None, 'defenses')
-                )
-                tech_amount = int(li.find('span', 'fright').text.replace('.', ''))
-                spied_defences.update({tech_name: tech_amount})
-            spied_buildings = {}
-            ul = bs4.find('ul', {'data-type': 'buildings'})
-            for li in ul.find_all('li'):
-                tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
-                tech_name = const.buildings.building_name(
-                    (tech_id, None, None)
-                )
-                tech_level = int(li.find('span', 'fright').text.replace('.', ''))
-                spied_buildings.update({tech_name: tech_level})
-            spied_research = {}
-            ul = bs4.find('ul', {'data-type': 'research'})
-            for li in ul.find_all('li'):
-                tech_id = int(re.search(r'([0-9]+)', li.find('img')['class'][0]).group(1))
-                tech_name = const.research.research_name(
-                    (tech_id, None, 'research')
-                )
-                tech_amount = int(li.find('span', 'fright').text.replace('.', ''))
-                spied_research.update({tech_name: tech_amount})
+                resources_data[resource_name[0]] = int(resource['title'].replace('.', ''))
+
+            def get_tech_qt(tech_type):
+                tech_list = bs4.find('ul', {'data-type': tech_type})
+                for tech in tech_list.find_all('li'):
+                    tech_id = int(re.search(r'([0-9]+)', tech.find('img')['class'][0]).group(1))
+                    tech_amount = int(tech.find('span', 'fright').text.replace('.', ''))
+                    yield (tech_id, tech_amount)
+
+            spied_data = {'ships': {}, 'defense': {}, 'buildings': {}, 'research': {}}
+            const_data = {
+                'ships': [const.ships.ship_name, 'shipyard'],
+                'defense': [const.buildings.defense_name, 'defenses'],
+                'buildings': [const.buildings.building_name, None],
+                'research': [const.research.research_name, 'research']
+            }
+            for tech_type in spied_data.keys():
+                for tech_id, tech_amount in get_tech_qt(tech_type):
+                    if tech_type == 'ships' and tech_id in [212, 217]:
+                            tech_name = const.buildings.building_name(
+                                (tech_id, None, None)
+                            )
+                    else:
+                        tech_name = const_data[tech_type][0](
+                            (tech_id, None, const_data[tech_type][1])
+                        )
+                    spied_data[tech_type].update({tech_name: tech_amount})
 
             class Report:
                 name = planet_coords.group(1)
                 position = planet_coords.group(2)
                 datetime = report_datetime
-                metal = resources_data["metal"]
-                crystal = resources_data["crystal"]
-                deuterium = resources_data["deuterium"]
+                metal = resources_data['metal']
+                crystal = resources_data['crystal']
+                deuterium = resources_data['deuterium']
                 resources = [metal, crystal, deuterium]
-                fleet = spied_fleet
-                defenses = spied_defences
-                buildings = spied_buildings
-                research = spied_research
+                fleet = spied_data['ships']
+                defenses = spied_data['defense']
+                buildings = spied_data['buildings']
+                research = spied_data['research']
                 api = api_code
                 list = [
                     name, position, datetime, metal,
@@ -1308,6 +1293,30 @@ class OGame(object):
                     'token': build_token,
                     'type': type,
                     'menge': amount}
+        )
+
+    def deconstruct(self, what, id):
+        type = what[0]
+        component = what[2]
+        cant_deconstruct = [34, 33, 36, 41, 212, 217]
+        if component not in ['supplies', 'facilities'] or type in cant_deconstruct:
+            return
+        response = self.session.get(
+            url=self.index_php +
+                'page=ingame&component={}&cp={}'
+                .format(component, id)
+        ).text
+        build_token = re.search(
+            r"var downgradeEndpoint = (.*)token=(.*)\&",
+            response
+        ).group(2)
+        self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame',
+                    'component': component,
+                    'modus': 3,
+                    'token': build_token,
+                    'type': type}
         )
 
     def collect_rubble_field(self, id):
