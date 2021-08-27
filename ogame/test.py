@@ -179,14 +179,26 @@ class UnittestOgame(unittest.TestCase):
             self.ids[0]
         ).metal_mine
         self.assertGreater(before.level, 0)
+        self.assertFalse(before.in_construction)
         self.empire.deconstruct(
-            what=buildings.metal_mine(),
-            id=self.empire.planet_ids()[0]
+            what=buildings.metal_mine,
+            id=self.ids[0]
         )
         after = self.empire.supply(
             self.ids[0]
         ).metal_mine
         self.assertTrue(before.level > after.level or after.in_construction)
+
+    def check_cancel(self):
+        before = self.empire.supply(
+            self.ids[0]
+        ).metal_mine
+        self.assertTrue(before.in_construction)
+        self.empire.cancel_building(self.ids[0])
+        after = self.empire.supply(
+            self.ids[0]
+        ).metal_mine
+        self.assertFalse(after.in_construction)
 
     def test_phalanx(self):
         Super_Dangereous_TO_test = 'You will get Banned'
