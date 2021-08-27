@@ -694,7 +694,6 @@ research.armor
 </pre>
 
 ### deconstruct
-Buildings
 ```python
 from ogame.constants import buildings
 empire.deconstruct(what=buildings.metal_mine,
@@ -721,6 +720,18 @@ buildings.jump_gate
 <pre> 
 
                                         returns None
+</pre>
+
+### cancel building and research progress
+Buildings
+<pre>
+If you need to cancel the construction or deconstruction of a building
+empire.cancel_building(id)              returns None
+</pre>
+Research
+<pre>
+If you need to cancel the current ongoing research
+empire.cancel_research(id)              returns None
 </pre>
 
 ### collect rubble field
