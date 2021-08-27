@@ -289,7 +289,7 @@ class OGame(object):
             r'textContent\[3] = "(.*)"',
             response
         )
-        textContent3 = textContent3.group(1).replace('\\u00b0C', '')
+        textContent3 = textContent3.group(1).replace('\\u00b0', '')
         textContent3 = re.findall(r'\d+(?: \d+)?', textContent3)
 
         class Celestial:
