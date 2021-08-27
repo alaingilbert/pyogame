@@ -285,18 +285,12 @@ class OGame(object):
             r'textContent\[1] = "(.*)km \(<span>(.*)<(.*)<span>(.*)<',
             response
         )
-        querys = [
-            re.compile(r'textContent\[3] = "(.*) \\u00b0C \\u00e0(.*)(.*)\\'),
-            re.compile(r'textContent\[3] = "(.*)\\u00b0C to (.*)\\u00b0C"'),
-            re.compile(r'textContent\[3] = "(.*) \\u00b0C (.*) (.*) \\u00b0C"'),
-        ]
-        textContent3 = None
-        for query in querys:
-            textContent3 = query.search(
-                response
-            )
-            if textContent3 is not None:
-                break
+        textContent3 = re.search(
+            r'textContent\[3] = "(.*)"',
+            response
+        )
+        textContent3 = textContent3.group(1).replace('\\u00b0C', '')
+        textContent3 = re.findall(r'\d+(?: \d+)?', textContent3)
 
         class Celestial:
             diameter = int(textContent1.group(1).replace('.', ''))
@@ -304,8 +298,8 @@ class OGame(object):
             total = int(textContent1.group(4))
             free = total - used
             temperature = [
-                int(textContent3.group(1)),
-                int(textContent3.group(2))
+                textContent3[0],
+                textContent3[1]
             ]
             coordinates = OGame.celestial_coordinates(self, id)
 
@@ -1159,7 +1153,7 @@ class OGame(object):
                 resource_name.remove('resourceIcon')
                 resources_data[resource_name[0]] = int(resource['title'].replace('.', ''))
 
-            def get_tech_qt(tech_type):
+            def get_tech_and_quantity(tech_type):
                 tech_list = bs4.find('ul', {'data-type': tech_type})
                 for tech in tech_list.find_all('li'):
                     tech_id = int(re.search(r'([0-9]+)', tech.find('img')['class'][0]).group(1))
@@ -1174,7 +1168,7 @@ class OGame(object):
                 'research': [const.research.research_name, 'research']
             }
             for tech_type in spied_data.keys():
-                for tech_id, tech_amount in get_tech_qt(tech_type):
+                for tech_id, tech_amount in get_tech_and_quantity(tech_type):
                     if tech_type == 'ships' and tech_id in [212, 217]:
                             tech_name = const.buildings.building_name(
                                 (tech_id, None, None)
@@ -1306,7 +1300,7 @@ class OGame(object):
                 'page=ingame&component={}&cp={}'
                 .format(component, id)
         ).text
-        build_token = re.search(
+        deconstruct_token = re.search(
             r"var downgradeEndpoint = (.*)token=(.*)\&",
             response
         ).group(2)
@@ -1315,8 +1309,40 @@ class OGame(object):
             params={'page': 'ingame',
                     'component': component,
                     'modus': 3,
-                    'token': build_token,
+                    'token': deconstruct_token,
                     'type': type}
+        )
+
+    def cancel_building(self, id):
+        self.cancel('building', id)
+
+    def cancel_research(self, id):
+        self.cancel('research', id)
+
+    def cancel(self, what_queue, id):
+        response = self.session.get(
+            url=self.index_php + 'page=ingame&component=overview',
+            params={'cp': id}
+        ).text
+        cancel_token = re.search(
+            rf"var cancelLink{what_queue} = (.*)token=(.*)\&",
+            response
+        ).group(2)
+        parameters = re.search(
+            rf"\"cancel{what_queue}\((.*)\, (.*)\,",
+            response
+        )
+        if parameters is None:
+            return
+        self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame',
+                    'component': 'overview',
+                    'modus': 2,
+                    'token': cancel_token,
+                    'action': 'cancel',
+                    'type': parameters.group(1),
+                    'listid': parameters.group(2)}
         )
 
     def collect_rubble_field(self, id):
