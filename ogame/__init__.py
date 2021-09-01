@@ -1137,10 +1137,9 @@ class OGame(object):
             planet_coords = bs4.find('span', 'msg_title').find('a')
             if planet_coords is None:
                 continue
-            planet_coords = re.search(r'(.*?) \[(.*?)\]', planet_coords.text)
+            planet_coords = re.search(r'(.*?) (\[(.*?)])', planet_coords.text)
             report_datetime = bs4.find('span', 'msg_date').text
             api_code = bs4.find('span', 'icon_apikey')['title']
-            api_code = re.search(r'value=\'(.+?)\'', api_code).group(1)
             resources_data = {}
             for resource in resources_list.find_all('li'):
                 resource_name = resource.find('div')['class']
@@ -1175,7 +1174,8 @@ class OGame(object):
 
             class Report:
                 name = planet_coords.group(1)
-                position = planet_coords.group(2)
+                position = const.convert_to_coordinates(planet_coords.group(2))
+                moon = bs4.find('figure', 'moon') is not None
                 datetime = report_datetime
                 metal = resources_data['metal']
                 crystal = resources_data['crystal']
@@ -1185,9 +1185,9 @@ class OGame(object):
                 defenses = spied_data['defense']
                 buildings = spied_data['buildings']
                 research = spied_data['research']
-                api = api_code
+                api = re.search(r'value=\'(.+?)\'', api_code).group(1)
                 list = [
-                    name, position, datetime, metal,
+                    name, position, moon, datetime, metal,
                     crystal, deuterium, resources, fleet,
                     defenses, buildings, research, api
                 ]
