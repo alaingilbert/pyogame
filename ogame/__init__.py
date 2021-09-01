@@ -1125,13 +1125,7 @@ class OGame(object):
             bs4 = BeautifulSoup4(response)
             for link in bs4.find_all_partial(href='page=messages&messageId'):
                 if link['href'] not in report_links:
-                    report_links.extend(
-                        [
-                            link['href']
-                            for link in bs4.find_all_partial(
-                                href='page=messages&messageId')
-                        ]
-                    )
+                    report_links.append(link['href'])
             firstpage += 1
         reports = []
         for link in report_links:
