@@ -548,6 +548,7 @@ reports = empire.spyreports()
 report = reports[0]
 report.name                                   returns str
 report.position                               returns list
+report.moon                                   returns bool
 report.datetime                               returns str
 report.metal                                  returns int
 report.crystal                                returns int
