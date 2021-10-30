@@ -1074,7 +1074,7 @@ class OGame(object):
             headers=header).json()
         new_token = None
         if response.get("password_checked") and response["password_checked"]:
-            new_token = response["newToken"]
+            new_token = response["newAjaxToken"]
         if new_token:
             self.session.post(
                 url=self.index_php,
