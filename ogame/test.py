@@ -255,3 +255,11 @@ class UnittestOgame(unittest.TestCase):
         self.empire.logout()
         self.empire.relogin()
         self.assertTrue(self.empire.is_logged_in())
+
+    def test_officers(self):
+        officers = self.empire.officers()
+        self.assertIsInstance(officers.commander, bool)
+        self.assertIsInstance(officers.admiral, bool)
+        self.assertIsInstance(officers.engineer, bool)
+        self.assertIsInstance(officers.geologist, bool)
+        self.assertIsInstance(officers.technocrat, bool)
