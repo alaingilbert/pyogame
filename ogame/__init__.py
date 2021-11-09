@@ -828,7 +828,20 @@ class OGame(object):
             return []
 
     def officers(self):
-        raise NotImplementedError("function not implemented yet PLS contribute")
+        commander_element = self.landing_page.find_partial(class_='on commander')
+        admiral_element = self.landing_page.find_partial(class_='on admiral')
+        engineer_element = self.landing_page.find_partial(class_='on engineer')
+        geologist_element = self.landing_page.find_partial(class_='on geologist')
+        technocrat_element = self.landing_page.find_partial(class_='on technocrat')
+
+        class Officers(object):
+            commander = commander_element is not None
+            admiral = admiral_element is not None
+            engineer = engineer_element is not None
+            geologist = geologist_element is not None
+            technocrat = technocrat_element is not None
+
+        return Officers
 
     def shop(self):
         raise NotImplementedError("function not implemented yet PLS contribute")

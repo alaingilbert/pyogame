@@ -463,7 +463,12 @@ empire.ally()                       returns list
 
 ### get officers
 <pre>
-empire.officers()                   returns Exception("function not implemented yet PLS contribute")
+officers = empire.officers()
+officers.commander                  returns bool
+officers.admiral                    returns bool
+officers.engineer                   returns bool
+officers.geologist                  returns bool
+officers.technocrat                 returns bool
 </pre>
 
 ### get shop
