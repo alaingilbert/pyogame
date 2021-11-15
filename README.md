@@ -1,12 +1,12 @@
-# pyogame
+ # pyogame
 <img src="https://github.com/alaingilbert/pyogame/blob/develop/logo.png?raw=true" width="300" alt="logo">
 
 OGame is a browser-based, money-management and space-war themed massively multiplayer online browser game with over 
 two million accounts.
 
 This lib is supposed to help write scripts and bots for your needs.
-it supports ogame_version: `8.1.0`
-version `21`
+it supports ogame_version: `8.4.0`
+version `22`
 
 ## install
 <pre>
@@ -14,7 +14,7 @@ pip install ogame
 </pre>
 update
 <pre>
-pip install ogame==8.1.0.21
+pip install ogame==8.4.0.22
 </pre>
 dont want to wait for new updates download direct from the develop branch
 <pre>
@@ -182,6 +182,19 @@ works with planet's and moon's
 empire.celestial_coordinates(id)        returns list
 </pre>
 
+### get celestial queue
+get research, building and shipyard construction time
+works with planet's and moon's
+<pre>
+empire.celestial_queue(id)              returns list
+
+queue = empire.celestial_queue(id)
+queue.list                              returns list
+queue.research                          returns datetime
+queue.buildings                         returns datetime
+queue.shipyard                          returns datetime
+</pre>
+
 ### resources
 <pre>
 resources have the format [metal, crystal, deuterium]
@@ -208,6 +221,48 @@ res.crystal                             returns int
 res.deuterium                           returns int
 </pre>
 
+### get/set resources settings
+<pre>
+empire.resources_settings(id)                       returns class(object)
+empire.resources_settings(id, settings)             returns class(object)
+
+settings = empire.resources_settings(id, settings)
+settings.list                                       returns list
+settings.metal_mine                                 returns int
+settings.crystal_mine                               returns int
+settings.deuterium_mine                             returns int
+settings.solar_plant                                returns int
+settings.fusion_plant                               returns int
+settings.solar_satellite                            returns int
+settings.crawler                                    returns int
+</pre>
+
+```python
+settings = empire.resources_settings(id)
+
+print(
+       settings.list,
+       settings.metal_mine,
+       settings.crystal_mine,
+       settings.deuterium_mine,
+       settings.solar_plant,
+       settings.fusion_plant,
+       settings.solar_satellite,
+       settings.crawler
+     )
+
+settings = empire.resources_settings(id,
+        settings={
+            buildings.metal_mine: speed.max,
+            buildings.crystal_mine: speed.min,
+            buildings.fusion_plant: 0,
+            buildings.solar_satellite: speed._50,
+        }
+    )
+
+print(settings.list)
+```
+
 ### get prices
 <pre>
 get prices of buildings or ships. Level is mandatory if you pass buildings that exist only once like mines.
@@ -231,7 +286,6 @@ sup = empire.supply(id)
 sup.metal_mine.level                    returns int
 sup.metal_mine.is_possible              returns bool (possible to build)
 sup.metal_mine.in_construction          returns bool
-sup.metal_mine.cost                     returns resources
 
 sup.crystal_mine
 sup.deuterium_mine
@@ -367,7 +421,38 @@ for planet in empire.galaxy(coordinates(randint(1,6), randint(1,499))):
     print(planet.name, planet.position, planet.player, planet.player_id, planet.rank, planet.status, planet.moon)
     if status.inactive in planet.status and status.vacation not in planet.status:
         #Farm Inactive
-```        
+```
+
+### get debris in galaxy
+<pre>
+empire.galaxy_debris(coordinates)               returns list of class(object)
+
+or use planet coordinates to get only the target debris
+
+empire.galaxy_debris(planet_coordinates)        returns class(object)
+
+pos = empire.galaxy_debris(planet_coordinates)
+pos.list                                        returns list
+pos.position                                    returns list
+pos.has_debris                                  returns bool
+pos.resources                                   returns list
+pos.metal                                       returns int
+pos.crystal                                     returns int
+pos.deuterium                                   returns int
+</pre>
+```python
+for position in empire.galaxy_debris(coordinates(1, 20)):
+    print(position.list)
+    print(position.position, position.has_debris, position.resources, position.metal, position.crystal, position.deuterium)
+    if position.has_debris:
+        # Can send recyclers
+
+position = empire.galaxy_debris(coordinates(1, 20, 12))
+print(position.list)
+print(position.position, position.has_debris, position.resources, position.metal, position.crystal, position.deuterium)
+if position.has_debris:
+    # Can send recyclers
+```
 
 ### get ally
 <pre>
@@ -378,7 +463,12 @@ empire.ally()                       returns list
 
 ### get officers
 <pre>
-empire.officers()                   returns Exception("function not implemented yet PLS contribute")
+officers = empire.officers()
+officers.commander                  returns bool
+officers.admiral                    returns bool
+officers.engineer                   returns bool
+officers.geologist                  returns bool
+officers.technocrat                 returns bool
 </pre>
 
 ### get shop
@@ -456,13 +546,29 @@ for fleet in empire.phalanx(moon_id, coordinates(2, 410, 7)):
 
 ### get spyreports
 <pre>
-empire.spyreports()                     returns list of class(object)
-empire.spyreports(firstpage=1, lastpage=30)
+empire.spyreports()                           returns list of class(object)
+empire.spyreports(firstpage=1, lastpage=30)   returns list of class(object)
+
+reports = empire.spyreports()
+report = reports[0]
+report.name                                   returns str
+report.position                               returns list
+report.moon                                   returns bool
+report.datetime                               returns str
+report.metal                                  returns int
+report.crystal                                returns int
+report.deuterium                              returns int
+report.fleet                                  returns dict
+report.defenses                               returns dict
+report.buildings                              returns dict
+report.research                               returns dict
+report.api                                    returns str
+report.list                                   returns list
 </pre>
 
 ```python
 for report in empire.spyreports():
-    print(report.fright)
+    print(report.list)
 ```
 
 ### send fleet (for both version 7.6 and 8.0.0)
@@ -569,7 +675,8 @@ ships.espionage_probe(int)
 ### do research
 ```python
 from ogame.constants import research
-empire.build(what=research.energy, id=id)
+empire.build(what=research.energy,
+             id=id)
 
 research.energy
 research.laser
@@ -590,6 +697,47 @@ research.armor
 ```
 <pre>                 
                                         returns None
+</pre>
+
+### deconstruct
+```python
+from ogame.constants import buildings
+empire.deconstruct(what=buildings.metal_mine,
+                   id=id)
+
+buildings.metal_mine
+buildings.crystal_mine
+buildings.deuterium_mine
+buildings.solar_plant
+buildings.fusion_plant
+buildings.metal_storage
+buildings.crystal_storage
+buildings.deuterium_storage
+
+buildings.robotics_factory
+buildings.shipyard
+buildings.research_laboratory
+buildings.missile_silo
+buildings.nanite_factory
+
+buildings.sensor_phalanx
+buildings.jump_gate
+```
+<pre> 
+
+                                        returns None
+</pre>
+
+### cancel building and research progress
+Buildings
+<pre>
+If you need to cancel the construction or deconstruction of a building
+empire.cancel_building(id)              returns None
+</pre>
+Research
+<pre>
+If you need to cancel the current ongoing research
+empire.cancel_research(id)              returns None
 </pre>
 
 ### collect rubble field
