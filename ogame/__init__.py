@@ -919,7 +919,7 @@ class OGame(object):
         fleet_ids = bs4.find_all_partial(id='fleet')
         fleet_ids = [id['id'] for id in fleet_ids]
         fleet_ids = [
-            re.search('fleet(.*)', id).group(1)
+            int(re.search('fleet(.*)', id).group(1))
             for id in fleet_ids
         ]
 
@@ -1120,7 +1120,6 @@ class OGame(object):
             return False
 
     def spyreports(self, firstpage=1, lastpage=30):
-        # get links for the last 30 pages
         report_links = []
         while firstpage <= lastpage:
             try:
@@ -1133,7 +1132,8 @@ class OGame(object):
                             'pagination': firstpage,
                             'ajax': 1}
                 ).text
-            except:
+            except Exception as e:
+                print(e)
                 break
             bs4 = BeautifulSoup4(response)
             for link in bs4.find_all_partial(href='page=messages&messageId'):
@@ -1161,7 +1161,7 @@ class OGame(object):
 
             def get_tech_and_quantity(tech_type):
                 tech_list = bs4.find('ul', {'data-type': tech_type})
-                for tech in tech_list.find_all('li'):
+                for tech in tech_list.find_all('li', {'class': 'detail_list_el'}):
                     tech_id = int(re.search(r'([0-9]+)', tech.find('img')['class'][0]).group(1))
                     tech_amount = int(tech.find('span', 'fright').text.replace('.', ''))
                     yield (tech_id, tech_amount)
