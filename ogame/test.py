@@ -174,7 +174,7 @@ class UnittestOgame(unittest.TestCase):
         ).rocket_launcher
         self.assertTrue(before < after.amount or after.in_construction)
 
-    def test_deconstruct(self):
+    def test_deconstruct_and_cancel(self):
         before = self.empire.supply(
             self.ids[0]
         ).metal_mine
@@ -188,8 +188,6 @@ class UnittestOgame(unittest.TestCase):
             self.ids[0]
         ).metal_mine
         self.assertTrue(before.level > after.level or after.in_construction)
-
-    def check_cancel(self):
         before = self.empire.supply(
             self.ids[0]
         ).metal_mine
