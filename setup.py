@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='ogame',
     packages=['ogame'],
-    version='8.1.0.22',
+    version='8.4.0.22',
     license='MIT',
     description='lib for the popular browsergame ogame',
     author='PapeprPieceCode',
