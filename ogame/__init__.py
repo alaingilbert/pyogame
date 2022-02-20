@@ -756,6 +756,24 @@ class OGame(object):
             alliance_id = playerId(
                 alliance_id['rel']) if alliance_id else None
 
+            # find user activity on planet
+            activity_tag = row.select('div[class*="activity"]')
+            if len(activity_tag) != 0:
+                if 'minute15' in activity_tag[0]['class']:
+                    flag_activity = 15 # if minute15, set as 15
+                elif 'showMinutes' in activity_tag[0]['class']:
+                    flag_str = row.findAll(
+                        "div", {"title": "Activity"})[0].string
+                    # if showMinutes, set as real count
+                    flag_activity = int(
+                        re.search(r'[0-9]+', flag_str).group())
+                else:
+                    # set None if no activity
+                    flag_activity = None
+            else:
+                # set None if something failed
+                flag_activity = None
+
             class Position:
                 position = planet_cord
                 name = row.find(id=re.compile(r'planet[0-9]+')).h1.span.text
@@ -765,9 +783,12 @@ class OGame(object):
                 status = planet_status
                 moon = moon_pos is not None
                 alliance = alliance_name.get(alliance_id)
+                # add attribute for planet activity info
+                activity = flag_activity
                 list = [
                     name, position, player,
-                    player_id, rank, status, moon, alliance
+                    player_id, rank, status, moon, alliance,
+                    activity # add activity info
                 ]
 
             planets.append(Position)
