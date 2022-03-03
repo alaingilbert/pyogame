@@ -1183,8 +1183,14 @@ class OGame(object):
             def get_tech_and_quantity(tech_type):
                 tech_list = bs4.find('ul', {'data-type': tech_type})
                 for tech in tech_list.find_all('li', {'class': 'detail_list_el'}):
-                    tech_id = int(re.search(r'([0-9]+)', tech.find('img')['class'][0]).group(1))
-                    tech_amount = int(tech.find('span', 'fright').text.replace('.', ''))
+                    try:
+                        tech_id = int(re.search(r'([0-9]+)', tech.find('img')['class'][0]).group(1))
+                    except TypeError:
+                        tech_id = None
+                    if tech_id is not None:
+                        tech_amount = int(tech.find('span', 'fright').text.replace('.', ''))
+                    else:
+                        tech_amount = None
                     yield (tech_id, tech_amount)
 
             spied_data = {'ships': {}, 'defense': {}, 'buildings': {}, 'research': {}}
