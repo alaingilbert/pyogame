@@ -1182,16 +1182,14 @@ class OGame(object):
 
             def get_tech_and_quantity(tech_type):
                 tech_list = bs4.find('ul', {'data-type': tech_type})
-                for tech in tech_list.find_all('li', {'class': 'detail_list_el'}):
-                    try:
+                # return None if level of espionage too low to retrieve information
+                if "unable" in tech_list.text:
+                    yield(None, None) 
+                else:
+                    for tech in tech_list.find_all('li', {'class': 'detail_list_el'}):
                         tech_id = int(re.search(r'([0-9]+)', tech.find('img')['class'][0]).group(1))
-                    except TypeError:
-                        tech_id = None
-                    if tech_id is not None:
                         tech_amount = int(tech.find('span', 'fright').text.replace('.', ''))
-                    else:
-                        tech_amount = None
-                    yield (tech_id, tech_amount)
+                        yield (tech_id, tech_amount)
 
             spied_data = {'ships': {}, 'defense': {}, 'buildings': {}, 'research': {}}
             const_data = {
@@ -1202,7 +1200,10 @@ class OGame(object):
             }
             for tech_type in spied_data.keys():
                 for tech_id, tech_amount in get_tech_and_quantity(tech_type):
-                    if tech_type == 'ships' and tech_id in [212, 217]:
+                    if tech_id == None:
+                        spied_data[tech_type] = "detail_list_fail" # replace dict with message string
+                        break
+                    elif tech_type == 'ships' and tech_id in [212, 217]:
                             tech_name = const.buildings.building_name(
                                 (tech_id, None, None)
                             )
