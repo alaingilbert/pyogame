@@ -769,10 +769,10 @@ class OGame(object):
                         re.search(r'[0-9]+', flag_str).group())
                 else:
                     # set None if no activity
-                    flag_activity = None
+                    flag_activity = -1
             else:
                 # set None if something failed
-                flag_activity = None
+                flag_activity = -1
 
             class Position:
                 position = planet_cord
