@@ -30,7 +30,7 @@ pip install git+https://github.com/alaingilbert/pyogame.git@develop
 [Join Discord](https://discord.gg/CeBDgnR)
 
 ## You wanna try a finished bot
-[pyogame.net](https://pyogame.net)
+[pyogame.net](https://pyogame.net)~~
 
 ## functions
 ### login
@@ -418,7 +418,7 @@ empire.galaxy(coordinates)          returns list of class(object)
 ```python
 for planet in empire.galaxy(coordinates(randint(1,6), randint(1,499))):
     print(planet.list)
-    print(planet.name, planet.position, planet.player, planet.player_id, planet.rank, planet.status, planet.moon)
+    print(planet.name, planet.position, planet.player, planet.player_id, planet.rank, planet.status, planet.moon, planet.activity)
     if status.inactive in planet.status and status.vacation not in planet.status:
         #Farm Inactive
 ```

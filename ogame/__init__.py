@@ -756,6 +756,24 @@ class OGame(object):
             alliance_id = playerId(
                 alliance_id['rel']) if alliance_id else None
 
+            # find user activity on planet
+            activity_tag = row.select('div[class*="activity"]')
+            if len(activity_tag) != 0:
+                if 'minute15' in activity_tag[0]['class']:
+                    flag_activity = 15 # if minute15, set as 15
+                elif 'showMinutes' in activity_tag[0]['class']:
+                    flag_str = row.findAll(
+                        "div", {"title": "Activity"})[0].string
+                    # if showMinutes, set as real count
+                    flag_activity = int(
+                        re.search(r'[0-9]+', flag_str).group())
+                else:
+                    # set -1 if no activity
+                    flag_activity = -1
+            else:
+                # set -2 if something failed
+                flag_activity = -2
+
             class Position:
                 position = planet_cord
                 name = row.find(id=re.compile(r'planet[0-9]+')).h1.span.text
@@ -765,9 +783,12 @@ class OGame(object):
                 status = planet_status
                 moon = moon_pos is not None
                 alliance = alliance_name.get(alliance_id)
+                # add attribute for planet activity info
+                activity = flag_activity
                 list = [
                     name, position, player,
-                    player_id, rank, status, moon, alliance
+                    player_id, rank, status, moon, alliance,
+                    activity # add activity info
                 ]
 
             planets.append(Position)
@@ -1161,10 +1182,14 @@ class OGame(object):
 
             def get_tech_and_quantity(tech_type):
                 tech_list = bs4.find('ul', {'data-type': tech_type})
-                for tech in tech_list.find_all('li', {'class': 'detail_list_el'}):
-                    tech_id = int(re.search(r'([0-9]+)', tech.find('img')['class'][0]).group(1))
-                    tech_amount = int(tech.find('span', 'fright').text.replace('.', ''))
-                    yield (tech_id, tech_amount)
+                # return None if level of espionage too low to retrieve information
+                if "unable" in tech_list.text:
+                    yield(None, None) 
+                else:
+                    for tech in tech_list.find_all('li', {'class': 'detail_list_el'}):
+                        tech_id = int(re.search(r'([0-9]+)', tech.find('img')['class'][0]).group(1))
+                        tech_amount = int(tech.find('span', 'fright').text.replace('.', ''))
+                        yield (tech_id, tech_amount)
 
             spied_data = {'ships': {}, 'defense': {}, 'buildings': {}, 'research': {}}
             const_data = {
@@ -1175,7 +1200,10 @@ class OGame(object):
             }
             for tech_type in spied_data.keys():
                 for tech_id, tech_amount in get_tech_and_quantity(tech_type):
-                    if tech_type == 'ships' and tech_id in [212, 217]:
+                    if tech_id == None:
+                        spied_data[tech_type] = "detail_list_fail" # replace dict with message string
+                        break
+                    elif tech_type == 'ships' and tech_id in [212, 217]:
                             tech_name = const.buildings.building_name(
                                 (tech_id, None, None)
                             )
