@@ -227,24 +227,24 @@ class UnittestOgame(unittest.TestCase):
         espionage_probe = self.empire.ships(self.ids[0]).espionage_probe.amount
         if not 0 < espionage_probe:
             self.empire.build(ships.espionage_probe(), self.ids[0])
-            while self.empire.ships(self.ids[0]).espionage_probe.amount <= 0:
+            while self.empire.ships(self.ids[0]).espionage_probe.amount == 0:
                 continue
 
         fleet_send = True
-        while fleet_send:
+        while not fleet_send:
             for planet in self.empire.galaxy(
                     coordinates(randint(1, 6), randint(1, 499))
             ):
                 if status.inactive in planet.status \
                         and status.vacation not in planet.status:
-                    fleet_send = not self.empire.send_fleet(
+                    fleet_send = self.empire.send_fleet(
                         mission.spy,
                         self.ids[0],
                         where=planet.position,
                         ships=fleet(espionage_probe=1)
                     )
                     break
-        self.assertTrue(not fleet_send)
+        self.assertTrue(fleet_send)
 
     def test_collect_rubble_field(self):
         self.empire.collect_rubble_field(self.ids[0])
