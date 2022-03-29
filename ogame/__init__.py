@@ -236,6 +236,11 @@ class OGame(object):
         return [planet.text for planet in
                 self.landing_page.find_all(class_='planet-name')]
 
+    def planet_coords(self):
+        coords_list = [re.search(r'(.*?) (\[(.*?)])', cords.text).group(2)
+                       for cords in self.landing_page.find_all(class_='smallplanet')]
+        return [const.convert_to_coordinates(cords) + [1] for cords in coords_list]
+    
     def id_by_planet_name(self, name):
         for planet_name, id in zip(
                 OGame.planet_names(self), OGame.planet_ids(self)
@@ -265,6 +270,33 @@ class OGame(object):
             names.append(re.search(r'<b>(.*) \[', name).group(1))
         return names
 
+    def moon_coords(self):
+        coords_list = [re.search(r'(.*?) (\[(.*?)])', cords['title']).group(2)
+                       for cords in self.landing_page.find_all(class_='moonlink')]
+        return [const.convert_to_coordinates(cords) + [3] for cords in coords_list]
+
+    def id_by_moon_name(self, name):
+        for moon_name, id in zip(
+                OGame.moon_names(self), OGame.moon_ids(self)
+        ):
+            if moon_name == name:
+                return id
+
+    def moon_ids_refresh(self):
+        response = self.session.get(self.index_php + 'page=ingame').text
+        bs4 = BeautifulSoup4(response)
+        moons = []
+        for moon in bs4.find_all(class_='moonlink'):
+            moon = moon['href']
+            moon = re.search('cp=(.*)', moon).group(1)
+            moons.append(int(moon))
+        coords_list = []
+        if moons:
+            coords_list = [re.search(r'(.*?) (\[(.*?)])', cords['title']).group(2)
+                           for cords in self.landing_page.find_all(class_='moonlink')]
+            coords_list = [const.convert_to_coordinates(cords) + [3] for cords in coords_list]
+        return [moons, coords_list]
+    
     def slot_celestial(self):
         class Slot:
             planets = self.landing_page.find(
@@ -291,6 +323,10 @@ class OGame(object):
         )
         textContent3 = textContent3.group(1).replace('\\u00b0', '')
         textContent3 = re.findall(r'\d+(?: \d+)?', textContent3)
+        textContent7 = re.search(
+            r'textContent\[7] = "(.*)>(.*?) \(Place (.*?) (.*)<',
+            response
+        )                                                            # searching for rank/points
 
         class Celestial:
             diameter = int(textContent1.group(1).replace('.', ''))
@@ -302,6 +338,9 @@ class OGame(object):
                 textContent3[1]
             ]
             coordinates = OGame.celestial_coordinates(self, id)
+            points = int(textContent7.group(2).replace(".",""))      # adds current player points
+            rank = int(textContent7.group(3).replace(".",""))        # adds current player rank
+
 
         return Celestial
 
@@ -460,6 +499,22 @@ class OGame(object):
             return True
         else:
             return False
+        
+    def add_resources(self, bs4):                         # adds resources to various other functions
+        def to_int(string):
+            return int(float(string.replace('M', '000').replace('n', '')))
+
+        class Resources:
+            resources = [bs4.find(id='resources_metal')['data-raw'],
+                         bs4.find(id='resources_crystal')['data-raw'],
+                         bs4.find(id='resources_deuterium')['data-raw']]
+            resources = [to_int(resource) for resource in resources]
+            metal = resources[0]
+            crystal = resources[1]
+            deuterium = resources[2]
+            energy = to_int(bs4.find(id='resources_energy')['data-raw'])
+
+        return Resources
 
     def supply(self, id):
         response = self.session.get(
@@ -488,9 +543,12 @@ class OGame(object):
             deuterium_mine = Supply(2)
             solar_plant = Supply(3)
             fusion_plant = Supply(4)
+            solar_satellite = Supply(5)
+            crawler = Supply(6)
             metal_storage = Supply(7)
             crystal_storage = Supply(8)
             deuterium_storage = Supply(9)
+            res = self.add_resources(bs4)
 
         return Supplies
 
@@ -526,6 +584,7 @@ class OGame(object):
             nanite_factory = Facility(5)
             terraformer = Facility(6)
             repair_dock = Facility(7)
+            res = self.add_resources(bs4)
 
         return Facilities
 
@@ -556,6 +615,7 @@ class OGame(object):
             moon_base = Facility(2)
             sensor_phalanx = Facility(3)
             jump_gate = Facility(4)
+            res = self.add_resources(bs4)
 
         return Facilities
 
@@ -605,6 +665,7 @@ class OGame(object):
             weapons = Research(13)
             shielding = Research(14)
             armor = Research(15)
+            res = self.add_resources(bs4)
 
         return Researches
 
@@ -659,6 +720,7 @@ class OGame(object):
             espionage_probe = Ship(14)
             solarSatellite = Ship(15)
             crawler = Crawler
+            res = self.add_resources(bs4)
 
         return Ships
 
@@ -740,6 +802,10 @@ class OGame(object):
                     re.search('(.*)_filter', sta).group(1)
                     for sta in status
                 ]
+                if re.search(r"status_abbr_outlaw+",
+                             str(row.find(class_=re.compile(r"status_abbr_outlaw tooltip")))) is not None:
+                    planet_status.append("outlaw")                   # adds outlaw status
+
 
                 player = row.find(rel=re.compile(r'player[0-9]+'))
                 if not player:
