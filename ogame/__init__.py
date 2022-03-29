@@ -871,13 +871,20 @@ class OGame(object):
         coordinate = [
             coords.find(class_=Coords).a.text
             for coords in event
+                if coords.find(class_=Coords).a is not None  # optional
         ]
         coordinate = [
             const.convert_to_coordinates(coords)
             for coords in coordinate
         ]
+        destin = Coords.replace("destCoords", "destFleet")\
+                       .replace("coordsOrigin", "originFleet")\
+                       .replace("destinationCoords", "destinationData")\
+                       .replace("originCoords", "originData")                  # for hostile/friendly_fleets
         destination = [
-            dest.find('figure', {'class': 'planetIcon'})
+            dest.find(class_=destin).find('figure', {'class': 'planetIcon'})
+            if dest.find(class_=destin).find('figure', {'class': 'planetIcon'}) is not None
+            else BeautifulSoup4('<figure class="planetIcon planet"></figure>').find("figure")
             for dest in event
         ]
         destination = [
@@ -888,7 +895,6 @@ class OGame(object):
         for coords, dest in zip(coordinate, destination):
             coords.append(dest)
             coordinates.append(coords)
-
         return coordinates
 
     def slot_fleet(self):
@@ -991,7 +997,11 @@ class OGame(object):
         bs4 = BeautifulSoup4(response)
 
         eventFleet = bs4.find_all('span', class_='hostile')
-        eventFleet = [child.parent.parent for child in eventFleet]
+        eventFleet = [
+            child.parent.parent
+            for child in eventFleet
+            if child.parent.parent['id'][9:10] is not 'u'  # avoid ACS-missions in eventFleet
+        ]
 
         fleet_ids = [id['id'] for id in eventFleet]
         fleet_ids = [
@@ -999,6 +1009,10 @@ class OGame(object):
             for id in fleet_ids
         ]
 
+        mission_types = [
+            int(event['data-mission-type'])
+            for event in eventFleet
+        ]
         arrival_times = [
             int(event['data-arrival-time'])
             for event in eventFleet
@@ -1012,11 +1026,11 @@ class OGame(object):
         origins = self.fleet_coordinates(eventFleet, 'coordsOrigin')
 
         player_ids = [
-            int(id.find(class_='sendMail').a['data-playerid'])
+            int(id.find_all("td", class_='sendMail')[0].a['data-playerid'])
             for id in eventFleet
         ]
         player_names = [
-            name.find(class_='sendMail').a['title']
+            name.find_all("td", class_='sendMail')[0].a['title']
             for name in eventFleet
         ]
 
@@ -1024,7 +1038,7 @@ class OGame(object):
         for i in range(len(fleet_ids)):
             class Fleets:
                 id = fleet_ids[i]
-                mission = 1
+                mission = mission_types[i]                    
                 diplomacy = const.diplomacy.hostile
                 player_name = player_names[i]
                 player_id = player_ids[i]
@@ -1039,6 +1053,7 @@ class OGame(object):
 
             fleets.append(Fleets)
         return fleets
+
 
     def phalanx(self, coordinates, id):
         raise NotImplemented(
