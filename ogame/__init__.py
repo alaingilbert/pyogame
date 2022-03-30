@@ -1053,7 +1053,7 @@ class OGame(object):
         if str(target_id) not in possible_dest:
             ready = re.search(r' <div id="(.*)"', response1.text)
             if ready:
-                print(" JumpGate not ready!")      # maybe change these lines and add an cooldown_timer
+                print(" JumpGate not ready!")      # maybe change these lines and add a cooldown_timer
             return False
         form_data = {'token': jump_token,
                      'zm': target_id}
