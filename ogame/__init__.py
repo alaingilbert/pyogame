@@ -1045,15 +1045,15 @@ class OGame(object):
             url='{}page=ingame&component=facilities&cp={}'
                  .format(self.index_php, origin_id)
         )
-        time.sleep(random.randint(1100, 2500) / 1000)
 
         response1 = self.session.get(self.index_php + 'page=jumpgatelayer')
         jump_token = re.search(r" value='(.*)'", response1.text).group(1)
         possible_dest = re.findall(r' value="(.*[0-9+])"', response1.text)
         if str(target_id) not in possible_dest:
             ready = re.search(r' <div id="(.*)"', response1.text)
-            if ready:
-                print(" JumpGate not ready!")      # maybe change these lines and add a cooldown_timer
+            cooldown = re.search(r'\("#cooldown"\), (.*),', response1.text)
+            if ready and cooldown:
+                return int(cooldown.group(1))                            # returns cooldown time in seconds
             return False
         form_data = {'token': jump_token,
                      'zm': target_id}
@@ -1061,14 +1061,13 @@ class OGame(object):
             ship_type = 'ship_{}'.format(ship[0])
             form_data.update({ship_type: ship[1]})
 
-        time.sleep(random.randint(1100, 2500) / 1000)
         response2 = self.session.post(
             url=self.index_php + 'page=jumpgate_execute&ajax=1',
             data=form_data,
             headers={'X-Requested-With': 'XMLHttpRequest'}
         )
 
-        if 'True' in response2.json()['status']:
+        if response2.json()['status']:
             return True
         else:
             return False
@@ -1134,7 +1133,6 @@ class OGame(object):
                 headers={'X-Requested-With': 'XMLHttpRequest'})
             if response.status_code != 200:
                 return [False, f'Error finding token!']
-            time.sleep(random.randint(1100, 2500) / 1000)
             token = re.search('var rewardToken = "(.*)"', response.text).group(1)
             return [response, token]
         def reward_data(tier_=tier):
@@ -1150,7 +1148,6 @@ class OGame(object):
                                      '&action=fetchRewards&ajax=1'
                                      f'&tier={tier_}&token={token}',
                 headers={'X-Requested-With': 'XMLHttpRequest'})
-            time.sleep(random.randint(1100, 2500) / 1000)
             reward_names = re.findall(r'"rewardName\\">([^<\\]*)', response2.text)
             quantity = re.findall(r'"quantity\\">\\n([^<\\]*)', response2.text)
             item_ids = re.findall(r'data-id=\\"([0-9]+)', response2.text)
@@ -1227,8 +1224,7 @@ class OGame(object):
                     time, alliance, rank
                 ]
             message_data.append(Message)
-            if Message.status == "1":
-                time.sleep(random.randint(1100, 2500) / 1000)
+            if Message.status == 1:
                 self.session.post(url=self.index_php + 'page=ajaxChat',
                                   data={'playerId': int(Message.player_id), 'mode': 2,
                                         'ajax': 1, 'updateUnread': 1},
