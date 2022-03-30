@@ -1204,33 +1204,29 @@ class OGame(object):
         response = self.session.post(
             url=self.index_php + 'page=ajaxChat&action=showPlayerList',
             headers={'X-Requested-With': 'XMLHttpRequest'}
-        ).text
-        chats_ = int(re.search('countOfChats":(\d+)', response).group(1))
+        )
+        chats_ = int(re.search('countOfChats":(\d+)', response.text).group(1))
         if not bool(chats_):
             return []
-        raw_data = [
-            data
-            for i, data in enumerate(
-                re.search('"listOfChats":(.*)},"c', response).group(1).replace("},",":{").split(":{"))
-                    if i % 2 != 0
-        ]
+        content = response.json()['listOfChats']
+        chat_ids = [id_s for id_s in content]
+        messages = [content[ids] for ids in chat_ids]
         message_data = []
-        for ipx in range(chats_):
-            raw_chat = re.sub("[^\w] ", " ", raw_data[ipx]).split(',"')  # .replace(" ", "_")).split(',"')
-            time_f = "%Y-%m-%d %H:%M:%S"; time_ff = "%H:%M:%S-%d.%m.%Y"
+        time_f = "%Y-%m-%d %H:%M:%S"; time_ff = "%H:%M:%S-%d.%m.%Y"
+        for data in messages:
             class Message:
-                player = raw_chat[0][15:len(raw_chat[0])-1].replace("_", " ")
-                player_id = raw_chat[1][11:len(raw_chat[1])]
-                status = raw_chat[3][6:len(raw_chat[3])-1]
-                text = raw_chat[5][7:len(raw_chat[5])-1].replace("_", " ").replace("\n", "").replace("\\", "")
-                time = datetime.strptime(raw_chat[6][7:len(raw_chat[6])-1], time_f).strftime(time_ff)
-                alliance = raw_chat[9][13:len(raw_chat[9])].replace("null", "None")
-                rank = raw_chat[11][20:len(raw_chat[11])-1]
+                player = data['partnerName']
+                player_id = data['partnerId']
+                status = data['unreadCounter']
+                text = data['text']
+                time = datetime.strptime(data['time'], time_f).strftime(time_ff)
+                alliance = data['allianceName']
+                rank = data['highscorePosition']
                 list = [
                     player, player_id, status, text,
                     time, alliance, rank
                 ]
-            message_data.append(Message.list)  #test Message.list # normal (Message)
+            message_data.append(Message)
             if Message.status == "1":
                 time.sleep(random.randint(1100, 2500) / 1000)
                 self.session.post(url=self.index_php + 'page=ajaxChat',
