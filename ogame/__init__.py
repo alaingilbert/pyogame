@@ -1111,17 +1111,15 @@ class OGame(object):
                   'text': msg},
             headers={'X-Requested-With': 'XMLHttpRequest'}
         )
-        try:
-            response = response.json()
-        except:
-            print("Already unanswered Buddy-Message ")     # no .json() when trying to send multiple messages to the same player
-            return False
-        if 'OK' in response['status']:
+        bs4 = BeautifulSoup4(response.text)
+        content = bs4.find('div', class_="buddylistContent")
+        if content.table:
             return True
         else:
+            print(" ".join(content.text.split()))            # output 'You have already sent a request to this player.' / 'Invalid player.'
             return False
 
-    def reward_system(self):                  # check if reward system is online
+    def reward_system(self):                                 # check if reward system is online
         bs4 = self.landing_page
         menue = bs4.find_all('span', class_='textlabel')
         if "Rewards" in [title.text for title in menue]:
