@@ -89,6 +89,14 @@ Get the class of your Ogame Account['miner', 'explorer', 'warrior', 'none]
 empire.character_class()            return string
 </pre>
 
+### chose characterclass
+<pre>
+from ogame.constants import character_class
+empire.choose_character_class(
+    character_class.miner
+)                                   return bool
+</pre>
+
 ### get rank
 <pre>
 empire.rank()                       return int

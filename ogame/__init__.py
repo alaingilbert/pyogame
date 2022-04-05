@@ -220,6 +220,27 @@ class OGame(object):
             class_='sprite characterclass medium')
         return character['class'][3]
 
+    def choose_character_class(self, classid):
+        character = self.landing_page.find_partial(
+            class_='sprite characterclass medium')
+        data = {
+            'page': "ingame",
+            'component': "characterclassselection",
+            'characterClassId': classid,
+            'action': "selectClass",
+            'ajax': '1',
+            'asJson': '1'
+        }
+        if character['class'][3] == 'none':
+            response = self.session.post(
+                url=self.index_php,
+                params=data,
+                headers={'X-Requested-With': 'XMLHttpRequest'}
+            ).json()
+            if response['status'] == 'success':
+                return True
+        return False
+
     def rank(self):
         rank = self.landing_page.find(id='bar')
         rank = rank.find_all('li')[1].text
