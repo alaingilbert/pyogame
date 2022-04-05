@@ -34,9 +34,10 @@ class UnittestOgame(unittest.TestCase):
         self.assertIsInstance(
             self.empire.id_by_planet_name(planets_names[0]), int
         )
-
+        self.assertIsInstance(self.empire.planet_coords(), list)
         self.assertGreater(len(self.empire.moon_ids()), -1)
         self.assertGreater(len(self.empire.moon_names()), -1)
+        self.assertIsInstance(self.empire.moon_coords(), list)
 
         self.collect_all_ids()
 
