@@ -98,11 +98,13 @@ empire.rank()                       return int
 <pre>
 empire.planet_ids()                 returns list 
 
+empire.planet_names()               returns list
+
+empire.planet_coords()              returns list
+
 empire.id_by_planet_name('name')    returns int
 
 empire.name_by_planet_id(id)        return string
-
-empire.planet_names()               returns list
 </pre>
 
 ### get moon id's
@@ -110,6 +112,10 @@ empire.planet_names()               returns list
 empire.moon_ids()                   returns list
 
 empire.moon_names()                 returns list
+
+empire.moon_coords()                returns list
+
+empire.id_by_planet_name('name')    returns int
 
 **keep in mind to prefer planets id's moon id dont works on every function**
 </pre>
@@ -169,9 +175,11 @@ celestial = empire.celestial(id)        returns class
 celestial.temperature                   returns list
 celestial.diameter                      returns int
 celestial.coordinates                   returns list
-celestial.used                          return int
-celestial.total                         return int
-celestial.free                          return int
+celestial.used                          returns int
+celestial.total                         returns int
+celestial.free                          returns int
+celestial.points                        returns int
+celestial.rank                          returns int
 </pre>
 
 ### get celestial coordinates
@@ -288,7 +296,9 @@ sup.metal_mine.in_construction          returns bool
 sup.crystal_mine
 sup.deuterium_mine
 sup.solar_plant
-sup.fusion_plant 
+sup.fusion_plant
+sup.solar_satellite
+sup.crawler
 sup.metal_storage
 sup.crystal_storage
 sup.deuterium_storage                   returns class(object)
