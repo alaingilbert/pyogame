@@ -1211,6 +1211,19 @@ class OGame(object):
         message_data = []
         time_f = "%Y-%m-%d %H:%M:%S"; time_ff = "%H:%M:%S-%d.%m.%Y"
         for data in messages:
+            chat_history = []
+            if data['unreadCounter'] >= 1:
+                response2 = self.session.post(url=self.index_php + 'page=ajaxChat',
+                                      data={'playerId': int(data['partnerId']), 'mode': 2,
+                                            'ajax': 1, 'updateUnread': 1},
+                                      headers={'X-Requested-With': 'XMLHttpRequest'})  # read message/mark as read
+                chat_data = response2.json()['data']
+                chat_overview = response2.json()['chatItems']
+                authors_list = re.findall(r'w">\n (.*)</', chat_data)
+                authors = [author.strip() for author in authors_list][-10:]
+                messages = [chat['chatContent'] for chat in chat_overview][-10:]
+                chat_history = [[authors[count], message]
+                                for count, message in enumerate(messages)]
             class Message:
                 player = data['partnerName']
                 player_id = data['partnerId']
@@ -1219,16 +1232,12 @@ class OGame(object):
                 time = datetime.strptime(data['time'], time_f).strftime(time_ff)
                 alliance = data['allianceName']
                 rank = data['highscorePosition']
+                chat = chat_history
                 list = [
                     player, player_id, status, text,
-                    time, alliance, rank
+                    time, alliance, rank, chat
                 ]
             message_data.append(Message)
-            if Message.status == 1:
-                self.session.post(url=self.index_php + 'page=ajaxChat',
-                                  data={'playerId': int(Message.player_id), 'mode': 2,
-                                        'ajax': 1, 'updateUnread': 1},
-                                  headers={'X-Requested-With': 'XMLHttpRequest'})  # read message/mark as read
         return message_data
 
     def rename_planet(self, id, new_name):
