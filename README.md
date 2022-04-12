@@ -619,6 +619,59 @@ empire.send_buddy(player_id, msg)       returns bool
 </pre>
 
 
+### get messages
+<pre>
+empire.get_messages()                         returns list of class(object)
+
+messages = empire.get_messages()
+message = messages[0]
+message.player                                returns str
+message.player_id                             returns int
+message.status  (amount of unread messages)   returns int
+message.text    (text of latest message)      returns str
+message.time                                  returns str
+message.alliance                              returns str
+message.rank                                  returns int
+message.chat    (chat history of last 10 msg) returns list
+message.list                                  returns list
+</pre>
+
+```python
+for message in empire.get_messages():
+    print(message.list)
+```
+
+### rewards
+<pre>
+empire.reward_system()                        returns bool (reward system online/offline)
+empire.rewards()                              returns list of class(object)
+
+items = empire.rewards() 
+items.highest_tier                            returns int  (7)
+items.claimable                               returns list ([1, 2, 3, 4])
+items.rewards                                 returns list (["Commander", "Admiral", "Geologist", ..])
+items.event_progress                          returns list ([4, 7] day 4 from 7 in total)
+items.list                                    returns list
+
+empire.rewards(tier=int, reward=int)          returns list of class(object) / [bool, "Error-Code"]
+
+claimed_reward = empire.rewards(tier=int, reward=int)
+if isinstance(claimed_reward, type(list)):
+    claimed_reward.status                     returns bool
+    claimed_reward.name                       returns str
+    claimed_reward.amount                     returns str (amount of items)
+    claimed_reward.id                         returns str (item id in reward system)
+else:
+    claimed_reward[0]                         returns bool
+    claimed_reward[1]                         returns str (Error: "Not enough tritium!",
+                                                                  "Tier exceeds maximum!")
+</pre>
+
+```python
+for message in empire.get_messages():
+    print(message.list)
+```
+
 ### build
 Buildings
 ```python
