@@ -650,12 +650,13 @@ items = empire.rewards()
 items.highest_tier                            returns int  (7)
 items.claimable                               returns list ([1, 2, 3, 4])
 items.rewards                                 returns list
-output: ([('Metal', '4.500.000', '1'), ('Crystal', '3.000.000', '2'), ('Deuterium', '1.500.000', '3')],
-         [('Commander', '4 days', '9'), ('Admiral', '4 days', '10'), ('Engineer', '4 days', '11')])
 items.event_progress                          returns list ([4, 7], day 4 from 7 in total)
 items.list                                    returns list
 
-empire.rewards(tier=int, reward=int)          returns list of class(object) / [bool, "Error-Code"]
+items.rewards  returns ([('Metal', '4.500.000', '1'), ('Crystal', '3.000.000', '2'), ('Deuterium', '1.500.000', '3')],
+                        [('Commander', '4 days', '9'), ('Admiral', '4 days', '10'), ('Engineer', '4 days', '11')])
+
+empire.rewards(tier=int, reward=int)          returns list of class(object) / bool
 
 The desired reward level should be inserted at tier.
 The reward that should be claimed at reward. (in case of three available items, 1=left, 2=middle, 3=right item)  
@@ -667,9 +668,8 @@ if isinstance(claimed_reward, type(list)):
     claimed_reward.amount                     returns str (amount of items)
     claimed_reward.id                         returns str (item id in reward system)
 else:
-    claimed_reward[0]                         returns bool
-    claimed_reward[1]                         returns str (Error: "Not enough tritium!",
-                                                                  "Tier exceeds maximum!")
+    claimed_reward                            returns bool
+
 </pre>
 
 ```python
