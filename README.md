@@ -649,8 +649,10 @@ empire.rewards()                              returns list of class(object)
 items = empire.rewards() 
 items.highest_tier                            returns int  (7)
 items.claimable                               returns list ([1, 2, 3, 4])
-items.rewards                                 returns list (["Commander", "Admiral", "Geologist", ..])
-items.event_progress                          returns list ([4, 7] day 4 from 7 in total)
+items.rewards                                 returns list
+output: ([('Metal', '4.500.000', '1'), ('Crystal', '3.000.000', '2'), ('Deuterium', '1.500.000', '3')],
+         [('Commander', '4 days', '9'), ('Admiral', '4 days', '10'), ('Engineer', '4 days', '11')])
+items.event_progress                          returns list ([4, 7], day 4 from 7 in total)
 items.list                                    returns list
 
 empire.rewards(tier=int, reward=int)          returns list of class(object) / [bool, "Error-Code"]
