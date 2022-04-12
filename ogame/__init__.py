@@ -1127,47 +1127,43 @@ class OGame(object):
             return False
 
     def rewards(self, tier=None, reward=None):
-        def reward_token():
-            response = self.session.get(
+        def grab_token():
+            response1 = self.session.get(
                 url=self.index_php + f'page=ingame&component=rewarding&tab=rewards',
                 headers={'X-Requested-With': 'XMLHttpRequest'})
-            if response.status_code != 200:
-                return [False, f'Error finding token!']
-            token = re.search('var rewardToken = "(.*)"', response.text).group(1)
-            return [response, token]
-        def reward_data(tier_=tier):
-            reward_overview=reward_token()
-            if reward_overview[0] is False:
-                return [False, reward_overview[1]]
-            max_tier = len(re.findall(r'data-tier="([0-9])', reward_overview[0].text))+1
-            if max_tier < tier_:
-                return [False, f'Error tier exceeds maximum!']
-            token = reward_overview[1]
+            if response1.status_code != 200:
+                return False
+            return response1
+        def reward_data(show_tier=tier):
+            response1 = grab_token()
+            if response1 is False:
+                return False
+            token = re.search('var rewardToken = "(.*)"', response1.text).group(1)
             response2 = self.session.get(
                 url=self.index_php + 'page=ingame&component=rewarding&tab=rewards'
                                      '&action=fetchRewards&ajax=1'
-                                     f'&tier={tier_}&token={token}',
+                                     f'&tier={show_tier}&token={token}',
                 headers={'X-Requested-With': 'XMLHttpRequest'})
-            reward_names = re.findall(r'"rewardName\\">([^<\\]*)', response2.text)
-            quantity = re.findall(r'"quantity\\">\\n([^<\\]*)', response2.text)
+            if response2.status_code != 200:
+                return False
+            item_names = re.findall(r'"rewardName\\">([^<\\]*)', response2.text)
+            quantity = re.findall(r'"quantity\\">\\\D* ([^<\\]*)\\n', response2.text)
             item_ids = re.findall(r'data-id=\\"([0-9]+)', response2.text)
             tritium = re.findall(r'\\u([^ ]*)', response2.text)
-            return [response2, reward_names, quantity, item_ids, tritium]
+            return [response2, item_names, quantity, item_ids, tritium]
         if tier and reward:
             data = reward_data()
-            if data[0] is False:
-                return [False, data[1]]
-            if data[4][0] != data[4][1]:
-                return [False, f'Not enough tritium!']
+            if data[0] is False or data[4][0] != data[4][1]:
+                return False
             item = max(min(reward - 1, 2), 0)
-            new_ajax_token = data[0].json()['newAjaxToken']
+            ajax_token = data[0].json()['newAjaxToken']
             reward_id = int(data[3][item])
             response3 = self.session.post(
                 url=self.index_php + 'page=ingame&component=rewarding&tab=rewards'
                                      '&action=submitReward&asJson=1',
                 data={'selectedReward': reward_id,
                       'selectedTier': tier,
-                      'token': new_ajax_token},
+                      'token': ajax_token},
                 headers={'X-Requested-With': 'XMLHttpRequest'}
             )
             class selectedReward:
@@ -1177,25 +1173,24 @@ class OGame(object):
                 id = data[3][item].strip()
             return selectedReward
         else:
-            response1 = reward_token()
-            if response1[0] is False:
-                return [False, response1[1]]
-            tier_list = re.findall(r'data-tier="([0-9])', response1[0].text)
-            items_list = []
-            for ipx in range(len(tier_list)):
+            response = grab_token()
+            if response is False:
+                return False
+            max_tier = int(re.findall(r'data-tier="([0-9])', response.text)[-1])
+            progress = re.search(r'title=.*([0-9])\/([0-9])', response.text)
+            item_list = []
+            claimable_list = []
+            for ipx in range(max_tier):
                 data = reward_data(ipx+1)
-                items_list.append(
-                    [data[4][0] == data[4][1],
-                     [(data[1][i].strip(), data[2][i].strip(), data[3][i].strip()) for i in range(3)]]
-                )
+                item_list.append([(data[1][i], data[2][i], data[3][i]) for i in range(3)])
+                claimable_list.append(data[4][0] == data[4][1])
             class TierList:
-                highest_tier = len(tier_list)
-                claimable = [items_list[i][0] for i in range(len(tier_list))]
-                rewards = [items_list[i][1] for i in range(len(tier_list))]
-                event_progress = [int(re.search(r'title=.*([0-9])\/([0-9])', response1[0].text).group(1)),
-                                  int(re.search(r'title=.*([0-9])\/([0-9])', response1[0].text).group(2))]
-                list = items_list
-            return TierList      
+                highest_tier = max_tier
+                event_progress = [int(progress.group(1)), int(progress.group(2))]
+                claimable = claimable_list
+                rewards = item_list
+                list = [highest_tier, event_progress, claimable, rewards]
+            return TierList     
 
     def get_messages(self):      
         response = self.session.post(
