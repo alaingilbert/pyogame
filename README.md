@@ -655,6 +655,9 @@ items.list                                    returns list
 
 empire.rewards(tier=int, reward=int)          returns list of class(object) / [bool, "Error-Code"]
 
+The desired reward level should be inserted at tier.
+The reward that should be claimed at reward. (in case of three available items, 1=left, 2=middle, 3=right item)  
+
 claimed_reward = empire.rewards(tier=int, reward=int)
 if isinstance(claimed_reward, type(list)):
     claimed_reward.status                     returns bool
