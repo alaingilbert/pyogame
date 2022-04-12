@@ -1207,7 +1207,251 @@ class OGame(object):
 
             reports.append(Report)
         return reports
+    
+        def get_page_messages(self, page, tab_id):
+        payload = {
+            "messageId": "-1",
+            "tab": '{}'.format(tab_id),
+            "action": "107",
+            "pagination": '{}'.format(page),
+            "ajax": "1",
+        }
 
+        return self.session.get(url=self.index_php + 'page=messages', params=payload)
+
+    def extract_other_message(self, response):
+        msgs = []
+        bs4 = BeautifulSoup4(response.text)
+        nb_page = bs4.select("ul.pagination li.paginator")[-1].attrs['data-page']
+        msgs_raw = bs4.select("li.msg")
+        msg_id = 0
+        message_date = 'False'
+        message_sender = 'False'
+        message_text = 'False'
+        for msg_raw in msgs_raw:
+            if 'data-msg-id' in str(msg_raw):
+                msg_id = msg_raw['data-msg-id']
+                msgs.append(msg_id)
+            else:
+                continue
+            if 'msg_date' in str(msg_raw):
+                message_date = str(msg_raw.select_one("li.msg div.msg_head span.fright span.msg_date").text)
+                msgs.append(message_date)
+            if 'msg_sender' in str(msg_raw):
+                message_sender = str(msg_raw.select_one("li.msg div.msg_head span.msg_sender").text)
+                msgs.append(message_sender)
+            if 'msg_content' in str(msg_raw):
+                message_text = str(msg_raw.select_one("li.msg span.msg_content").text.strip())
+                msgs.append(message_text)
+
+        return msgs, nb_page
+
+    def get_other_messages(self):
+        tab_id = 24
+        page = 1
+        nb_page = 1
+        msgs = []
+        new_messages_counter = self.get_new_messages_count()
+        print(f"New other messages: {new_messages_counter[4]}")
+        while int(page) <= int(nb_page):
+            response = self.get_page_messages(page, tab_id)
+            new_messages, new_nb_page = self.extract_other_message(response)
+            msgs.append(new_messages)
+            nb_page = new_nb_page
+            page += 1
+
+        return msgs
+
+    def extract_combat_summary_reports_message(self, response):
+        msgs = []
+        bs4 = BeautifulSoup4(response.text)
+        nb_page = bs4.select("ul.pagination li.paginator")[-1].attrs['data-page']
+        msgs_raw = bs4.select("li.msg")
+        for msg_raw in msgs_raw:
+            if 'data-msg-id' in str(msg_raw):
+                msg_id = msg_raw['data-msg-id']
+            else:
+                continue
+
+            message_destination = str(msg_raw.select_one("div.msg_head a").text)
+            message_destination = const.convert_to_coordinates(message_destination)
+
+            fleet_lost_first_round_message = False
+            if 'planet' in str(msg_raw.select_one("div.msg_head figure")):
+                message_destination_type = 1
+            elif 'moon' in str(msg_raw.select_one("div.msg_head figure")):
+                message_destination_type = 3
+            else:
+                message_destination_type = 1
+                fleet_lost_first_round_message = True
+            message_destination = const.coordinates(int(message_destination[0]), int(message_destination[1]),
+                                                    int(message_destination[2]), int(message_destination_type))
+
+            if not fleet_lost_first_round_message:
+                res_title = msg_raw.select("span.msg_content div.combatLeftSide span")[1].attrs['title']
+                re_res = re.search('([\\d.,]+)<br/>[^\\d]*([\\d.,]+)<br/>[^\\d]*([\\d.,]+)', res_title)
+                re_res = const.resources(re_res[1], re_res[2], re_res[3])
+
+                debris_field_title = msg_raw.select("span.msg_content div.combatLeftSide span")[2].attrs['title']
+
+                res_text = msg_raw.select("span.msg_content div.combatLeftSide span")[1]
+                re_res_text = re.search('[\\d.,]+[^\\d]*([\\d.,]+)', str(res_text))
+                re_res_text = re_res_text[1]
+
+                message_date = str(msg_raw.select_one("span.msg_date").text)
+
+                message_text = msg_raw.select("li.msg span.msg_content span.msg_ctn")
+
+                attacker_name_message = message_text[0].text
+                attacker_name_message = attacker_name_message[
+                                        attacker_name_message.find("(") + 1:attacker_name_message.find(")")]
+
+                attacker_point_lost_message = message_text[0].text
+                attacker_point_lost_message = attacker_point_lost_message[
+                                              attacker_point_lost_message.find(attacker_name_message) + len(
+                                                  attacker_name_message) + 3:]
+
+                defender_name_message = message_text[3].text
+                defender_name_message = defender_name_message[
+                                            defender_name_message.find("(") + 1:defender_name_message.find(")")]
+
+                defender_point_lost_message = message_text[3].text
+                defender_point_lost_message = defender_point_lost_message[
+                                              defender_point_lost_message.find(defender_name_message) + len(
+                                                  defender_name_message) + 3:]
+
+                repaired_message = message_text[4].text
+                repaired_message = repaired_message[
+                                   repaired_message.find(":") + 1:]
+
+                try:
+                    moon_chance_message = message_text[5].text
+                    moon_chance_message = moon_chance_message[
+                                          moon_chance_message.find(":") + 1:moon_chance_message.find("%")]
+                except:
+                    moon_chance_message = None
+
+                # monn_created_message = # ToDo Find color green?....
+
+                link = str(msg_raw.select_one("div.msg_actions a span.icon_attack").parent)
+                link = link.replace("&amp;", "&")
+                re_link = re.search('galaxy=(\\d+)&system=(\\d+)&position=(\\d+)&type=(\\d+)&', str(link))
+                re_link = const.coordinates(int(re_link[1]), int(re_link[2]), int(re_link[3]), int(re_link[4]))
+
+                if re_link == message_destination:
+                    re_link = None
+                    attacker_name_message = 'Self'
+            else:
+                re_res = False
+                debris_field_title = False
+                re_res_text = False
+                message_date = False
+                re_link = False
+                attacker_name_message = False
+                attacker_point_lost_message = False
+                defender_name_message = False
+                defender_point_lost_message = False
+                repaired_message = False
+                moon_chance_message = False
+
+            class CombatReportSummary:
+                id = msg_id
+                destination = message_destination
+                fleet_lost_first_round = fleet_lost_first_round_message
+                resources = re_res
+                df = debris_field_title
+                loot = re_res_text
+                created_at = message_date
+                origin = re_link
+                attacker_name = attacker_name_message
+                attacker_lost = attacker_point_lost_message
+                defender_name = defender_name_message
+                defender_lost = defender_point_lost_message
+                repaired = repaired_message
+                moon_chance = moon_chance_message
+                list = [
+                    id, destination, fleet_lost_first_round, resources, df, loot, created_at,
+                    origin, attacker_name, attacker_lost, defender_name,
+                    defender_lost, repaired, moon_chance
+                ]
+
+            msgs.append(CombatReportSummary)
+        return msgs, nb_page
+
+    def get_new_messages_count(self):
+        payload = {
+            "tab": '2',
+            "ajax": "1",
+        }
+
+        response = self.session.get(url=self.index_php + 'page=messages', params=payload).text
+        bs4 = BeautifulSoup4(response)
+        msgs_raw = bs4.select("ul li")
+        new_messages = []
+        i = 0
+        for raw in msgs_raw:
+            if i < 5:
+                raw = raw.text.strip()
+                if raw.find("(") > 0:
+                    raw = int(raw[raw.find("(") + 1:raw.find(")")])
+                else:
+                    raw = 0
+                new_messages.append(raw)
+            i += 1
+        return new_messages  # [espionage, combat reports, expeditions, unions/transport, other]
+
+    def get_combat_reports_messages(self):
+        tab_id = 21
+        page = 1
+        nb_page = 1
+        msgs = []
+        new_messages_counter = self.get_new_messages_count()
+        print(f"New Combatreports: {new_messages_counter[1]}")
+        while int(page) <= int(nb_page):
+            response = self.get_page_messages(page, tab_id)
+            new_messages, new_nb_page = self.extract_combat_summary_reports_message(response)
+            msgs.append(new_messages)
+            nb_page = new_nb_page
+            page += 1
+
+        return msgs
+
+    def get_delete_messages_token(self):
+        payload = {
+            "tab": '20',
+            "ajax": "1",
+        }
+        page_html = self.session.get(url=self.index_php + 'page=messages', params=payload).text
+        try:
+            regex = r"name='token' value='([^']+)'"
+            token = re.search(regex, page_html, re.MULTILINE).group(1)
+            return token
+        except Exception as e:
+            print(f'token not found. {e} ')
+            return False
+
+    def delete_all_message_from_tab(self, tab_id):
+        # tabid: 20 = > Espionage
+        # tabid: 21 = > Combat
+        # tabid: 22 = > Expeditions
+        # tabid: 23 = > Unions / Transport
+        # tabid: 24 = > Other
+        token = self.get_delete_messages_token()
+
+        payload = {
+            "messageId": "-1",
+            "tabid": '{}'.format(tab_id),
+            "action": "103",
+            "token": '{}'.format(token),
+            "ajax": "1",
+        }
+        if token:
+            self.session.post(url=self.index_php + 'page=messages', params=payload)
+            return True
+        else:
+            print(f'error deleting messages')
+            return False
+        
     def send_fleet(
             self,
             mission,
