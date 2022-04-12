@@ -542,6 +542,20 @@ for fleet in empire.phalanx(moon_id, coordinates(2, 410, 7)):
         print(fleet.id, fleet.mission, fleet.returns, fleet.arrival, fleet.origin, fleet.destination)
 ```
 
+### jump fleet
+<pre>
+empire.jump_fleet(origin_id, target_id, ships)  returns bool / int (cooldown in sec)
+
+Jumpgate is required on both moons, if there is a cooldown the function
+will return the remaining seconds as an int. 
+</pre>
+
+```python
+empire.jump_fleet(origin_id=id_1,
+                  target_id=id_2,
+                  ships=fleet(light_fighter=12, bomber=1, cruiser=100)
+```
+
 ### get spyreports
 <pre>
 empire.spyreports()                           returns list of class(object)
@@ -596,6 +610,12 @@ True if the Fleet you want to return is possible to retreat
 ### send message
 <pre>
 empire.send_message(player_id, msg)     returns bool
+</pre>
+
+
+### send buddy request
+<pre>
+empire.send_buddy(player_id, msg)       returns bool
 </pre>
 
 
