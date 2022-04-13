@@ -1,4 +1,4 @@
-  # pyogame
+ # pyogame
 <img src="https://github.com/alaingilbert/pyogame/blob/develop/logo.png?raw=true" width="300" alt="logo">
 
 OGame is a browser-based, money-management and space-war themed massively multiplayer online browser game with over 
@@ -571,7 +571,7 @@ will return the remaining seconds as an int.
 ```python
 empire.jump_fleet(origin_id=id_1,
                   target_id=id_2,
-                  ships=fleet(light_fighter=12, bomber=1, cruiser=100)
+                  ships=fleet(light_fighter=12, bomber=1, cruiser=100))
 ```
 
 ### get spyreports
@@ -668,8 +668,10 @@ items.rewards                                 returns list
 items.event_progress                          returns list ([4, 7], day 4 from 7 in total)
 items.list                                    returns list
 
+example:
 items.rewards  returns ([('Metal', '4.500.000', '1'), ('Crystal', '3.000.000', '2'), ('Deuterium', '1.500.000', '3')],
                         [('Commander', '4 days', '9'), ('Admiral', '4 days', '10'), ('Engineer', '4 days', '11')])
+
 
 empire.rewards(tier=int, reward=int)          returns list of class(object) / bool
 
@@ -684,13 +686,7 @@ if isinstance(claimed_reward, type(list)):
     claimed_reward.id                         returns str (item id in reward system)
 else:
     claimed_reward                            returns bool
-
 </pre>
-
-```python
-for message in empire.get_messages():
-    print(message.list)
-```
 
 ### build
 Buildings
