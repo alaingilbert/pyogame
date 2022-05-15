@@ -647,7 +647,64 @@ class OGame(object):
             armor = Research(15)
 
         return Researches
+    
+    def lf_research(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': 'lfresearch',
+                    'cp': id}
+        ).text
+        bs4 = BeautifulSoup4(response)
 
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+
+        technology_status = []
+        for container_tiers in bs4.select('#technologies div li'):
+            try:
+                technology_status.append(container_tiers['data-status'])
+            except:
+                technology_status.append('not available')
+
+        class LfResearch:
+            def __init__(self, i):
+                if i <= technology_status.count('on')+technology_status.count('disabled')-1:
+                    self.level = levels[i]
+                    self.is_possible = OGame.isPossible(technology_status[i])
+                    self.in_construction = OGame.inConstruction(technology_status[i])
+                else:
+                    self.level = 0
+                    self.is_possible = False
+                    self.in_construction = False
+
+        class LfResearches(object):
+            intergalactic_envoys = LfResearch(0)
+            high_performance_extractors = LfResearch(1)
+            fusion_drives = LfResearch(2)
+            stealth_field_generator = LfResearch(3)
+            orbital_den = LfResearch(4)
+            research_ai = LfResearch(5)
+            high_performance_terraformer = LfResearch(6)
+            enhanced_production_technologies = LfResearch(7)
+            light_fighter_mk_II = LfResearch(8)
+            cruiser_mk_II = LfResearch(9)
+            improved_lab_technology = LfResearch(10)
+            plasma_terraformer = LfResearch(11)
+            low_temperature_drives = LfResearch(12)
+            bomber_mk_II = LfResearch(13)
+            destroyer_mk_II = LfResearch(14)
+            battlecruiser_mk_II = LfResearch(15)
+            robot_assistants = LfResearch(16)
+            supercomputer = LfResearch(17)
+            
+        return LfResearches
+    
     def ships(self, id):
         response = self.session.get(
             self.index_php + 'page=ingame&component=shipyard&cp={}'
