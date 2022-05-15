@@ -219,6 +219,11 @@ class OGame(object):
         character = self.landing_page.find_partial(
             class_='sprite characterclass medium')
         return character['class'][3]
+    
+    def lf_character_class(self):
+        lf_character_class = self.landing_page.find_partial(
+            class_='lifeform-item-icon small')
+        return lf_character_class['class'][2]
 
     def rank(self):
         rank = self.landing_page.find(id='bar')
