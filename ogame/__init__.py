@@ -658,7 +658,7 @@ class OGame(object):
 
         return Researches
     
-    def lf_research(self, id=None):
+    def lf_research_humans(self, id=None):
         if id is None:
             id = self.planet_ids()[0]
         response = self.session.get(
@@ -681,6 +681,7 @@ class OGame(object):
                 technology_status.append(container_tiers['data-status'])
             except:
                 technology_status.append('not available')
+        print(f'DEBUG technology_status {technology_status}')
 
         class LfResearch:
             def __init__(self, i):
@@ -712,7 +713,181 @@ class OGame(object):
             battlecruiser_mk_II = LfResearch(15)
             robot_assistants = LfResearch(16)
             supercomputer = LfResearch(17)
-            
+
+        return LfResearches
+
+    def lf_research_rocktal(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': 'lfresearch',
+                    'cp': id}
+        ).text
+        bs4 = BeautifulSoup4(response)
+
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+
+        technology_status = []
+        for container_tiers in bs4.select('#technologies div li'):
+            try:
+                technology_status.append(container_tiers['data-status'])
+            except:
+                technology_status.append('not available')
+        print(f'DEBUG technology_status {technology_status}')
+
+        class LfResearch:
+            def __init__(self, i):
+                if i <= technology_status.count('on')+technology_status.count('disabled')-1:
+                    self.level = levels[i]
+                    self.is_possible = OGame.isPossible(technology_status[i])
+                    self.in_construction = OGame.inConstruction(technology_status[i])
+                else:
+                    self.level = 0
+                    self.is_possible = False
+                    self.in_construction = False
+
+        class LfResearches(object):
+            magma_refinement = LfResearch(0)
+            acoustic_scanning = LfResearch(1)
+            high_energy_pump_systems = LfResearch(2)
+            cargo_hold_expansion_civilian_ships = LfResearch(3)
+            magma_powered_production = LfResearch(4)
+            geothermal_power_plants = LfResearch(5)
+            depth_sounding = LfResearch(6)
+            ion_crystal_enhancement_heavy_fighter = LfResearch(7)
+            improved_stellarator = LfResearch(8)
+            hardened_diamond_drill_heads = LfResearch(9)
+            seismic_mining_technology = LfResearch(10)
+            magma_powered_pump_systems = LfResearch(11)
+            ion_crystal_modules = LfResearch(12)
+            optimised_silo_construction_method = LfResearch(13)
+            diamond_energy_transmitter = LfResearch(14)
+            obsidian_shield_reinforcement = LfResearch(15)
+            rocktal_collector_enhancement = LfResearch(16)
+            rune_shields = LfResearch(17)
+
+        return LfResearches
+
+    def lf_research_mechas(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': 'lfresearch',
+                    'cp': id}
+        ).text
+        bs4 = BeautifulSoup4(response)
+
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+
+        technology_status = []
+        for container_tiers in bs4.select('#technologies div li'):
+            try:
+                technology_status.append(container_tiers['data-status'])
+            except:
+                technology_status.append('not available')
+        print(f'DEBUG technology_status {technology_status}')
+
+        class LfResearch:
+            def __init__(self, i):
+                if i <= technology_status.count('on')+technology_status.count('disabled')-1:
+                    self.level = levels[i]
+                    self.is_possible = OGame.isPossible(technology_status[i])
+                    self.in_construction = OGame.inConstruction(technology_status[i])
+                else:
+                    self.level = 0
+                    self.is_possible = False
+                    self.in_construction = False
+
+        class LfResearches(object):
+            catalyser_technology = LfResearch(0)
+            plasma_drive = LfResearch(1)
+            efficiency_module = LfResearch(2)
+            depot_ai = LfResearch(3)
+            general_overhaul_light_fighter = LfResearch(4)
+            automated_transport_lines = LfResearch(5)
+            improved_drone_ai = LfResearch(6)
+            experimental_recycling_technology = LfResearch(7)
+            general_overhaul_cruiser = LfResearch(8)
+            slingshot_autopilot = LfResearch(9)
+            high_temperature_superconductors = LfResearch(10)
+            general_overhaul_battleship = LfResearch(11)
+            artificial_swarm_intelligence = LfResearch(12)
+            general_overhaul_battlecruiser = LfResearch(13)
+            general_overhaul_bomber = LfResearch(14)
+            general_overhaul_destroyer = LfResearch(15)
+            mechan_general_enhancement = LfResearch(16)
+            experimental_weapons_technology = LfResearch(17)
+
+        return LfResearches
+
+    def lf_research_kaelesh(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': 'lfresearch',
+                    'cp': id}
+        ).text
+        bs4 = BeautifulSoup4(response)
+
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+
+        technology_status = []
+        for container_tiers in bs4.select('#technologies div li'):
+            try:
+                technology_status.append(container_tiers['data-status'])
+            except:
+                technology_status.append('not available')
+        print(f'DEBUG technology_status {technology_status}')
+
+        class LfResearch:
+            def __init__(self, i):
+                if i <= technology_status.count('on')+technology_status.count('disabled')-1:
+                    self.level = levels[i]
+                    self.is_possible = OGame.isPossible(technology_status[i])
+                    self.in_construction = OGame.inConstruction(technology_status[i])
+                else:
+                    self.level = 0
+                    self.is_possible = False
+                    self.in_construction = False
+
+        class LfResearches(object):
+            heat_recovery = LfResearch(0)
+            sulphide_process = LfResearch(1)
+            psionic_network = LfResearch(2)
+            telekinetic_tractor_beam = LfResearch(3)
+            enhanced_sensor_technology = LfResearch(4)
+            neuromodal_compressor = LfResearch(5)
+            neuro_interface = LfResearch(6)
+            interplanetary_analysis_network = LfResearch(7)
+            overclocking_heavy_fighter = LfResearch(8)
+            telekinetic_drive = LfResearch(9)
+            sixth_sense = LfResearch(10)
+            psychoharmoniser = LfResearch(11)
+            efficient_swarm_intelligence = LfResearch(12)
+            overclocking_large_cargo = LfResearch(13)
+            gravitation_sensors = LfResearch(14)
+            overclocking_battleship = LfResearch(15)
+            kaelesh_discoverer_enhancement = LfResearch(16)
+            psionic_shield_matrix = LfResearch(17)
+
         return LfResearches
     
     def ships(self, id):
