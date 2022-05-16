@@ -220,8 +220,13 @@ class OGame(object):
             class_='sprite characterclass medium')
         return character['class'][3]
     
-    def lf_character_class(self):
-        lf_character_class = self.landing_page.find_partial(
+    def lf_character_class(self, planet_id):
+        response_class = self.session.get(
+            url=self.index_php + 'page=ingame&component=overview',
+            params={'cp': planet_id}
+        ).text
+        response_class = BeautifulSoup4(response_class)
+        lf_character_class = response_class.find_partial(
             class_='lifeform-item-icon small')
         return lf_character_class['class'][2]
 
