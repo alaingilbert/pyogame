@@ -1119,6 +1119,38 @@ class OGame(object):
             fleets.append(Fleets)
         return fleets
 
+    def jump_fleet(self, origin_id, target_id, ships):
+        self.session.get(
+            url='{}page=ingame&component=facilities&cp={}'
+                 .format(self.index_php, origin_id)
+        )
+
+        response1 = self.session.get(self.index_php + 'page=jumpgatelayer')
+        jump_token = re.search(r" value='(.*)'", response1.text).group(1)
+        possible_dest = re.findall(r' value="(.*[0-9+])"', response1.text)
+        if str(target_id) not in possible_dest:
+            ready = re.search(r' <div id="(.*)"', response1.text)
+            cooldown = re.search(r'\("#cooldown"\), (.*),', response1.text)
+            if ready and cooldown:
+                return int(cooldown.group(1))                            # returns cooldown time in seconds
+            return False
+        form_data = {'token': jump_token,
+                     'zm': target_id}
+        for ship in ships:
+            ship_type = 'ship_{}'.format(ship[0])
+            form_data.update({ship_type: ship[1]})
+
+        response2 = self.session.post(
+            url=self.index_php + 'page=jumpgate_execute&ajax=1',
+            data=form_data,
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        )
+
+        if response2.json()['status']:
+            return True
+        else:
+            return False
+
 
     def phalanx(self, coordinates, id):
         raise NotImplemented(
@@ -1140,6 +1172,148 @@ class OGame(object):
             return True
         else:
             return False
+        
+    def send_buddy(self, player_id, msg):          # send buddy_requests like messages
+        response = self.session.get(
+            url=self.index_php +
+                f'page=ingame&component=buddies&action=7&id={player_id}&ajax=1',
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        ).text
+        chat_token = re.search("value='(.*)'", response).group(1)
+        response = self.session.post(
+            url=self.index_php,
+            data={'page': 'ingame',
+                  'component': 'buddies',
+                  'action': 6,
+                  'id': player_id,
+                  'token': chat_token,
+                  'text': msg},
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        )
+        bs4 = BeautifulSoup4(response.text)
+        content = bs4.find('div', class_="buddylistContent")
+        if content.table:
+            return True
+        else:
+            print(" ".join(content.text.split()))            # output 'You have already sent a request to this player.' / 'Invalid player.'
+            return False
+
+    def reward_system(self):                                 # check if reward system is online
+        bs4 = self.landing_page
+        menue = bs4.find_all('span', class_='textlabel')
+        if "Rewards" in [title.text for title in menue]:
+            return True
+        else:
+            return False
+
+    def rewards(self, tier=None, reward=None):
+        def grab_token():
+            response1 = self.session.get(
+                url=self.index_php + f'page=ingame&component=rewarding&tab=rewards',
+                headers={'X-Requested-With': 'XMLHttpRequest'})
+            if response1.status_code != 200:
+                return False
+            return response1
+        def reward_data(show_tier=tier):
+            response1 = grab_token()
+            if response1 is False:
+                return False
+            token = re.search('var rewardToken = "(.*)"', response1.text).group(1)
+            response2 = self.session.get(
+                url=self.index_php + 'page=ingame&component=rewarding&tab=rewards'
+                                     '&action=fetchRewards&ajax=1'
+                                     f'&tier={show_tier}&token={token}',
+                headers={'X-Requested-With': 'XMLHttpRequest'})
+            if response2.status_code != 200:
+                return False
+            item_names = re.findall(r'"rewardName\\">([^<\\]*)', response2.text)
+            quantity = re.findall(r'"quantity\\">\\\D* ([^<\\]*)\\n', response2.text)
+            item_ids = re.findall(r'data-id=\\"([0-9]+)', response2.text)
+            tritium = re.findall(r'\\u([^ ]*)', response2.text)
+            return [response2, item_names, quantity, item_ids, tritium]
+        if tier and reward:
+            data = reward_data()
+            if data[0] is False or data[4][0] != data[4][1]:
+                return False
+            item = max(min(reward - 1, 2), 0)
+            ajax_token = data[0].json()['newAjaxToken']
+            reward_id = int(data[3][item])
+            response3 = self.session.post(
+                url=self.index_php + 'page=ingame&component=rewarding&tab=rewards'
+                                     '&action=submitReward&asJson=1',
+                data={'selectedReward': reward_id,
+                      'selectedTier': tier,
+                      'token': ajax_token},
+                headers={'X-Requested-With': 'XMLHttpRequest'}
+            )
+            class selectedReward:
+                status = response3.json()['status']
+                name = data[1][item]
+                amount = data[2][item].strip()
+                id = data[3][item].strip()
+            return selectedReward
+        else:
+            response = grab_token()
+            if response is False:
+                return False
+            max_tier = int(re.findall(r'data-tier="([0-9])', response.text)[-1])
+            progress = re.search(r'title=.*([0-9])\/([0-9])', response.text)
+            item_list = []
+            claimable_list = []
+            for ipx in range(max_tier):
+                data = reward_data(ipx+1)
+                item_list.append([(data[1][i], data[2][i], data[3][i]) for i in range(3)])
+                claimable_list.append(data[4][0] == data[4][1])
+            class TierList:
+                highest_tier = max_tier
+                event_progress = [int(progress.group(1)), int(progress.group(2))]
+                claimable = claimable_list
+                rewards = item_list
+                list = [highest_tier, event_progress, claimable, rewards]
+            return TierList     
+
+    def get_messages(self):      
+        response = self.session.post(
+            url=self.index_php + 'page=ajaxChat&action=showPlayerList',
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        )
+        chats_ = int(re.search('countOfChats":(\d+)', response.text).group(1))
+        if not bool(chats_):
+            return []
+        content = response.json()['listOfChats']
+        chat_ids = [id_s for id_s in content]
+        messages = [content[ids] for ids in chat_ids]
+        message_data = []
+        time_f = "%Y-%m-%d %H:%M:%S"; time_ff = "%H:%M:%S-%d.%m.%Y"
+        for data in messages:
+            chat_history = []
+            if data['unreadCounter'] >= 1:
+                response2 = self.session.post(url=self.index_php + 'page=ajaxChat',
+                                      data={'playerId': int(data['partnerId']), 'mode': 2,
+                                            'ajax': 1, 'updateUnread': 1},
+                                      headers={'X-Requested-With': 'XMLHttpRequest'})  # read message/mark as read
+                chat_data = response2.json()['data']
+                chat_overview = response2.json()['chatItems']
+                authors_list = re.findall(r'w">\n (.*)</', chat_data)
+                authors = [author.strip() for author in authors_list][-10:]
+                messages = [chat['chatContent'] for chat in chat_overview][-10:]
+                chat_history = [[authors[count], message]
+                                for count, message in enumerate(messages)]
+            class Message:
+                player = data['partnerName']
+                player_id = data['partnerId']
+                status = data['unreadCounter']
+                text = data['text']
+                time = datetime.strptime(data['time'], time_f).strftime(time_ff)
+                alliance = data['allianceName']
+                rank = data['highscorePosition']
+                chat = chat_history
+                list = [
+                    player, player_id, status, text,
+                    time, alliance, rank, chat
+                ]
+            message_data.append(Message)
+        return message_data
 
     def rename_planet(self, id, new_name):
         self.session.get(
