@@ -307,6 +307,12 @@ class messages:
     spy_reports = 20
 
 
+class character_class:
+    miner = 1
+    warrior = 2
+    explorer = 3
+
+
 def price(technology, level=1):
     def multipli_resources(resources, multiplyer):
         return [resource * multiplyer for resource in resources]

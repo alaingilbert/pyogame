@@ -220,6 +220,27 @@ class OGame(object):
             class_='sprite characterclass medium')
         return character['class'][3]
 
+    def choose_character_class(self, classid):
+        character = self.landing_page.find_partial(
+            class_='sprite characterclass medium')
+        data = {
+            'page': "ingame",
+            'component': "characterclassselection",
+            'characterClassId': classid,
+            'action': "selectClass",
+            'ajax': '1',
+            'asJson': '1'
+        }
+        if character['class'][3] == 'none':
+            response = self.session.post(
+                url=self.index_php,
+                params=data,
+                headers={'X-Requested-With': 'XMLHttpRequest'}
+            ).json()
+            if response['status'] == 'success':
+                return True
+        return False
+
     def rank(self):
         rank = self.landing_page.find(id='bar')
         rank = rank.find_all('li')[1].text
@@ -236,6 +257,16 @@ class OGame(object):
         return [planet.text for planet in
                 self.landing_page.find_all(class_='planet-name')]
 
+    def planet_coords(self):
+        coords_list = [
+            re.search(r'(.*?) (\[(.*?)])', cords.text).group(2)
+            for cords in self.landing_page.find_all(class_='smallplanet')
+        ]
+        return [
+            const.convert_to_coordinates(cords) + [1]
+            for cords in coords_list
+        ]
+    
     def id_by_planet_name(self, name):
         for planet_name, id in zip(
                 OGame.planet_names(self), OGame.planet_ids(self)
@@ -265,6 +296,23 @@ class OGame(object):
             names.append(re.search(r'<b>(.*) \[', name).group(1))
         return names
 
+    def moon_coords(self):
+        coords_list = [
+            re.search(r'(.*?) (\[(.*?)])', cords['title']).group(2)
+            for cords in self.landing_page.find_all(class_='moonlink')
+        ]
+        return [
+            const.convert_to_coordinates(cords) + [3]
+            for cords in coords_list
+        ]
+
+    def id_by_moon_name(self, name):
+        for moon_name, id in zip(
+                OGame.moon_names(self), OGame.moon_ids(self)
+        ):
+            if moon_name == name:
+                return id
+    
     def slot_celestial(self):
         class Slot:
             planets = self.landing_page.find(
@@ -291,6 +339,10 @@ class OGame(object):
         )
         textContent3 = textContent3.group(1).replace('\\u00b0', '')
         textContent3 = re.findall(r'\d+(?: \d+)?', textContent3)
+        textContent7 = re.search(
+            r'textContent\[7] = "(.*)>(.*?) \(Place (.*?) (.*)<',
+            response
+        )
 
         class Celestial:
             diameter = int(textContent1.group(1).replace('.', ''))
@@ -302,6 +354,8 @@ class OGame(object):
                 textContent3[1]
             ]
             coordinates = OGame.celestial_coordinates(self, id)
+            points = int(textContent7.group(2).replace(".", ""))
+            rank = int(textContent7.group(3).replace(".", ""))
 
         return Celestial
 
@@ -328,6 +382,7 @@ class OGame(object):
         else:
             shipyard_time = int(shipyard_time.group(1))
             shipyard_time = datetime.now() + timedelta(seconds=shipyard_time)
+
         class Queue:
             research = research_time
             buildings = build_time
@@ -379,9 +434,9 @@ class OGame(object):
                 attrs={'class':'undermark'}
             )
             day_production = [
-                int(day_production[0].span['title'].replace('.','')),
-                int(day_production[1].span['title'].replace('.','')),
-                int(day_production[2].span['title'].replace('.',''))
+                int(day_production[0].span['title'].replace('.', '')),
+                int(day_production[1].span['title'].replace('.', '')),
+                int(day_production[2].span['title'].replace('.', ''))
             ]
             storage = bs4.find_all('tr')
             for stor in storage:
@@ -488,6 +543,8 @@ class OGame(object):
             deuterium_mine = Supply(2)
             solar_plant = Supply(3)
             fusion_plant = Supply(4)
+            solar_satellite = Supply(5)
+            crawler = Supply(6)
             metal_storage = Supply(7)
             crystal_storage = Supply(8)
             deuterium_storage = Supply(9)
@@ -740,7 +797,15 @@ class OGame(object):
                     re.search('(.*)_filter', sta).group(1)
                     for sta in status
                 ]
-
+                if re.search(
+                    r"status_abbr_outlaw+",
+                    str(
+                         row.find(
+                             class_=re.compile(r"status_abbr_outlaw tooltip")
+                         )
+                    )
+                ) is not None:
+                    planet_status.append("outlaw")
                 player = row.find(rel=re.compile(r'player[0-9]+'))
                 if not player:
                     continue
@@ -871,13 +936,20 @@ class OGame(object):
         coordinate = [
             coords.find(class_=Coords).a.text
             for coords in event
+                if coords.find(class_=Coords).a is not None  # optional
         ]
         coordinate = [
             const.convert_to_coordinates(coords)
             for coords in coordinate
         ]
+        destin = Coords.replace("destCoords", "destFleet")\
+                       .replace("coordsOrigin", "originFleet")\
+                       .replace("destinationCoords", "destinationData")\
+                       .replace("originCoords", "originData")                  # for hostile/friendly_fleets
         destination = [
-            dest.find('figure', {'class': 'planetIcon'})
+            dest.find(class_=destin).find('figure', {'class': 'planetIcon'})
+            if dest.find(class_=destin).find('figure', {'class': 'planetIcon'}) is not None
+            else BeautifulSoup4('<figure class="planetIcon planet"></figure>').find("figure")
             for dest in event
         ]
         destination = [
@@ -888,7 +960,6 @@ class OGame(object):
         for coords, dest in zip(coordinate, destination):
             coords.append(dest)
             coordinates.append(coords)
-
         return coordinates
 
     def slot_fleet(self):
@@ -991,7 +1062,11 @@ class OGame(object):
         bs4 = BeautifulSoup4(response)
 
         eventFleet = bs4.find_all('span', class_='hostile')
-        eventFleet = [child.parent.parent for child in eventFleet]
+        eventFleet = [
+            child.parent.parent
+            for child in eventFleet
+            if child.parent.parent['id'][9:10] is not 'u'  # avoid ACS-missions in eventFleet
+        ]
 
         fleet_ids = [id['id'] for id in eventFleet]
         fleet_ids = [
@@ -999,6 +1074,10 @@ class OGame(object):
             for id in fleet_ids
         ]
 
+        mission_types = [
+            int(event['data-mission-type'])
+            for event in eventFleet
+        ]
         arrival_times = [
             int(event['data-arrival-time'])
             for event in eventFleet
@@ -1012,11 +1091,11 @@ class OGame(object):
         origins = self.fleet_coordinates(eventFleet, 'coordsOrigin')
 
         player_ids = [
-            int(id.find(class_='sendMail').a['data-playerid'])
+            int(id.find_all("td", class_='sendMail')[0].a['data-playerid'])
             for id in eventFleet
         ]
         player_names = [
-            name.find(class_='sendMail').a['title']
+            name.find_all("td", class_='sendMail')[0].a['title']
             for name in eventFleet
         ]
 
@@ -1024,7 +1103,7 @@ class OGame(object):
         for i in range(len(fleet_ids)):
             class Fleets:
                 id = fleet_ids[i]
-                mission = 1
+                mission = mission_types[i]                    
                 diplomacy = const.diplomacy.hostile
                 player_name = player_names[i]
                 player_id = player_ids[i]
@@ -1071,6 +1150,7 @@ class OGame(object):
             return True
         else:
             return False
+
 
     def phalanx(self, coordinates, id):
         raise NotImplemented(

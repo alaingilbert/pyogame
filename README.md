@@ -123,7 +123,10 @@ empire.moon_names()                 returns list
 
 empire.moon_coords()                returns list
 
+
 empire.id_by_moon_name('name')      returns int
+empire.id_by_planet_name('name')    returns int
+
 
 **keep in mind to prefer planets id's moon id dont works on every function**
 </pre>
