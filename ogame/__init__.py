@@ -219,6 +219,16 @@ class OGame(object):
         character = self.landing_page.find_partial(
             class_='sprite characterclass medium')
         return character['class'][3]
+    
+    def lf_character_class(self, planet_id):
+        response_class = self.session.get(
+            url=self.index_php + 'page=ingame&component=overview',
+            params={'cp': planet_id}
+        ).text
+        response_class = BeautifulSoup4(response_class)
+        lf_character_class = response_class.find_partial(
+            class_='lifeform-item-icon small')
+        return lf_character_class['class'][2]
 
     def choose_character_class(self, classid):
         character = self.landing_page.find_partial(
@@ -450,7 +460,8 @@ class OGame(object):
             ]
             darkmatter = to_int(bs4.find(id='resources_darkmatter')['data-raw'])
             energy = to_int(bs4.find(id='resources_energy')['data-raw'])
-
+            population = to_int(bs4.find(id='resources_population')['data-raw'])
+            food = to_int(bs4.find(id='resources_food')['data-raw'])
         return Resources
 
     def resources_settings(self, id, settings=None):
@@ -585,7 +596,46 @@ class OGame(object):
             repair_dock = Facility(7)
 
         return Facilities
+    
+    def lf_facilities(self, id):
+        response = self.session.get(
+            self.index_php + 'page=ingame&component=lfbuildings&cp={}'
+            .format(id)
+        ).text
+        bs4 = BeautifulSoup4(response)
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+        technologyStatus = [
+            status['data-status']
+            for status in bs4.find_all('li', {'class': 'technology'})
+        ]
 
+        class LfFacilitie:
+            def __init__(self, i):
+                self.level = levels[i]
+                self.is_possible = OGame.isPossible(technologyStatus[i])
+                self.in_construction = OGame.inConstruction(technologyStatus[i])
+
+        class LfFacilities(object):
+            residential_sector = LfFacilitie(0)
+            biosphere_farm = LfFacilitie(1)
+            research_centre = LfFacilitie(2)
+            academy_of_sciences = LfFacilitie(3)
+            neuro_calibration_centre = LfFacilitie(4)
+            high_energy_smelting = LfFacilitie(5)
+            food_silo = LfFacilitie(6)
+            fusion_powered_production = LfFacilitie(7)
+            skyscraper = LfFacilitie(8)
+            biotech_lab = LfFacilitie(9)
+            metropolis = LfFacilitie(9)
+            planetary_shield = LfFacilitie(10)
+            
+        return LfFacilities
+    
     def moon_facilities(self, id):
         response = self.session.get(
             url='{}page=ingame&component=facilities&cp={}'
@@ -664,7 +714,239 @@ class OGame(object):
             armor = Research(15)
 
         return Researches
+    
+    def lf_research_humans(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': 'lfresearch',
+                    'cp': id}
+        ).text
+        bs4 = BeautifulSoup4(response)
 
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+
+        technology_status = []
+        for container_tiers in bs4.select('#technologies div li'):
+            try:
+                technology_status.append(container_tiers['data-status'])
+            except:
+                technology_status.append('not available')
+        print(f'DEBUG technology_status {technology_status}')
+
+        class LfResearch:
+            def __init__(self, i):
+                if i <= technology_status.count('on')+technology_status.count('disabled')-1:
+                    self.level = levels[i]
+                    self.is_possible = OGame.isPossible(technology_status[i])
+                    self.in_construction = OGame.inConstruction(technology_status[i])
+                else:
+                    self.level = 0
+                    self.is_possible = False
+                    self.in_construction = False
+
+        class LfResearches(object):
+            intergalactic_envoys = LfResearch(0)
+            high_performance_extractors = LfResearch(1)
+            fusion_drives = LfResearch(2)
+            stealth_field_generator = LfResearch(3)
+            orbital_den = LfResearch(4)
+            research_ai = LfResearch(5)
+            high_performance_terraformer = LfResearch(6)
+            enhanced_production_technologies = LfResearch(7)
+            light_fighter_mk_II = LfResearch(8)
+            cruiser_mk_II = LfResearch(9)
+            improved_lab_technology = LfResearch(10)
+            plasma_terraformer = LfResearch(11)
+            low_temperature_drives = LfResearch(12)
+            bomber_mk_II = LfResearch(13)
+            destroyer_mk_II = LfResearch(14)
+            battlecruiser_mk_II = LfResearch(15)
+            robot_assistants = LfResearch(16)
+            supercomputer = LfResearch(17)
+
+        return LfResearches
+
+    def lf_research_rocktal(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': 'lfresearch',
+                    'cp': id}
+        ).text
+        bs4 = BeautifulSoup4(response)
+
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+
+        technology_status = []
+        for container_tiers in bs4.select('#technologies div li'):
+            try:
+                technology_status.append(container_tiers['data-status'])
+            except:
+                technology_status.append('not available')
+        print(f'DEBUG technology_status {technology_status}')
+
+        class LfResearch:
+            def __init__(self, i):
+                if i <= technology_status.count('on')+technology_status.count('disabled')-1:
+                    self.level = levels[i]
+                    self.is_possible = OGame.isPossible(technology_status[i])
+                    self.in_construction = OGame.inConstruction(technology_status[i])
+                else:
+                    self.level = 0
+                    self.is_possible = False
+                    self.in_construction = False
+
+        class LfResearches(object):
+            magma_refinement = LfResearch(0)
+            acoustic_scanning = LfResearch(1)
+            high_energy_pump_systems = LfResearch(2)
+            cargo_hold_expansion_civilian_ships = LfResearch(3)
+            magma_powered_production = LfResearch(4)
+            geothermal_power_plants = LfResearch(5)
+            depth_sounding = LfResearch(6)
+            ion_crystal_enhancement_heavy_fighter = LfResearch(7)
+            improved_stellarator = LfResearch(8)
+            hardened_diamond_drill_heads = LfResearch(9)
+            seismic_mining_technology = LfResearch(10)
+            magma_powered_pump_systems = LfResearch(11)
+            ion_crystal_modules = LfResearch(12)
+            optimised_silo_construction_method = LfResearch(13)
+            diamond_energy_transmitter = LfResearch(14)
+            obsidian_shield_reinforcement = LfResearch(15)
+            rocktal_collector_enhancement = LfResearch(16)
+            rune_shields = LfResearch(17)
+
+        return LfResearches
+
+    def lf_research_mechas(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': 'lfresearch',
+                    'cp': id}
+        ).text
+        bs4 = BeautifulSoup4(response)
+
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+
+        technology_status = []
+        for container_tiers in bs4.select('#technologies div li'):
+            try:
+                technology_status.append(container_tiers['data-status'])
+            except:
+                technology_status.append('not available')
+        print(f'DEBUG technology_status {technology_status}')
+
+        class LfResearch:
+            def __init__(self, i):
+                if i <= technology_status.count('on')+technology_status.count('disabled')-1:
+                    self.level = levels[i]
+                    self.is_possible = OGame.isPossible(technology_status[i])
+                    self.in_construction = OGame.inConstruction(technology_status[i])
+                else:
+                    self.level = 0
+                    self.is_possible = False
+                    self.in_construction = False
+
+        class LfResearches(object):
+            catalyser_technology = LfResearch(0)
+            plasma_drive = LfResearch(1)
+            efficiency_module = LfResearch(2)
+            depot_ai = LfResearch(3)
+            general_overhaul_light_fighter = LfResearch(4)
+            automated_transport_lines = LfResearch(5)
+            improved_drone_ai = LfResearch(6)
+            experimental_recycling_technology = LfResearch(7)
+            general_overhaul_cruiser = LfResearch(8)
+            slingshot_autopilot = LfResearch(9)
+            high_temperature_superconductors = LfResearch(10)
+            general_overhaul_battleship = LfResearch(11)
+            artificial_swarm_intelligence = LfResearch(12)
+            general_overhaul_battlecruiser = LfResearch(13)
+            general_overhaul_bomber = LfResearch(14)
+            general_overhaul_destroyer = LfResearch(15)
+            mechan_general_enhancement = LfResearch(16)
+            experimental_weapons_technology = LfResearch(17)
+
+        return LfResearches
+
+    def lf_research_kaelesh(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': 'lfresearch',
+                    'cp': id}
+        ).text
+        bs4 = BeautifulSoup4(response)
+
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+
+        technology_status = []
+        for container_tiers in bs4.select('#technologies div li'):
+            try:
+                technology_status.append(container_tiers['data-status'])
+            except:
+                technology_status.append('not available')
+        print(f'DEBUG technology_status {technology_status}')
+
+        class LfResearch:
+            def __init__(self, i):
+                if i <= technology_status.count('on')+technology_status.count('disabled')-1:
+                    self.level = levels[i]
+                    self.is_possible = OGame.isPossible(technology_status[i])
+                    self.in_construction = OGame.inConstruction(technology_status[i])
+                else:
+                    self.level = 0
+                    self.is_possible = False
+                    self.in_construction = False
+
+        class LfResearches(object):
+            heat_recovery = LfResearch(0)
+            sulphide_process = LfResearch(1)
+            psionic_network = LfResearch(2)
+            telekinetic_tractor_beam = LfResearch(3)
+            enhanced_sensor_technology = LfResearch(4)
+            neuromodal_compressor = LfResearch(5)
+            neuro_interface = LfResearch(6)
+            interplanetary_analysis_network = LfResearch(7)
+            overclocking_heavy_fighter = LfResearch(8)
+            telekinetic_drive = LfResearch(9)
+            sixth_sense = LfResearch(10)
+            psychoharmoniser = LfResearch(11)
+            efficient_swarm_intelligence = LfResearch(12)
+            overclocking_large_cargo = LfResearch(13)
+            gravitation_sensors = LfResearch(14)
+            overclocking_battleship = LfResearch(15)
+            kaelesh_discoverer_enhancement = LfResearch(16)
+            psionic_shield_matrix = LfResearch(17)
+
+        return LfResearches
+    
     def ships(self, id):
         response = self.session.get(
             self.index_php + 'page=ingame&component=shipyard&cp={}'
@@ -1489,7 +1771,251 @@ class OGame(object):
 
             reports.append(Report)
         return reports
+    
+        def get_page_messages(self, page, tab_id):
+        payload = {
+            "messageId": "-1",
+            "tab": '{}'.format(tab_id),
+            "action": "107",
+            "pagination": '{}'.format(page),
+            "ajax": "1",
+        }
 
+        return self.session.get(url=self.index_php + 'page=messages', params=payload)
+
+    def extract_other_message(self, response):
+        msgs = []
+        bs4 = BeautifulSoup4(response.text)
+        nb_page = bs4.select("ul.pagination li.paginator")[-1].attrs['data-page']
+        msgs_raw = bs4.select("li.msg")
+        msg_id = 0
+        message_date = 'False'
+        message_sender = 'False'
+        message_text = 'False'
+        for msg_raw in msgs_raw:
+            if 'data-msg-id' in str(msg_raw):
+                msg_id = msg_raw['data-msg-id']
+                msgs.append(msg_id)
+            else:
+                continue
+            if 'msg_date' in str(msg_raw):
+                message_date = str(msg_raw.select_one("li.msg div.msg_head span.fright span.msg_date").text)
+                msgs.append(message_date)
+            if 'msg_sender' in str(msg_raw):
+                message_sender = str(msg_raw.select_one("li.msg div.msg_head span.msg_sender").text)
+                msgs.append(message_sender)
+            if 'msg_content' in str(msg_raw):
+                message_text = str(msg_raw.select_one("li.msg span.msg_content").text.strip())
+                msgs.append(message_text)
+
+        return msgs, nb_page
+
+    def get_other_messages(self):
+        tab_id = 24
+        page = 1
+        nb_page = 1
+        msgs = []
+        new_messages_counter = self.get_new_messages_count()
+        print(f"New other messages: {new_messages_counter[4]}")
+        while int(page) <= int(nb_page):
+            response = self.get_page_messages(page, tab_id)
+            new_messages, new_nb_page = self.extract_other_message(response)
+            msgs.append(new_messages)
+            nb_page = new_nb_page
+            page += 1
+
+        return msgs
+
+    def extract_combat_summary_reports_message(self, response):
+        msgs = []
+        bs4 = BeautifulSoup4(response.text)
+        nb_page = bs4.select("ul.pagination li.paginator")[-1].attrs['data-page']
+        msgs_raw = bs4.select("li.msg")
+        for msg_raw in msgs_raw:
+            if 'data-msg-id' in str(msg_raw):
+                msg_id = msg_raw['data-msg-id']
+            else:
+                continue
+
+            message_destination = str(msg_raw.select_one("div.msg_head a").text)
+            message_destination = const.convert_to_coordinates(message_destination)
+
+            fleet_lost_first_round_message = False
+            if 'planet' in str(msg_raw.select_one("div.msg_head figure")):
+                message_destination_type = 1
+            elif 'moon' in str(msg_raw.select_one("div.msg_head figure")):
+                message_destination_type = 3
+            else:
+                message_destination_type = 1
+                fleet_lost_first_round_message = True
+            message_destination = const.coordinates(int(message_destination[0]), int(message_destination[1]),
+                                                    int(message_destination[2]), int(message_destination_type))
+
+            if not fleet_lost_first_round_message:
+                res_title = msg_raw.select("span.msg_content div.combatLeftSide span")[1].attrs['title']
+                re_res = re.search('([\\d.,]+)<br/>[^\\d]*([\\d.,]+)<br/>[^\\d]*([\\d.,]+)', res_title)
+                re_res = const.resources(re_res[1], re_res[2], re_res[3])
+
+                debris_field_title = msg_raw.select("span.msg_content div.combatLeftSide span")[2].attrs['title']
+
+                res_text = msg_raw.select("span.msg_content div.combatLeftSide span")[1]
+                re_res_text = re.search('[\\d.,]+[^\\d]*([\\d.,]+)', str(res_text))
+                re_res_text = re_res_text[1]
+
+                message_date = str(msg_raw.select_one("span.msg_date").text)
+
+                message_text = msg_raw.select("li.msg span.msg_content span.msg_ctn")
+
+                attacker_name_message = message_text[0].text
+                attacker_name_message = attacker_name_message[
+                                        attacker_name_message.find("(") + 1:attacker_name_message.find(")")]
+
+                attacker_point_lost_message = message_text[0].text
+                attacker_point_lost_message = attacker_point_lost_message[
+                                              attacker_point_lost_message.find(attacker_name_message) + len(
+                                                  attacker_name_message) + 3:]
+
+                defender_name_message = message_text[3].text
+                defender_name_message = defender_name_message[
+                                            defender_name_message.find("(") + 1:defender_name_message.find(")")]
+
+                defender_point_lost_message = message_text[3].text
+                defender_point_lost_message = defender_point_lost_message[
+                                              defender_point_lost_message.find(defender_name_message) + len(
+                                                  defender_name_message) + 3:]
+
+                repaired_message = message_text[4].text
+                repaired_message = repaired_message[
+                                   repaired_message.find(":") + 1:]
+
+                try:
+                    moon_chance_message = message_text[5].text
+                    moon_chance_message = moon_chance_message[
+                                          moon_chance_message.find(":") + 1:moon_chance_message.find("%")]
+                except:
+                    moon_chance_message = None
+
+                # monn_created_message = # ToDo Find color green?....
+
+                link = str(msg_raw.select_one("div.msg_actions a span.icon_attack").parent)
+                link = link.replace("&amp;", "&")
+                re_link = re.search('galaxy=(\\d+)&system=(\\d+)&position=(\\d+)&type=(\\d+)&', str(link))
+                re_link = const.coordinates(int(re_link[1]), int(re_link[2]), int(re_link[3]), int(re_link[4]))
+
+                if re_link == message_destination:
+                    re_link = None
+                    attacker_name_message = 'Self'
+            else:
+                re_res = False
+                debris_field_title = False
+                re_res_text = False
+                message_date = False
+                re_link = False
+                attacker_name_message = False
+                attacker_point_lost_message = False
+                defender_name_message = False
+                defender_point_lost_message = False
+                repaired_message = False
+                moon_chance_message = False
+
+            class CombatReportSummary:
+                id = msg_id
+                destination = message_destination
+                fleet_lost_first_round = fleet_lost_first_round_message
+                resources = re_res
+                df = debris_field_title
+                loot = re_res_text
+                created_at = message_date
+                origin = re_link
+                attacker_name = attacker_name_message
+                attacker_lost = attacker_point_lost_message
+                defender_name = defender_name_message
+                defender_lost = defender_point_lost_message
+                repaired = repaired_message
+                moon_chance = moon_chance_message
+                list = [
+                    id, destination, fleet_lost_first_round, resources, df, loot, created_at,
+                    origin, attacker_name, attacker_lost, defender_name,
+                    defender_lost, repaired, moon_chance
+                ]
+
+            msgs.append(CombatReportSummary)
+        return msgs, nb_page
+
+    def get_new_messages_count(self):
+        payload = {
+            "tab": '2',
+            "ajax": "1",
+        }
+
+        response = self.session.get(url=self.index_php + 'page=messages', params=payload).text
+        bs4 = BeautifulSoup4(response)
+        msgs_raw = bs4.select("ul li")
+        new_messages = []
+        i = 0
+        for raw in msgs_raw:
+            if i < 5:
+                raw = raw.text.strip()
+                if raw.find("(") > 0:
+                    raw = int(raw[raw.find("(") + 1:raw.find(")")])
+                else:
+                    raw = 0
+                new_messages.append(raw)
+            i += 1
+        return new_messages  # [espionage, combat reports, expeditions, unions/transport, other]
+
+    def get_combat_reports_messages(self):
+        tab_id = 21
+        page = 1
+        nb_page = 1
+        msgs = []
+        new_messages_counter = self.get_new_messages_count()
+        print(f"New Combatreports: {new_messages_counter[1]}")
+        while int(page) <= int(nb_page):
+            response = self.get_page_messages(page, tab_id)
+            new_messages, new_nb_page = self.extract_combat_summary_reports_message(response)
+            msgs.append(new_messages)
+            nb_page = new_nb_page
+            page += 1
+
+        return msgs
+
+    def get_delete_messages_token(self):
+        payload = {
+            "tab": '20',
+            "ajax": "1",
+        }
+        page_html = self.session.get(url=self.index_php + 'page=messages', params=payload).text
+        try:
+            regex = r"name='token' value='([^']+)'"
+            token = re.search(regex, page_html, re.MULTILINE).group(1)
+            return token
+        except Exception as e:
+            print(f'token not found. {e} ')
+            return False
+
+    def delete_all_message_from_tab(self, tab_id):
+        # tabid: 20 = > Espionage
+        # tabid: 21 = > Combat
+        # tabid: 22 = > Expeditions
+        # tabid: 23 = > Unions / Transport
+        # tabid: 24 = > Other
+        token = self.get_delete_messages_token()
+
+        payload = {
+            "messageId": "-1",
+            "tabid": '{}'.format(tab_id),
+            "action": "103",
+            "token": '{}'.format(token),
+            "ajax": "1",
+        }
+        if token:
+            self.session.post(url=self.index_php + 'page=messages', params=payload)
+            return True
+        else:
+            print(f'error deleting messages')
+            return False
+        
     def send_fleet(
             self,
             mission,
