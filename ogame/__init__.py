@@ -3,6 +3,9 @@ import requests
 import unittest
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
+import json
+import math
+import random
 
 try:
     import constants as const
@@ -2197,6 +2200,125 @@ class OGame(object):
             'https://lobby.ogame.gameforge.com/api/users/me/logout'
         )
         return not OGame.is_logged_in(self)
+    
+    def buy_offer_of_the_day(self):
+    response = self.session.get(
+        url=self.index_php +
+            'page=ingame&component=traderOverview').text
+
+    time.sleep(random.randint(250, 1500)/1000)
+
+    response2 = self.session.post(
+        url=self.index_php +
+            'page=ajax&component=traderimportexport',
+        data={
+            'show': 'importexport',
+            'ajax': 1
+        },
+        headers={'X-Requested-With': 'XMLHttpRequest'}).text
+
+    time.sleep(random.randint(250, 1500) / 1000)
+
+    bs4 = BeautifulSoup4(response2)
+
+    try:
+        item_available = bs4.find_partial(class_='bargain import_bargain take hidden').text
+        return f'You have already accepted this offer!'
+    except Exception as e:
+        err = e
+    try:
+        item_price = bs4.find_partial(class_='price js_import_price').text
+        item_price = int(item_price.replace('.', ''))
+    except Exception as e:
+        return f'err: {e}, failed to extract offer of the day price'
+
+    try:
+        planet_resources = re.search(r'var planetResources\s?=\s?({[^;]*});', response2).group(1)
+        planet_resources = json.loads(planet_resources)
+    except Exception as e:
+        return f'err: {e}, failed to extract offer of the day planet resources'
+
+    try:
+        import_token = re.search(r'var importToken\s?=\s?"([^"]*)";', response2).group(1)
+    except Exception as e:
+        return f'err: {e}, failed to extract offer of the day import_token'
+
+    try:
+        multiplier = re.search(r'var multiplier\s?=\s?({[^;]*});', response2).group(1)
+        multiplier = json.loads(multiplier)
+    except Exception as e:
+        return f'err: {e}, failed to extract offer of the day multiplier'
+
+    form_data = {'action': 'trade'}
+
+    remaining = item_price
+
+    for celestial in list(planet_resources.keys()):
+        metal_needed = int(planet_resources[celestial]['input']['metal'])
+        if remaining < metal_needed * float(multiplier['metal']):
+            metal_needed = math.ceil(remaining / float(multiplier['metal']))
+
+        remaining -= metal_needed * float(multiplier['metal'])
+
+        crystal_needed = int(planet_resources[celestial]['input']['crystal'])
+        if remaining < crystal_needed * float(multiplier['crystal']):
+            crystal_needed = math.ceil(remaining / float(multiplier['crystal']))
+
+        remaining -= crystal_needed * float(multiplier['crystal'])
+
+        deuterium_needed = int(planet_resources[celestial]['input']['deuterium'])
+        if remaining < deuterium_needed * float(multiplier['deuterium']):
+            deuterium_needed = math.ceil(remaining / float(multiplier['deuterium']))
+
+        remaining -= deuterium_needed * float(multiplier['deuterium'])
+
+        form_data.update(
+            {
+                'bid[planets][{}][metal]'.format(str(celestial)): '{}'.format(int(metal_needed)),
+                'bid[planets][{}][crystal]'.format(str(celestial)): '{}'.format(str(crystal_needed)),
+                'bid[planets][{}][deuterium]'.format(str(celestial)): '{}'.format(str(deuterium_needed)),
+            }
+        )
+
+    form_data.update(
+        {
+            'bid[honor]': '0',
+            'token': '{}'.format(import_token),
+            'ajax': '1'
+        }
+    )
+
+    time.sleep(random.randint(1500, 3000) / 1000)
+
+    response3 = self.session.post(
+        url=self.index_php +
+            'page=ajax&component=traderimportexport&ajax=1&action=trade&asJson=1',
+        data=form_data,
+        headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+
+    try:
+        new_token = response3['newAjaxToken']
+    except Exception as e:
+        return f'err: {e}, failed to extract offer of the day newAjaxToken'
+
+    form_data2 = {
+        'action': 'takeItem',
+        'token': '{}'.format(new_token),
+        'ajax': '1'
+    }
+
+    time.sleep(random.randint(250, 1500) / 1000)
+
+    response4 = self.session.post(
+        url=self.index_php +
+            'page=ajax&component=traderimportexport&ajax=1&action=takeItem&asJson=1',
+        data=form_data2,
+        headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+
+    getitem = False
+    if not response4['error']:
+        getitem = True
+    return getitem
 
 
 def BeautifulSoup4(response):
