@@ -36,7 +36,7 @@ class OGame(object):
             self.user_agent = {
                 'User-Agent':
                     'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
-                    '(KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36'
+                    '(KHTML, like Gecko) Chrome/100.0.4324.182 Safari/537.36'
             }
         self.session.headers.update(self.user_agent)
 
@@ -1350,7 +1350,7 @@ class OGame(object):
         eventFleet = [
             child.parent.parent
             for child in eventFleet
-            if child.parent.parent['id'][9:10] is not 'u'  # avoid ACS-missions in eventFleet
+            if child.parent.parent['id'][9:10] is not 'u'
         ]
 
         fleet_ids = [id['id'] for id in eventFleet]
