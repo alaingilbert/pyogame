@@ -600,7 +600,7 @@ class OGame(object):
 
         return Facilities
     
-    def lf_facilities(self, id):
+    def lf_facilities_humans(self, id):
         response = self.session.get(
             self.index_php + 'page=ingame&component=lfbuildings&cp={}'
             .format(id)
@@ -638,7 +638,128 @@ class OGame(object):
             planetary_shield = LfFacilitie(10)
             
         return LfFacilities
-    
+
+
+        def lf_facilities_rocktal(self, id):
+        response = self.session.get(
+            self.index_php + 'page=ingame&component=lfbuildings&cp={}'
+            .format(id)
+        ).text
+        bs4 = BeautifulSoup4(response)
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+        technologyStatus = [
+            status['data-status']
+            for status in bs4.find_all('li', {'class': 'technology'})
+        ]
+
+        class LfFacilitie:
+            def __init__(self, i):
+                self.level = levels[i]
+                self.is_possible = OGame.isPossible(technologyStatus[i])
+                self.in_construction = OGame.inConstruction(technologyStatus[i])
+
+        class LfFacilities(object):
+            meditation_enclave = LfFacilitie(0)
+            crystal_farm = LfFacilitie(1)
+            rune_technologium = LfFacilitie(2)
+            rune_forge = LfFacilitie(3)
+            oriktorium = LfFacilitie(4)
+            magma_forge = LfFacilitie(5)
+            disruption_chamber = LfFacilitie(6)
+            megalith = LfFacilitie(7)
+            crystal_refinery = LfFacilitie(8)
+            deuterium_synthesiser = LfFacilitie(9)
+            mineral_research_centre = LfFacilitie(9)
+            metal_recycling_plant = LfFacilitie(10)
+
+        return LfFacilities
+
+
+    def lf_facilities_mechas(self, id):
+        response = self.session.get(
+            self.index_php + 'page=ingame&component=lfbuildings&cp={}'
+            .format(id)
+        ).text
+        bs4 = BeautifulSoup4(response)
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+        technologyStatus = [
+            status['data-status']
+            for status in bs4.find_all('li', {'class': 'technology'})
+        ]
+
+        class LfFacilitie:
+            def __init__(self, i):
+                self.level = levels[i]
+                self.is_possible = OGame.isPossible(technologyStatus[i])
+                self.in_construction = OGame.inConstruction(technologyStatus[i])
+
+        class LfFacilities(object):
+            assembly_line = LfFacilitie(0)
+            fusion_cell_factory = LfFacilitie(1)
+            robotics_research_centre = LfFacilitie(2)
+            update_network = LfFacilitie(3)
+            quantum_computer_centre = LfFacilitie(4)
+            automatised_assembly_centre = LfFacilitie(5)
+            high_performance_transformer = LfFacilitie(6)
+            microchip_assembly_line = LfFacilitie(7)
+            production_assembly_hall = LfFacilitie(8)
+            high_performance_synthesiser = LfFacilitie(9)
+            chip_mass_production = LfFacilitie(9)
+            nano_repair_bots = LfFacilitie(10)
+
+        return LfFacilities
+
+
+    def lf_facilities_kaelesh(self, id):
+        response = self.session.get(
+            self.index_php + 'page=ingame&component=lfbuildings&cp={}'
+            .format(id)
+        ).text
+        bs4 = BeautifulSoup4(response)
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+        technologyStatus = [
+            status['data-status']
+            for status in bs4.find_all('li', {'class': 'technology'})
+        ]
+
+        class LfFacilitie:
+            def __init__(self, i):
+                self.level = levels[i]
+                self.is_possible = OGame.isPossible(technologyStatus[i])
+                self.in_construction = OGame.inConstruction(technologyStatus[i])
+
+        class LfFacilities(object):
+            sanctuary = LfFacilitie(0)
+            antimatter_condenser = LfFacilitie(1)
+            vortex_chamber = LfFacilitie(2)
+            halls_of_realisation = LfFacilitie(3)
+            forum_of_transcendence = LfFacilitie(4)
+            antimatter_convector = LfFacilitie(5)
+            cloning_laboratory = LfFacilitie(6)
+            chrysalis_accelerator = LfFacilitie(7)
+            bio_modifier = LfFacilitie(8)
+            psionic_modulator = LfFacilitie(9)
+            ship_manufacturing_hall = LfFacilitie(9)
+            supra_refractor = LfFacilitie(10)
+
+        return LfFacilities
+
+
     def moon_facilities(self, id):
         response = self.session.get(
             url='{}page=ingame&component=facilities&cp={}'
