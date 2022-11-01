@@ -306,6 +306,16 @@ class diplomacy:
 class messages:
     spy_reports = 20
 
+class lf_character_class:
+    lifeform1 = 1
+    lifeform2 = 2
+    lifeform3 = 3
+
+class character_class:
+    miner = 1
+    warrior = 2
+    explorer = 3
+
 
 def price(technology, level=1):
     def multipli_resources(resources, multiplyer):
