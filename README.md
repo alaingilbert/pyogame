@@ -209,12 +209,23 @@ coordinates(1, 2, 12, destination.moon)
 coordinates(1, 2, 12, destination.debris)
 coordinates(1, 2, 12, destination.planet) or coordinates(1, 2, 12)
 ```
+
 ### get slot celestials
 returns how many planet slots are free to colonize
 <pre>
 slot = empire.slot_celestial()          returns class
 slot.free                               returns int
 slot.total                              returns int
+</pre>
+
+### get extra_slots
+returns the amount of additional slots aquired by items
+<pre>
+xslot = empire.extra_slotsl(stype)      returns int
+empire.extra_slotsl(0)                  returns int / additional expedition_slots
+empire.extra_slotsl(1)                  returns int / additional fleet_slots
+
+probably a niche function, but sometimes quite useful
 </pre>
 
 ### get celestial
@@ -294,6 +305,7 @@ a new file called tooltip_names.py will be created in the ogame package folder
 
 According to your language area, a class with specific names will be added
 it consists of all different ship_names followed by defence_names
+</pre>
 
 ```python
 class en_tooltips:
@@ -328,6 +340,7 @@ class en_tooltips:
     ]
 ```
 
+<pre>
 If needed, those list of strings can be imported separately and used
 as input for the initial empire.celestial_queue() function
 -> minimizing the package import on every function call later on
@@ -335,7 +348,6 @@ as input for the initial empire.celestial_queue() function
 just call:
 empire.tooltip_names_import()           returns list
 to get those names separately
-
 </pre>
 
 ### resources
@@ -558,12 +570,28 @@ def.missile_interplanetary
 
 ### get galaxy
 <pre>
-empire.galaxy(coordinates)          returns list of class(object)
+empire.galaxy(coordinates)                      returns list of class(object)
+
+pos = empire.galaxy(coordinates)
+pos.list                                        returns list
+pos.position                                    returns list
+pos.name / pos.player                           returns str
+pos.rank                                        returns int
+pos.status                                      returns list of str
+pos.moon                                        returns bool
+pos.moon_size                                   returns int / 0 if no moon
+pos.alliance                                    returns str
+pos.debris_coord                                return list
+pos.has_debris                                  returns bool
+pos.resources                                   returns list
+pos.expedition_debris                           returns list  # the one for pathfinder
+pos.needed_pf                                   returns int
 </pre>
 ```python
 for planet in empire.galaxy(coordinates(randint(1,6), randint(1,499))):
     print(planet.list)
-    print(planet.name, planet.position, planet.player, planet.player_id, planet.rank, planet.status, planet.moon, planet.activity)
+    print(planet.name, planet.position, planet.player, planet.player_id, planet.rank, planet.status, planet.moon, planet.activity, planet.moon_size, planet.debris.coord, planet.has_debris, planet.resources,
+planet.expedition_debris, planet.needed_pf)
     if status.inactive in planet.status and status.vacation not in planet.status:
         #Farm Inactive
 ```
@@ -997,6 +1025,15 @@ empire.cancel_research(id)              returns None
 this will collect your rubble field at the planet id.
                 
 empire.collect_rubble_field(id)         returns None
+</pre>
+
+### activate/deactivate vacation mode
+<pre>
+empire.vacation_mode()                  returns bool / will enter vacation mode
+empire.vacation_mode(activate=False)    returns bool / deactivate vacation mode
+
+if already in vacation and the 48h arent't over yet   returns str / of time
+
 </pre>
 
 ### im i still loged In?
