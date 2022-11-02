@@ -83,6 +83,23 @@ server.Donut.galaxy                 returns bool
 server.Donut.system                 returns bool
 </pre>
 
+### get highscore-list
+<pre>
+empire.highscore(page=1)            return list
+
+Page 1 returns the data of all Players in Top 100
+Each list entry consists of a separate class 
+
+player_top1 = empire.highscore(page=1)[0]
+player_top1.name                    return str
+player_top1.player_id               return int
+player_top1.rank                    return int
+player_top1.points                  return int
+player_top1.list                    return list [name, player_id, rank, points]
+
+makes tracking player-progress through the highscore possible 
+</pre>
+
 ### get characterclass
 <pre>
 Get the class of your Ogame Account['miner', 'explorer', 'warrior', 'none]
@@ -104,31 +121,52 @@ empire.rank()                       return int
 
 ### get planet id's
 <pre>
-empire.planet_ids()                 returns list 
+empire.planet_ids()                 return list 
 
-empire.planet_names()               returns list
+empire.planet_names()               return list
 
-empire.planet_coords()              returns list
+empire.planet_coords()              return list
 
-empire.id_by_planet_name('name')    returns int
-
+empire.id_by_planet_name('name')    return int
 empire.name_by_planet_id(id)        return string
+
+empire.planet_infos()               return list of class
+planet1 = empire.planet_infos()[0]  return class
+
+planet1.coordinates                 return list
+planet1.temperature                 return list
+planet1.diameter                    return int
+planet1.used                        return int
+planet1.total                       return int
+planet1.free                        return int
+
+useful for importing all celestial data of all planets
+at once through loading one single overview page
 </pre>
 
 ### get moon id's
 <pre>
-empire.moon_ids()                   returns list
+empire.moon_ids()                   return list
 
-empire.moon_names()                 returns list
+empire.moon_names()                 return list
 
-empire.moon_coords()                returns list
+empire.moon_coords()                return list
 
+empire.id_by_moon_name('name')      return int
+empire.name_by_moon_id(id)          return string
 
-empire.id_by_moon_name('name')      returns int
-empire.id_by_planet_name('name')    returns int
+empire.moon_infos()                 return list of class
+moon1 = empire.moon_infos()[0]      return class
 
+moon1.coordinates                   return list
+moon1.temperature                   return list
+moon1.diameter                      return int
+moon1.used                          return int
+moon1.total                         return int
+moon1.free                          return int
 
-**keep in mind to prefer planets id's moon id dont works on every function**
+useful for importing all celestial data of all moons
+at once through loading one single overview page
 </pre>
 
 ### abandon planet
@@ -171,12 +209,23 @@ coordinates(1, 2, 12, destination.moon)
 coordinates(1, 2, 12, destination.debris)
 coordinates(1, 2, 12, destination.planet) or coordinates(1, 2, 12)
 ```
+
 ### get slot celestials
 returns how many planet slots are free to colonize
 <pre>
 slot = empire.slot_celestial()          returns class
 slot.free                               returns int
 slot.total                              returns int
+</pre>
+
+### get extra_slots
+returns the amount of additional slots aquired by items
+<pre>
+xslot = empire.extra_slotsl(stype)      returns int
+empire.extra_slotsl(0)                  returns int / additional expedition_slots
+empire.extra_slotsl(1)                  returns int / additional fleet_slots
+
+probably a niche function, but sometimes quite useful
 </pre>
 
 ### get celestial
@@ -203,13 +252,102 @@ empire.celestial_coordinates(id)        returns list
 get research, building and shipyard construction time
 works with planet's and moon's
 <pre>
-empire.celestial_queue(id)              returns list
+empire.celestial_queue(id, name_list)   returns list
+optional input = name_list (needed for the shipyard queue)
+
 
 queue = empire.celestial_queue(id)
 queue.list                              returns list
 queue.research                          returns datetime
 queue.buildings                         returns datetime
 queue.shipyard                          returns datetime
+queue.squeue                            returns class / None
+
+If ships are in queue those will now be added under squeue!
+
+shid = queue.squeue                     returns merged class
+
+shid.light_fighter.amount
+shid.light_fighter.is_possible
+shid.light_fighter.in_construction
+shid.light_fighter.in_queue
+shid.light_fighter.amount = shid.light_fighter.in_queue
+
+shid.heavy_fighter
+shid.cruiser
+shid.battleship
+shid.interceptor
+shid.bomber
+shid.destroyer
+shid.deathstar
+shid.reaper
+shid.explorer
+shid.small_transporter
+shid.large_transporter
+shid.colonyShip
+shid.recycler
+shid.espionage_probe
+shid.solarSatellite
+shid.crawler
+shid.laser_cannon_light
+shid.laser_cannon_heavy
+shid.gauss_cannon
+shid.ion_cannon
+shid.plasma_cannon
+shid.shield_dome_small
+shid.shield_dome_large
+shid.missile_interceptor
+shid.missile_interplanetary
+
+
+If ships are in queue and a name_list is not provided
+a new file called tooltip_names.py will be created in the ogame package folder
+
+According to your language area, a class with specific names will be added
+it consists of all different ship_names followed by defence_names
+</pre>
+
+```python
+class en_tooltips:
+    list = [
+    'Light Fighter',
+    'Heavy Fighter',
+    'Cruiser',
+    'Battleship',
+    'Battlecruiser',
+    'Bomber',
+    'Destroyer',
+    'Deathstar',
+    'Reaper',
+    'Pathfinder',
+    'Small Cargo',
+    'Large Cargo',
+    'Colony Ship',
+    'Recycler',
+    'Espionage Probe',
+    'Solar Satellite',
+    'Crawler',
+    'Rocket Launcher',
+    'Light Laser',
+    'Heavy Laser',
+    'Gauss Cannon',
+    'Ion Cannon',
+    'Plasma Turret',
+    'Small Shield Dome',
+    'Large Shield Dome',
+    'Anti-Ballistic Missiles',
+    'Interplanetary Missiles'
+    ]
+```
+
+<pre>
+If needed, those list of strings can be imported separately and used
+as input for the initial empire.celestial_queue() function
+-> minimizing the package import on every function call later on
+
+just call:
+empire.tooltip_names_import()           returns list
+to get those names separately
 </pre>
 
 ### resources
@@ -432,12 +570,28 @@ def.missile_interplanetary
 
 ### get galaxy
 <pre>
-empire.galaxy(coordinates)          returns list of class(object)
+empire.galaxy(coordinates)                      returns list of class(object)
+
+pos = empire.galaxy(coordinates)
+pos.list                                        returns list
+pos.position                                    returns list
+pos.name / pos.player                           returns str
+pos.rank                                        returns int
+pos.status                                      returns list of str
+pos.moon                                        returns bool
+pos.moon_size                                   returns int / 0 if no moon
+pos.alliance                                    returns str
+pos.debris_coord                                return list
+pos.has_debris                                  returns bool
+pos.resources                                   returns list
+pos.expedition_debris                           returns list  # the one for pathfinder
+pos.needed_pf                                   returns int
 </pre>
 ```python
 for planet in empire.galaxy(coordinates(randint(1,6), randint(1,499))):
     print(planet.list)
-    print(planet.name, planet.position, planet.player, planet.player_id, planet.rank, planet.status, planet.moon, planet.activity)
+    print(planet.name, planet.position, planet.player, planet.player_id, planet.rank, planet.status, planet.moon, planet.activity, planet.moon_size, planet.debris.coord, planet.has_debris, planet.resources,
+planet.expedition_debris, planet.needed_pf)
     if status.inactive in planet.status and status.vacation not in planet.status:
         #Farm Inactive
 ```
@@ -492,7 +646,43 @@ officers.technocrat                 returns bool
 
 ### get shop
 <pre>
-empire.shop()                       returns Exception("function not implemented yet PLS contribute")
+empire.shop_items()                 returns list [item1, item2, ...]
+
+The returned list consist of roughly +80 Items.
+Sole purpose is to import the Item names + id.
+
+item1 = empire.shop_items()[0]      returns list
+['Researchers', '1aa36213cb676fd5baad5edc2bee4fbe117a778b']
+....
+....
+item12 = empire.shop_items()[11]    returns list
+['Bronze Crystal Booster 90d', 'bb7579f7a21152a4a256f001d5162765e2f2c5b9']
+
+item_name = item12[0]               returns str
+item_id = item12[1]                 returns str
+....
+first list entry resembles the item name, second one the id
+
+empire.buy_item(id, activate_it)    return class
+item = empire.buy_item(id, activate_it)
+activate it set on False per default
+if True the Item is bough + instant activated
+
+name =  item.name                   return str
+costs = item.costs                  return int      / DM
+duration = item.duration            return duration / in s
+effect = item.effect                return str      / description
+amount = item.amount                return int      / used amount
+list = item.list                    return list [name, costs, duration,...]
+
+in case of failure                  return False
+
+empire.activate_item(id)            return class
+class basically the same, except another entry:
+can_be_used = item.canbeused        return bool
+
+as the function name implicates, input the item_id
+and as long as enough items are in stock it will be activated
 </pre>
 
 ### get slot
@@ -835,6 +1025,15 @@ empire.cancel_research(id)              returns None
 this will collect your rubble field at the planet id.
                 
 empire.collect_rubble_field(id)         returns None
+</pre>
+
+### activate/deactivate vacation mode
+<pre>
+empire.vacation_mode()                  returns bool / will enter vacation mode
+empire.vacation_mode(activate=False)    returns bool / deactivate vacation mode
+
+if already in vacation and the 48h arent't over yet   returns str / of time
+
 </pre>
 
 ### im i still loged In?
