@@ -2658,7 +2658,7 @@ class OGame(object):
                 .format(id),
             headers={'X-Requested-With': 'XMLHttpRequest'})
 
-    def activate_vacation(self, activate=True):
+    def vacation_mode(self, activate=True):
         response = self.session.get(
             url=self.index_php + 'page=ingame&component=preferences'
                 .format(id),
