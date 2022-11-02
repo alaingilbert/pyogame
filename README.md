@@ -83,6 +83,23 @@ server.Donut.galaxy                 returns bool
 server.Donut.system                 returns bool
 </pre>
 
+### get highscore-list
+<pre>
+empire.highscore(page=1)            return list
+
+Page 1 returns the data of all Players in Top 100
+Each list entry consists of a separate class 
+
+player_top1 = empire.highscore(page=1)[0]
+player_top1.name                    return str
+player_top1.player_id               return int
+player_top1.rank                    return int
+player_top1.points                  return int
+player_top1.list                    return list [name, player_id, rank, points]
+
+makes tracking player-progress through the highscore possible 
+</pre>
+
 ### get characterclass
 <pre>
 Get the class of your Ogame Account['miner', 'explorer', 'warrior', 'none]
@@ -492,7 +509,43 @@ officers.technocrat                 returns bool
 
 ### get shop
 <pre>
-empire.shop()                       returns Exception("function not implemented yet PLS contribute")
+empire.shop_items()                 returns list [item1, item2, ...]
+
+The returned list consist of roughly +80 Items.
+Sole purpose is to import the Item names + id.
+
+item1 = empire.shop_items()[0]      returns list
+['Researchers', '1aa36213cb676fd5baad5edc2bee4fbe117a778b']
+....
+....
+item12 = empire.shop_items()[11]    returns list
+['Bronze Crystal Booster 90d', 'bb7579f7a21152a4a256f001d5162765e2f2c5b9']
+
+item_name = item12[0]               returns str
+item_id = item12[1]                 returns str
+....
+first list entry resembles the item name, second one the id
+
+empire.buy_item(id, activate_it)    return class
+item = empire.buy_item(id, activate_it)
+activate it set on False per default
+if True the Item is bough + instant activated
+
+name =  item.name                   return str
+costs = item.costs                  return int      / DM
+duration = item.duration            return duration / in s
+effect = item.effect                return str      / description
+amount = item.amount                return int      / used amount
+list = item.list                    return list [name, costs, duration,...]
+
+in case of failure                  return False
+
+empire.activate_item(id)            return class
+class basically the same, except another entry:
+can_be_used = item.canbeused        return bool
+
+as the function name implicates, input the item_id
+and as long as enough items are in stock it will be activated
 </pre>
 
 ### get slot
