@@ -218,7 +218,7 @@ class OGame(object):
         else:
             return False
 
-    def list_highscore(self, page=1):
+    def highscore(self, page=1):
         data = {
             'page': 'highscoreContent',
             'category': '1',
@@ -234,11 +234,15 @@ class OGame(object):
         player_list = []
         for i in range(1, 101):
             rawy = bs4.select('tr', attrs={'class': ''})[i]
-            name = rawy.find('span', attrs={'class': 'playername'}).text.strip()
-            player_id = rawy['id'].replace("position", "")
-            rank = rawy.find('td', attrs={'class': 'position'}).text.strip()
-            points = rawy.find('td', attrs={'class': 'score'}).text.strip().replace(".", "").replace(",", "")
-            player_list.append([player_id, name, rank, points])
+            class PlayerData:
+                name = rawy.find('span', attrs={'class': 'playername'}).text.strip()
+                player_id = int(rawy['id'].replace("position", ""))
+                rank = int(rawy.find('td', attrs={'class': 'position'}).text.strip())
+                points = int(rawy.find('td', attrs={'class': 'score'}).text.strip().replace(".", "").replace(",", ""))
+                list = [
+                    name, player_id, rank, points
+                ]
+            player_list.append(PlayerData)
         return player_list
 
     def character_class(self):
