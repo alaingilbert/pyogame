@@ -241,13 +241,101 @@ empire.celestial_coordinates(id)        returns list
 get research, building and shipyard construction time
 works with planet's and moon's
 <pre>
-empire.celestial_queue(id)              returns list
+empire.celestial_queue(id, name_list)   returns list
+optional input = name_list (needed for the shipyard queue)
+
 
 queue = empire.celestial_queue(id)
 queue.list                              returns list
 queue.research                          returns datetime
 queue.buildings                         returns datetime
 queue.shipyard                          returns datetime
+queue.squeue                            returns class / None
+
+If ships are in queue those will now be added under squeue!
+
+shid = queue.squeue                     returns merged class
+
+shid.light_fighter.amount
+shid.light_fighter.is_possible
+shid.light_fighter.in_construction
+shid.light_fighter.in_queue
+shid.light_fighter.amount = shid.light_fighter.in_queue
+
+shid.heavy_fighter
+shid.cruiser
+shid.battleship
+shid.interceptor
+shid.bomber
+shid.destroyer
+shid.deathstar
+shid.reaper
+shid.explorer
+shid.small_transporter
+shid.large_transporter
+shid.colonyShip
+shid.recycler
+shid.espionage_probe
+shid.solarSatellite
+shid.crawler
+shid.laser_cannon_light
+shid.laser_cannon_heavy
+shid.gauss_cannon
+shid.ion_cannon
+shid.plasma_cannon
+shid.shield_dome_small
+shid.shield_dome_large
+shid.missile_interceptor
+shid.missile_interplanetary
+
+
+If ships are in queue and a name_list is not provided
+a new file called tooltip_names.py will be created in the ogame package folder
+
+According to your language area, a class with specific names will be added
+it consists of all different ship_names followed by defence_names
+
+```python
+class en_tooltips:
+    list = [
+    'Light Fighter',
+    'Heavy Fighter',
+    'Cruiser',
+    'Battleship',
+    'Battlecruiser',
+    'Bomber',
+    'Destroyer',
+    'Deathstar',
+    'Reaper',
+    'Pathfinder',
+    'Small Cargo',
+    'Large Cargo',
+    'Colony Ship',
+    'Recycler',
+    'Espionage Probe',
+    'Solar Satellite',
+    'Crawler',
+    'Rocket Launcher',
+    'Light Laser',
+    'Heavy Laser',
+    'Gauss Cannon',
+    'Ion Cannon',
+    'Plasma Turret',
+    'Small Shield Dome',
+    'Large Shield Dome',
+    'Anti-Ballistic Missiles',
+    'Interplanetary Missiles'
+    ]
+```
+
+If needed, those list of strings can be imported separately and used
+as input for the initial empire.celestial_queue() function
+-> minimizing the package import on every function call later on
+
+just call:
+empire.tooltip_names_import()           returns list
+to get those names separately
+
 </pre>
 
 ### resources
