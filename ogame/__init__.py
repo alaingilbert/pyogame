@@ -1500,7 +1500,7 @@ class OGame(object):
                 # add attribute for planet activity info
                 activity = flag_activity
                 list = [
-                    name, position, player, activity,
+                    position, planet_name, player, activity,
                     player_id, rank, status, moon, moon_size, alliance,
                     debris_coord, has_debris, resources, expedition_debris, needed_pf
                 ]
