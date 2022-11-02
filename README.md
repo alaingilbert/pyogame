@@ -121,31 +121,52 @@ empire.rank()                       return int
 
 ### get planet id's
 <pre>
-empire.planet_ids()                 returns list 
+empire.planet_ids()                 return list 
 
-empire.planet_names()               returns list
+empire.planet_names()               return list
 
-empire.planet_coords()              returns list
+empire.planet_coords()              return list
 
-empire.id_by_planet_name('name')    returns int
-
+empire.id_by_planet_name('name')    return int
 empire.name_by_planet_id(id)        return string
+
+empire.planet_infos()               return list of class
+planet1 = empire.planet_infos()[0]  return class
+
+planet1.coordinates                 return list
+planet1.temperature                 return list
+planet1.diameter                    return int
+planet1.used                        return int
+planet1.total                       return int
+planet1.free                        return int
+
+useful for importing all celestial data of all planets
+at once through loading one single overview page
 </pre>
 
 ### get moon id's
 <pre>
-empire.moon_ids()                   returns list
+empire.moon_ids()                   return list
 
-empire.moon_names()                 returns list
+empire.moon_names()                 return list
 
-empire.moon_coords()                returns list
+empire.moon_coords()                return list
 
+empire.id_by_moon_name('name')      return int
+empire.name_by_moon_id(id)          return string
 
-empire.id_by_moon_name('name')      returns int
-empire.id_by_planet_name('name')    returns int
+empire.moon_infos()                 return list of class
+moon1 = empire.moon_infos()[0]      return class
 
+moon1.coordinates                   return list
+moon1.temperature                   return list
+moon1.diameter                      return int
+moon1.used                          return int
+moon1.total                         return int
+moon1.free                          return int
 
-**keep in mind to prefer planets id's moon id dont works on every function**
+useful for importing all celestial data of all moons
+at once through loading one single overview page
 </pre>
 
 ### abandon planet
