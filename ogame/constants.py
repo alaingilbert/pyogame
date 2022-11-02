@@ -353,13 +353,13 @@ def price(technology, level=1):
 
     if buildings.is_facilities(technology):
         if technology[0] == 14: return resources(400 * 2 ** level, 120 * 2 ** level, 200 * 2 ** level)
-        elif technology[0] == 21: return resources(200 * 2 ** level, 100 * 2 ** level, 50 * 2 ** level)
+        elif technology[0] == 21: return resources(400 * 2 ** level, 200 * 2 ** level, 100 * 2 ** level)
         elif technology[0] == 31: return resources(200 * 2 ** level, 400 * 2 ** level, 200 * 2 ** level)
-        elif technology[0] == 34: return resources(metal=10000 * 2 ** level, crystal=20000 * 2 ** level)
+        elif technology[0] == 34: return resources(metal=20000 * 2 ** level, crystal=40000 * 2 ** level)
         elif technology[0] == 44: return resources(20000 * 2 ** level, 20000 * 2 ** level, 1000 * 2 ** level)
         elif technology[0] == 15: return resources(1000000 * 2 ** level, 500000 * 2 ** level, 100000 * 2 ** level)
         elif technology[0] == 33: return resources(crystal=50000 * 2 ** level, deuterium=100000 * 2 ** level)
-        elif technology[0] == 36: return resources(metal=40 * 5 ** level, deuterium=10 * 5 ** level)
+        elif technology[0] == 36: return resources(metal=200 * 5 ** level, deuterium=50 * 5 ** level)
         elif technology[0] == 41: return resources(10000 * 2 ** level, 20000 * 2 ** level, 10000 * 2 ** level)
         elif technology[0] == 42: return resources(10000 * 2 ** level, 20000 * 2 ** level, 10000 * 2 ** level)
         elif technology[0] == 43: return resources(10000 * 2 ** level, 20000 * 2 ** level, 10000 * 2 ** level)
