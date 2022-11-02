@@ -306,12 +306,11 @@ class OGame(object):
                         listofelems[index][0] = listofelems[index][0] + item_duration[2]
         return listofelems
 
-    def buy_item(self, item_id, activate_it=False):
+    def buy_item(self, id, activate_it=False):
         response = self.session.get(
-            url=self.index_php + 'page=shop&ajax=1&type={}'.format(item_id),
+            url=self.index_php + 'page=shop&ajax=1&type={}'.format(id),
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).text
-        time.sleep(random.randint(1100, 2500) / 1000)
         if activate_it:
             activateToken = re.search(r'activateToken="(.*)";', str(response)).group(1)
             response2 = self.session.post(
@@ -319,13 +318,13 @@ class OGame(object):
                 data={'ajax': 1,
                       'token': activateToken,
                       'referrerPage': "ingame",
-                      'buyAndActivate': item_id},
+                      'buyAndActivate': id},
                 headers={'X-Requested-With': 'XMLHttpRequest'}
             ).json()
         else:
             buyToken = re.search(r'var token="(.*)";v', str(response)).group(1)
             response2 = self.session.post(
-                url=self.index_php + 'page=buyitem&item={}'.format(item_id),
+                url=self.index_php + 'page=buyitem&item={}'.format(id),
                 data={'ajax': 1,
                       'token': buyToken},
                 headers={'X-Requested-With': 'XMLHttpRequest'}
@@ -336,24 +335,27 @@ class OGame(object):
                 item_data = response2['message']['item']
             else:
                 item_data = response2['item']
-            list = [
-                item_data['name'],
-                item_data['costs'],
-                str(timedelta(seconds=item_data['duration'])),
-                item_data['effect'],
-                item_data['amount']
-            ]
-        return list
+            class Item:
+                name = item_data['name']
+                costs = int(item_data['costs'])
+                duration = int(item_data['duration'])
+                effect = item_data['effect']
+                amount = int(item_data['amount'])
+                list = [
+                    name, costs, duration, effect, amount
+                ]
+            return Item
+        else:
+            return False
 
-    def activate_item(self, item_id):
+    def activate_item(self, id):
         response = self.session.get(
-            url=self.index_php + 'page=shop&ajax=1&type={}'.format(item_id),
+            url=self.index_php + 'page=shop&ajax=1&type={}'.format(id),
             headers={'X-Requested-With': 'XMLHttpRequest'}
         ).text
-        time.sleep(random.randint(1100, 2500) / 1000)
         activateToken = re.search(r'var token="(.*)";v', str(response)).group(1)
         response2 = self.session.post(
-            url=self.index_php + 'page=inventory&item={}&ajax=1'.format(item_id),
+            url=self.index_php + 'page=inventory&item={}&ajax=1'.format(id),
             data={'ajax': 1,
                   'token': activateToken,
                   'referrerPage': "shop"},
@@ -362,16 +364,19 @@ class OGame(object):
         list = []
         if not response2['error']:
             item_data = response2['message']['item']
-            print(item_data)
-            list = [
-                item_data['name'],
-                item_data['costs'],
-                str(timedelta(seconds=item_data['duration'])),
-                item_data['effect'],
-                item_data['canBeActivated'],
-                item_data['amount']
-            ]
-        return list
+            class Item:
+                name = item_data['name']
+                costs = int(item_data['costs'])
+                duration = int(item_data['duration'])
+                effect = item_data['effect']
+                canbeused = bool(item_data['canBeActivated'])
+                amount = int(item_data['amount'])
+                list = [
+                    name, costs, duration, effect, canbeused, amount
+                ]
+            return Item
+        else:
+            return False
 
     def planet_ids(self):
         ids = []
