@@ -615,36 +615,60 @@ class OGame(object):
                     self.in_construction = False
                 self.in_queue = amount[i]
 
-        class BuildingQueue(object):
-            light_fighter = Shipyard(0)
-            heavy_fighter = Shipyard(1)
-            cruiser = Shipyard(2)
-            battleship = Shipyard(3)
-            interceptor = Shipyard(4)
-            bomber = Shipyard(5)
-            destroyer = Shipyard(6)
-            deathstar = Shipyard(7)
-            reaper = Shipyard(8)
-            explorer = Shipyard(9)
-            small_transporter = Shipyard(10)
-            large_transporter = Shipyard(11)
-            colonyShip = Shipyard(12)
-            recycler = Shipyard(13)
-            espionage_probe = Shipyard(14)
-            solarSatellite = Shipyard(15)
-            crawler = Shipyard(16)
-            rocket_launcher = Shipyard(17)
-            laser_cannon_light = Shipyard(18)
-            laser_cannon_heavy = Shipyard(19)
-            gauss_cannon = Shipyard(20)
-            ion_cannon = Shipyard(21)
-            plasma_cannon = Shipyard(22)
-            shield_dome_small = Shipyard(23)
-            shield_dome_large = Shipyard(24)
-            missile_interceptor = Shipyard(25)
-            missile_interplanetary = Shipyard(26)
+        ShipsQueue = self.shi_class(Shipyard)
+        ShipsQueue.solarSatellite = Shipyard(15)
+        ShipsQueue.crawler = Shipyard(16)
+        amount = amount[17:]
+        DeffQueue = self.deff_class(Shipyard)
+        Queue = self.merge_class(ShipsQueue, DeffQueue)
+        del ShipsQueue, DeffQueue
+        return Queue
 
-        return BuildingQueue
+    def deff_class(self, DeffClass):
+        class Deff(object):
+            rocket_launcher = DeffClass(0)
+            laser_cannon_light = DeffClass(1)
+            laser_cannon_heavy = DeffClass(2)
+            gauss_cannon = DeffClass(3)
+            ion_cannon = DeffClass(4)
+            plasma_cannon = DeffClass(5)
+            shield_dome_small = DeffClass(6)
+            shield_dome_large = DeffClass(7)
+            missile_interceptor = DeffClass(8)
+            missile_interplanetary = DeffClass(9)
+
+        return Deff
+
+    def shi_class(self, ShipClass):
+        class Ships(object):
+            light_fighter = ShipClass(0)
+            heavy_fighter = ShipClass(1)
+            cruiser = ShipClass(2)
+            battleship = ShipClass(3)
+            interceptor = ShipClass(4)
+            bomber = ShipClass(5)
+            destroyer = ShipClass(6)
+            deathstar = ShipClass(7)
+            reaper = ShipClass(8)
+            explorer = ShipClass(9)
+            small_transporter = ShipClass(10)
+            large_transporter = ShipClass(11)
+            colonyShip = ShipClass(12)
+            recycler = ShipClass(13)
+            espionage_probe = ShipClass(14)
+
+        return Ships
+
+    def merge_class(self, ob1, ob2):
+        my_dict = {**ob1.__dict__, **ob2.__dict__}
+        del my_dict['__dict__'], my_dict['__weakref__'], my_dict['__doc__']
+
+        class mergeClass(object):
+            def __init__(self, my_dict):
+                for key in my_dict:
+                    setattr(self, key, my_dict[key])
+
+        return mergeClass(my_dict)
 
     def tooltip_names_import(self):
         import inspect, os.path
@@ -897,7 +921,7 @@ class OGame(object):
             repair_dock = Facility(7)
 
         return Facilities
-    
+
     def lf_facilities(self, id):
         response = self.session.get(
             self.index_php + 'page=ingame&component=lfbuildings&cp={}'
@@ -934,9 +958,9 @@ class OGame(object):
             biotech_lab = LfFacilitie(9)
             metropolis = LfFacilitie(9)
             planetary_shield = LfFacilitie(10)
-            
+
         return LfFacilities
-    
+
     def moon_facilities(self, id):
         response = self.session.get(
             url='{}page=ingame&component=facilities&cp={}'
@@ -1257,7 +1281,7 @@ class OGame(object):
             psionic_shield_matrix = LfResearch(17)
 
         return LfResearches
-    
+
     def ships(self, id):
         response = self.session.get(
             self.index_php + 'page=ingame&component=shipyard&cp={}'
@@ -1291,25 +1315,9 @@ class OGame(object):
                 is_possible = False
                 in_construction = False
 
-        class Ships(object):
-            light_fighter = Ship(0)
-            heavy_fighter = Ship(1)
-            cruiser = Ship(2)
-            battleship = Ship(3)
-            interceptor = Ship(4)
-            bomber = Ship(5)
-            destroyer = Ship(6)
-            deathstar = Ship(7)
-            reaper = Ship(8)
-            explorer = Ship(9)
-            small_transporter = Ship(10)
-            large_transporter = Ship(11)
-            colonyShip = Ship(12)
-            recycler = Ship(13)
-            espionage_probe = Ship(14)
-            solarSatellite = Ship(15)
-            crawler = Crawler
-
+        Ships = self.shi_class(Ship)
+        Ships.crawler = Crawler
+        Ships.res = self.add_resources(bs4)
         return Ships
 
     def defences(self, id):
@@ -1333,18 +1341,7 @@ class OGame(object):
                 self.is_possible = OGame.isPossible(technologyStatus[i])
                 self.in_construction = OGame.inConstruction(technologyStatus[i])
 
-        class Defences(object):
-            rocket_launcher = Defence(0)
-            laser_cannon_light = Defence(1)
-            laser_cannon_heavy = Defence(2)
-            gauss_cannon = Defence(3)
-            ion_cannon = Defence(4)
-            plasma_cannon = Defence(5)
-            shield_dome_small = Defence(6)
-            shield_dome_large = Defence(7)
-            missile_interceptor = Defence(8)
-            missile_interplanetary = Defence(9)
-
+        Defences = self.deff_class(Defence)
         return Defences
 
     def galaxy(self, coords):
@@ -1817,24 +1814,8 @@ class OGame(object):
                 self.crystal = shipments[1]
                 self.deuterium = shipments[2]
 
-        class Ships(object):
-            light_fighter = Ship(0)
-            heavy_fighter = Ship(1)
-            cruiser = Ship(2)
-            battleship = Ship(3)
-            interceptor = Ship(4)
-            bomber = Ship(5)
-            destroyer = Ship(6)
-            deathstar = Ship(7)
-            reaper = Ship(8)
-            explorer = Ship(9)
-            small_transporter = Ship(10)
-            large_transporter = Ship(11)
-            colonyShip = Ship(12)
-            recycler = Ship(13)
-            espionage_probe = Ship(14)
-            shipment = Ress()
-
+        Ships = self.shi_class(Ship)
+        Ships.shipment = Ress()
         return Ships
 
     def hostile_fleet(self):
