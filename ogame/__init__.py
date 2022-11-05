@@ -764,8 +764,10 @@ class OGame(object):
             storage = [to_int(store.span['title']) for store in storage]
             darkmatter = to_int(bs4.find(id='resources_darkmatter')['data-raw'])
             energy = to_int(bs4.find(id='resources_energy')['data-raw'])
-            population = to_int(bs4.find(id='resources_population')['data-raw'])
-            food = to_int(bs4.find(id='resources_food')['data-raw'])
+            
+            if bs4.find(id='resources_population')['data-raw']:
+                population = to_int(bs4.find(id='resources_population')['data-raw'])
+                food = to_int(bs4.find(id='resources_food')['data-raw'])
         return Resources
 
     def resources_settings(self, id, settings=None):
