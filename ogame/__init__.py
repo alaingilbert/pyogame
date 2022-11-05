@@ -1469,9 +1469,11 @@ class OGame(object):
             if debris_index:
                 debris_data = debris_fields[debris_index]
 
-            moon_size_row = 0
             if moon:
                 moon_size_row = int(row.select_one("td.moon span#moonsize").text.split()[0])
+            else:
+                moon_size_row = 0
+                flag_activity[1] = -2
 
             debris_16 = bs4.find(class_="expeditionDebrisSlotBox")
             if debris_16:
