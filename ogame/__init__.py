@@ -464,21 +464,24 @@ class OGame(object):
     def planet_infos(self):
         infos = []
         for planet in self.landing_page.find_all(class_='planetlink'):
+            planet_fields = re.search(r'\((.*)\/(.*)\)', planet['title'])
+            temperatures = re.search(r'([0-9]+)°.* ([0-9]+)°', planet['title'])
             class Celestial:
                 coordinates = re.search(r'\[(.*)]', planet['title']).group(1)
                 coordinates = [int(coords) for coords in coordinates.split(':')]
                 coordinates.append(const.destination.planet)
-                diameter = re.search(r'br>(.*)km', planet['title']).group(1)
+                diameter = re.search(r'/>(.*)km', planet['title']).group(1)
                 diameter = int("".join(re.split('\\.|\\,', diameter)))
-                total = int(re.search(r'\((.*)\/(.*)\)', planet['title']).group(2))
-                if "overmark" in re.search(r'\((.*)\/(.*)\)', planet['title']).group(1):
+                total = int(planet_fields.group(2))
+                if "overmark" in planet_fields.group(1):
                     used = total
                 else:
-                    used = int(re.search(r'\((.*)\/(.*)\)', planet['title']).group(1))
+                    used = int(planet_fields.group(1))
                 free = total - used
+                temperature =
                 temperature = [
-                    int(re.search(r'([0-9]+)°.* ([0-9]+)°', planet['title']).group(1)),
-                    int(re.search(r'([0-9]+)°.* ([0-9]+)°', planet['title']).group(2))
+                    int(temperatures.group(1)),
+                    int(temperatures.group(2))
                 ]
             infos.append(Celestial)
         return infos
@@ -486,17 +489,18 @@ class OGame(object):
     def moon_infos(self):
         infos = []
         for moon in self.landing_page.find_all(class_='moonlink'):
+            moon_fields = re.search(r'\((.*)\/(.*)\)', moon['title'])
             class Celestial:
                 coordinates = re.search(r'\[(.*)]', moon['title']).group(1)
                 coordinates = [int(coords) for coords in coordinates.split(':')]
                 coordinates.append(const.destination.moon)
                 diameter = re.search(r'br>(.*)km', moon['title']).group(1)
                 diameter = int("".join(re.split('\\.|\\,', diameter)))
-                total = int(re.search(r'\((.*)\/(.*)\)', moon['title']).group(2))
-                if "overmark" in re.search(r'\((.*)\/(.*)\)', moon['title']).group(1):
+                total = int(moon_fields.group(2))
+                if "overmark" in moon_fields.group(1):
                     used = total
                 else:
-                    used = int(re.search(r'\((.*)\/(.*)\)', moon['title']).group(1))
+                    used = int(moon_fields.group(1))
                 free = total - used
             infos.append(Celestial)
         return infos
