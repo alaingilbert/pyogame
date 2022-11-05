@@ -1451,23 +1451,15 @@ class OGame(object):
             alliance_id = playerId(
                 alliance_id['rel']) if alliance_id else None
 
-            # find user activity on planet
+            flag_activity = [-1, -1]
             activity_tag = row.select('div[class*="activity"]')
-            if len(activity_tag) != 0:
-                if 'minute15' in activity_tag[0]['class']:
-                    flag_activity = 15 # if minute15, set as 15
-                elif 'showMinutes' in activity_tag[0]['class']:
-                    flag_str = row.findAll(
-                        "div", {"title": "Activity"})[0].string
-                    # if showMinutes, set as real count
-                    flag_activity = int(
-                        re.search(r'[0-9]+', flag_str).group())
+            for i, atag in enumerate(activity_tag):
+                if 'minute15' in atag['class']:
+                    flag_activity[i] = 15
+                elif 'showMinutes' in atag['class']:
+                    flag_activity[i] = int(re.search(r'([0-9]+)', atag.text).group(1))
                 else:
-                    # set -1 if no activity
-                    flag_activity = -1
-            else:
-                # set -2 if something failed
-                flag_activity = -2
+                    flag_activity[i] = -1
 
             debris_data = [planet_cord[:2] + [2], False, [0, 0, 0]]
             debris_index = None
@@ -1484,7 +1476,10 @@ class OGame(object):
             debris_16 = bs4.find(class_="expeditionDebrisSlotBox")
             if debris_16:
                 debris_data = debris_16.find(class_='ListLinks').text.replace(".","")
-                debris_16 = [int(data.replace(",","").replace(".","")) for data in re.findall(r'\d+', debris_data)]
+                debris_16 = [
+                    int(data.replace(",","").replace(".",""))
+                    for data in re.findall(r'\d+', debris_data)
+                ]
             else:
                 debris_16 = [0, 0, 0]   # [met, kris, pf]
 
