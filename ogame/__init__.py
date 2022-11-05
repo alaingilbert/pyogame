@@ -310,77 +310,73 @@ class OGame(object):
         response = self.session.get(
             url=self.index_php + 'page=shop&ajax=1&type={}'.format(id),
             headers={'X-Requested-With': 'XMLHttpRequest'}
-        )
-        item_name = BeautifulSoup4(response.text).h2.text
-
-        if len(item_name) > 5:
-            activateToken = re.search(r'activateToken="(.*)";', response.text)
-            if activate_it and activateToken:
-                response = self.session.post(
-                    url=self.index_php + 'page=inventory',
-                    data={'ajax': 1,
-                          'token': activateToken.group(1),
-                          'referrerPage': "ingame",
-                          'buyAndActivate': id},
-                    headers={'X-Requested-With': 'XMLHttpRequest'}
-                ).json()
-                item_data = response['message']['item']
+        )).text
+        if activate_it:
+            activateToken = re.search(r'activateToken="(.*)";', str(response)).group(1)
+            response2 = self.session.post(
+                url=self.index_php + 'page=inventory',
+                data={'ajax': 1,
+                      'token': activateToken,
+                      'referrerPage': "ingame",
+                      'buyAndActivate': id},
+                headers={'X-Requested-With': 'XMLHttpRequest'}
+            ).json()
+        else:
+            buyToken = re.search(r'var token="(.*)";v', str(response)).group(1)
+            response2 = self.session.post(
+                url=self.index_php + 'page=buyitem&item={}'.format(id),
+                data={'ajax': 1,
+                      'token': buyToken},
+                headers={'X-Requested-With': 'XMLHttpRequest'}
+            ).json()
+        list = []
+        if not response2['error']:
+            if activate_it:
+                item_data = response2['message']['item']
             else:
-                buyToken = re.search(r'var token="(.*)";v', response.text).group(1)
-                response = self.session.post(
-                    url=self.index_php + 'page=buyitem&item={}'.format(id),
-                    data={'ajax': 1,
-                          'token': buyToken},
-                    headers={'X-Requested-With': 'XMLHttpRequest'}
-                ).json()
-                item_data = response['item']
-
-        if len(item_name) <= 5 or response['error']:
+                item_data = response2['item']
+            class Item:
+                name = item_data['name']
+                costs = int(item_data['costs'])
+                duration = int(item_data['duration'])
+                effect = item_data['effect']
+                amount = int(item_data['amount'])
+                list = [
+                    name, costs, duration, effect, amount
+                ]
+            return Item
+        else:
             return False
-
-        class Item:
-            name = item_data['name']
-            costs = int(item_data['costs'])
-            duration = int(item_data['duration'])
-            effect = item_data['effect']
-            amount = int(item_data['amount'])
-            list = [
-                name, costs, duration, effect, amount
-            ]
-        return Item
 
     def activate_item(self, id):
         response = self.session.get(
             url=self.index_php + 'page=shop&ajax=1&type={}'.format(id),
             headers={'X-Requested-With': 'XMLHttpRequest'}
-        )
-        item_name = BeautifulSoup4(response.text).h2.text
-
-        if len(item_name) > 5:
-            activateToken = re.search(r'var token="(.*)";v', response.text).group(1)
-            response = self.session.post(
-                url=self.index_php + 'page=inventory&item={}&ajax=1'.format(id),
-                data={'ajax': 1,
-                      'token': activateToken,
-                      'referrerPage': "shop"},
-                headers={'X-Requested-With': 'XMLHttpRequest'}
-            ).json()
-
-        if len(item_name_length) <= 5 or response['error']:
+        ).text
+        activateToken = re.search(r'var token="(.*)";v', str(response)).group(1)
+        response2 = self.session.post(
+            url=self.index_php + 'page=inventory&item={}&ajax=1'.format(id),
+            data={'ajax': 1,
+                  'token': activateToken,
+                  'referrerPage': "shop"},
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        ).json()
+        list = []
+        if not response2['error']:
+            item_data = response2['message']['item']
+            class Item:
+                name = item_data['name']
+                costs = int(item_data['costs'])
+                duration = int(item_data['duration'])
+                effect = item_data['effect']
+                canbeused = bool(item_data['canBeActivated'])
+                amount = int(item_data['amount'])
+                list = [
+                    name, costs, duration, effect, canbeused, amount
+                ]
+            return Item
+        else:
             return False
-
-        item_data = response.json()['message']['item']
-        class Item:
-            name = item_data['name']
-            costs = int(item_data['costs'])
-            duration = int(item_data['duration'])
-            effect = item_data['effect']
-            canbeused = bool(item_data['canBeActivated'])
-            amount = int(item_data['amount'])
-            list = [
-                name, costs, duration, effect, canbeused, amount
-            ]
-        return Item
 
     def planet_ids(self):
         ids = []
@@ -520,7 +516,6 @@ class OGame(object):
             r'textContent\[7] = "(.*)>(.*?) \(Place (.*?) (.*)<',
             response
         )
-
         class Celestial:
             diameter = int(textContent1.group(1).replace('.', '').replace(',', ''))
             used = int(textContent1.group(2))
@@ -533,7 +528,6 @@ class OGame(object):
             coordinates = OGame.celestial_coordinates(self, id)
             points = int(textContent7.group(2).replace(".", "").replace(',', ''))
             rank = int(textContent7.group(3).replace(".", "").replace(',', ''))
-
         return Celestial
 
     def celestial_queue(self, id, name_list=False):
@@ -553,13 +547,14 @@ class OGame(object):
         else:
             build_time = int(build_time.group(1))
             build_time = datetime.fromtimestamp(build_time)
+        shipyard_queue = None
         shipyard_time = re.search(r'var restTimeship2 = ([0-9]+)', response)
         if shipyard_time is None:
             shipyard_time = datetime.fromtimestamp(0)
         else:
             shipyard_time = int(shipyard_time.group(1))
             shipyard_time = datetime.now() + timedelta(seconds=shipyard_time)
-        shipyard_queue = self.shipyard_queue(id, response, name_list)
+            shipyard_queue = self.shipyard_queue(id, response, name_list)
 
         class Queue:
             research = research_time
