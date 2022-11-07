@@ -310,73 +310,77 @@ class OGame(object):
         response = self.session.get(
             url=self.index_php + 'page=shop&ajax=1&type={}'.format(id),
             headers={'X-Requested-With': 'XMLHttpRequest'}
-        ).text
-        if activate_it:
-            activateToken = re.search(r'activateToken="(.*)";', str(response)).group(1)
-            response2 = self.session.post(
-                url=self.index_php + 'page=inventory',
-                data={'ajax': 1,
-                      'token': activateToken,
-                      'referrerPage': "ingame",
-                      'buyAndActivate': id},
-                headers={'X-Requested-With': 'XMLHttpRequest'}
-            ).json()
-        else:
-            buyToken = re.search(r'var token="(.*)";v', str(response)).group(1)
-            response2 = self.session.post(
-                url=self.index_php + 'page=buyitem&item={}'.format(id),
-                data={'ajax': 1,
-                      'token': buyToken},
-                headers={'X-Requested-With': 'XMLHttpRequest'}
-            ).json()
-        list = []
-        if not response2['error']:
-            if activate_it:
-                item_data = response2['message']['item']
+        )
+        item_name = BeautifulSoup4(response.text).h2.text
+
+        if len(item_name) > 5:
+            activateToken = re.search(r'activateToken="(.*)";', response.text)
+            if activate_it and activateToken:
+                response = self.session.post(
+                    url=self.index_php + 'page=inventory',
+                    data={'ajax': 1,
+                          'token': activateToken.group(1),
+                          'referrerPage': "ingame",
+                          'buyAndActivate': id},
+                    headers={'X-Requested-With': 'XMLHttpRequest'}
+                ).json()
+                item_data = response['message']['item']
             else:
-                item_data = response2['item']
-            class Item:
-                name = item_data['name']
-                costs = int(item_data['costs'])
-                duration = int(item_data['duration'])
-                effect = item_data['effect']
-                amount = int(item_data['amount'])
-                list = [
-                    name, costs, duration, effect, amount
-                ]
-            return Item
-        else:
+                buyToken = re.search(r'var token="(.*)";v', response.text).group(1)
+                response = self.session.post(
+                    url=self.index_php + 'page=buyitem&item={}'.format(id),
+                    data={'ajax': 1,
+                          'token': buyToken},
+                    headers={'X-Requested-With': 'XMLHttpRequest'}
+                ).json()
+                item_data = response['item']
+
+        if len(item_name) <= 5 or response['error']:
             return False
+
+        class Item:
+            name = item_data['name']
+            costs = int(item_data['costs'])
+            duration = int(item_data['duration'])
+            effect = item_data['effect']
+            amount = int(item_data['amount'])
+            list = [
+                name, costs, duration, effect, amount
+            ]
+        return Item
 
     def activate_item(self, id):
         response = self.session.get(
             url=self.index_php + 'page=shop&ajax=1&type={}'.format(id),
             headers={'X-Requested-With': 'XMLHttpRequest'}
-        ).text
-        activateToken = re.search(r'var token="(.*)";v', str(response)).group(1)
-        response2 = self.session.post(
-            url=self.index_php + 'page=inventory&item={}&ajax=1'.format(id),
-            data={'ajax': 1,
-                  'token': activateToken,
-                  'referrerPage': "shop"},
-            headers={'X-Requested-With': 'XMLHttpRequest'}
-        ).json()
-        list = []
-        if not response2['error']:
-            item_data = response2['message']['item']
-            class Item:
-                name = item_data['name']
-                costs = int(item_data['costs'])
-                duration = int(item_data['duration'])
-                effect = item_data['effect']
-                canbeused = bool(item_data['canBeActivated'])
-                amount = int(item_data['amount'])
-                list = [
-                    name, costs, duration, effect, canbeused, amount
-                ]
-            return Item
-        else:
+        )
+        item_name = BeautifulSoup4(response.text).h2.text
+
+        if len(item_name) > 5:
+            activateToken = re.search(r'var token="(.*)";v', response.text).group(1)
+            response = self.session.post(
+                url=self.index_php + 'page=inventory&item={}&ajax=1'.format(id),
+                data={'ajax': 1,
+                      'token': activateToken,
+                      'referrerPage': "shop"},
+                headers={'X-Requested-With': 'XMLHttpRequest'}
+            ).json()
+
+        if len(item_name_length) <= 5 or response['error']:
             return False
+
+        item_data = response.json()['message']['item']
+        class Item:
+            name = item_data['name']
+            costs = int(item_data['costs'])
+            duration = int(item_data['duration'])
+            effect = item_data['effect']
+            canbeused = bool(item_data['canBeActivated'])
+            amount = int(item_data['amount'])
+            list = [
+                name, costs, duration, effect, canbeused, amount
+            ]
+        return Item
 
     def planet_ids(self):
         ids = []
@@ -460,21 +464,24 @@ class OGame(object):
     def planet_infos(self):
         infos = []
         for planet in self.landing_page.find_all(class_='planetlink'):
+            planet_fields = re.search(r'\((.*)\/(.*)\)', planet['title'])
+            temperatures = re.search(r'([0-9]+)°.* ([0-9]+)°', planet['title'])
             class Celestial:
                 coordinates = re.search(r'\[(.*)]', planet['title']).group(1)
                 coordinates = [int(coords) for coords in coordinates.split(':')]
                 coordinates.append(const.destination.planet)
-                diameter = re.search(r'br>(.*)km', planet['title']).group(1)
+                diameter = re.search(r'/>(.*)km', planet['title']).group(1)
                 diameter = int("".join(re.split('\\.|\\,', diameter)))
-                total = int(re.search(r'\((.*)\/(.*)\)', planet['title']).group(2))
-                if "overmark" in re.search(r'\((.*)\/(.*)\)', planet['title']).group(1):
+                total = int(planet_fields.group(2))
+                if "overmark" in planet_fields.group(1):
                     used = total
                 else:
-                    used = int(re.search(r'\((.*)\/(.*)\)', planet['title']).group(1))
+                    used = int(planet_fields.group(1))
                 free = total - used
+                temperature =
                 temperature = [
-                    int(re.search(r'([0-9]+)°.* ([0-9]+)°', planet['title']).group(1)),
-                    int(re.search(r'([0-9]+)°.* ([0-9]+)°', planet['title']).group(2))
+                    int(temperatures.group(1)),
+                    int(temperatures.group(2))
                 ]
             infos.append(Celestial)
         return infos
@@ -482,17 +489,18 @@ class OGame(object):
     def moon_infos(self):
         infos = []
         for moon in self.landing_page.find_all(class_='moonlink'):
+            moon_fields = re.search(r'\((.*)\/(.*)\)', moon['title'])
             class Celestial:
                 coordinates = re.search(r'\[(.*)]', moon['title']).group(1)
                 coordinates = [int(coords) for coords in coordinates.split(':')]
                 coordinates.append(const.destination.moon)
                 diameter = re.search(r'br>(.*)km', moon['title']).group(1)
                 diameter = int("".join(re.split('\\.|\\,', diameter)))
-                total = int(re.search(r'\((.*)\/(.*)\)', moon['title']).group(2))
-                if "overmark" in re.search(r'\((.*)\/(.*)\)', moon['title']).group(1):
+                total = int(moon_fields.group(2))
+                if "overmark" in moon_fields.group(1):
                     used = total
                 else:
-                    used = int(re.search(r'\((.*)\/(.*)\)', moon['title']).group(1))
+                    used = int(moon_fields.group(1))
                 free = total - used
             infos.append(Celestial)
         return infos
@@ -549,14 +557,13 @@ class OGame(object):
         else:
             build_time = int(build_time.group(1))
             build_time = datetime.fromtimestamp(build_time)
-        shipyard_queue = None
         shipyard_time = re.search(r'var restTimeship2 = ([0-9]+)', response)
         if shipyard_time is None:
             shipyard_time = datetime.fromtimestamp(0)
         else:
             shipyard_time = int(shipyard_time.group(1))
             shipyard_time = datetime.now() + timedelta(seconds=shipyard_time)
-            shipyard_queue = self.shipyard_queue(id, response, name_list)
+        shipyard_queue = self.shipyard_queue(id, response, name_list)
 
         class Queue:
             research = research_time
@@ -757,8 +764,10 @@ class OGame(object):
             storage = [to_int(store.span['title']) for store in storage]
             darkmatter = to_int(bs4.find(id='resources_darkmatter')['data-raw'])
             energy = to_int(bs4.find(id='resources_energy')['data-raw'])
-            population = to_int(bs4.find(id='resources_population')['data-raw'])
-            food = to_int(bs4.find(id='resources_food')['data-raw'])
+            
+            if bs4.find(id='resources_population')['data-raw']:
+                population = to_int(bs4.find(id='resources_population')['data-raw'])
+                food = to_int(bs4.find(id='resources_food')['data-raw'])
         return Resources
 
     def resources_settings(self, id, settings=None):
@@ -1442,23 +1451,15 @@ class OGame(object):
             alliance_id = playerId(
                 alliance_id['rel']) if alliance_id else None
 
-            # find user activity on planet
+            flag_activity = [-1, -1]
             activity_tag = row.select('div[class*="activity"]')
-            if len(activity_tag) != 0:
-                if 'minute15' in activity_tag[0]['class']:
-                    flag_activity = 15 # if minute15, set as 15
-                elif 'showMinutes' in activity_tag[0]['class']:
-                    flag_str = row.findAll(
-                        "div", {"title": "Activity"})[0].string
-                    # if showMinutes, set as real count
-                    flag_activity = int(
-                        re.search(r'[0-9]+', flag_str).group())
+            for i, atag in enumerate(activity_tag):
+                if 'minute15' in atag['class']:
+                    flag_activity[i] = 15
+                elif 'showMinutes' in atag['class']:
+                    flag_activity[i] = int(re.search(r'([0-9]+)', atag.text).group(1))
                 else:
-                    # set -1 if no activity
-                    flag_activity = -1
-            else:
-                # set -2 if something failed
-                flag_activity = -2
+                    flag_activity[i] = -1
 
             debris_data = [planet_cord[:2] + [2], False, [0, 0, 0]]
             debris_index = None
@@ -1468,20 +1469,25 @@ class OGame(object):
             if debris_index:
                 debris_data = debris_fields[debris_index]
 
-            moon_size_row = 0
             if moon:
                 moon_size_row = int(row.select_one("td.moon span#moonsize").text.split()[0])
+            else:
+                moon_size_row = 0
+                flag_activity[1] = -2
 
             debris_16 = bs4.find(class_="expeditionDebrisSlotBox")
             if debris_16:
                 debris_data = debris_16.find(class_='ListLinks').text.replace(".","")
-                debris_16 = [int(data.replace(",","").replace(".","")) for data in re.findall(r'\d+', debris_data)]
+                debris_16 = [
+                    int(data.replace(",","").replace(".",""))
+                    for data in re.findall(r'\d+', debris_data)
+                ]
             else:
                 debris_16 = [0, 0, 0]   # [met, kris, pf]
 
             class Position:
                 position = planet_cord
-                name = row.find(id=re.compile(r'planet[0-9]+')).h1.span.text
+                planet_name = row.find(id=re.compile(r'planet[0-9]+')).h1.span.text
                 player = player_name[pid]
                 player_id = pid
                 rank = player_rank.get(pid)
@@ -1497,7 +1503,7 @@ class OGame(object):
                 # add attribute for planet activity info
                 activity = flag_activity
                 list = [
-                    name, position, player, activity,
+                    position, planet_name, player, activity,
                     player_id, rank, status, moon, moon_size, alliance,
                     debris_coord, has_debris, resources, expedition_debris, needed_pf
                 ]
@@ -1608,26 +1614,32 @@ class OGame(object):
             coordinates.append(coords)
         return coordinates
 
-    def extra_slots(self, stype):
+    def extra_slots(self):
         response = self.landing_page
         bs4 = BeautifulSoup4(str(response))
-        title = bs4.find_all(class_="detail_button")
-        if not title:
-            return 0
-        extra_e = [
-            int(re.search(r"br />\n\+(\d) ", titles['title']).group(1))
-            for titles in title
-            if re.search(r"Expedition", titles['title'])
+        active_items = bs4.find_all(class_="detail_button")
+        expo_items = [
+            '8c1f6c6849d1a5e4d9de6ae9bb1b861f6f7b5d4d', 'e54ecc0416d6e96b4165f24238b03a1b32c1df47',
+            'a5784c685c0e1e6111d9c18aeaf80af2e0777ab4', '31a504be1195149a3bef05b9cc6e3af185d24ef2',
+            'b2bc9789df7c1ef5e058f72d61380b696dde54e8', '4f6f941bbf2a8527b0424b3ad11014502d8f4fb8',
+            'fd7d35e73d0e09e83e30812b738ef966ea9ef790', '9336b9f29d36e3f69b0619c9523d8bec5e09ab8e',
+            '540410439514ac09363c5c47cf47117a8b8ae79a'
         ]
-        extra_f = [
-            re.search(r"br />\n\+(\d) ", titles['title']).group(1)
-            for titles in title
-            if re.search(r"Fleet", titles['title'])
+        fleet_items = [
+            '94a28491b6fd85003f1cb151e88dde106f1d7596', '0684c6a5a42acbb3cd134913d421fc28dae6b90d',
+            'bb47add58876240199a18ddacc2db07789be1934', 'c4e598a85805a7eb3ca70f9265cbd366fc4d2b0e',
+            'f8fd610825fb4a442e27e4e9add74f050e040e27', 'a693c5ce3f5676efaaf0781d94234bea4f599d2e',
+            '1808bf7639b81ac3ac87bcb7eb3bbba0a1874d0a', '5a8000c372cd079292a92d35d4ddba3c0f348d3b',
+            '1f7024c4f6493f0c589e1b00c76e6ced258c00e5'
         ]
-        if stype == 0:
-            return sum(extra_e)
-        else:
-            return sum(extra_f)
+        xtra_slots = [0, 0]
+        for item_type in active_items:
+            add = int(re.search(r"br />\n\+(\d) ", item_type['title']).group(1))
+            if item_type['ref'] in expo_items:
+                xtra_slots[0] += add
+            if item_type['ref'] in fleet_items:
+                xtra_slots[1] += add
+        return xtra_slots
 
     def slot_fleet(self):
         response = self.session.get(
@@ -2670,14 +2682,14 @@ class OGame(object):
         change_status = "off"
         if activate:
             change_status = "on"
-        if vacation_mode and activate:
-            return True
-        if deactivated_button.group(1) == 'true':
-            if vacation_mode and not activate:
-                vacation_till = re.search('.* (.*).', vacation_mode['title'])
-                return vacation_till
-            if not vacation_mode and activate:
-                return False
+        if vacation_mode:
+            if activate:
+                return True
+            else:
+                vacation_till = re.search('.* (.* .*).', vacation_mode['title']).group(1)
+                return datetime.strptime(vacation_till, "%d.%m.%Y %H:%M:%S")
+        if not vacation_mode and activate and deactivated_button.group(1) == 'true':
+            return False
 
         activate_token = re.search("name='token' value='(.*)'", response.text).group(1)
         form_data = {'mode': 'save',
@@ -2712,7 +2724,6 @@ class OGame(object):
             return False
         else:
             return True
-
 
     def is_logged_in(self):
         response = self.session.get(
