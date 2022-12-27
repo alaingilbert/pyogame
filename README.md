@@ -334,6 +334,7 @@ fac.terraformer
 fac.repair_dock
 </pre>
 
+
 ### get moon facilities
 <pre>
 empire.moon_facilities(id)              returns class(object) 
@@ -347,6 +348,82 @@ fac.shipyard
 fac.moon_base
 fac.sensor_phalanx 
 fac.jump_gate
+</pre>
+
+
+### get lifeform class
+<pre>
+empire.lf_character_class(planet_id)     returns string
+
+lifeform1 # humans
+lifeform2 # rocktal
+lifeform3 # mechas
+lifeform4 # kaelesh
+</pre>
+
+### get lifeform facilities
+<pre>
+fac_human = empire.lf_facilities_humans(planet_id)      returns class(object) 
+fac_rocktal = empire.lf_facilities_rocktal(planet_id)   returns class(object) 
+fac_mechas = empire.lf_facilities_mechas(planet_id)     returns class(object) 
+fac_kaelesh = empire.lf_facilities_kaelesh(planet_id)   returns class(object) 
+
+fac.human.residential_sector.level                      return int
+fac.human.residential_sector.is_possible                returns bool (possible to build)
+fac.human.residential_sector.in_construction            returns bool
+
+fac.human.residential_sector
+fac.human.biosphere_farm
+fac.human.research_centre
+fac.human.academy_of_sciences
+fac.human.neuro_calibration_centre
+fac.human.high_energy_smelting
+fac.human.food_silo
+fac.human.fusion_powered_production
+fac.human.skyscraper
+fac.human.biotech_lab
+fac.human.metropolis
+fac.human.planetary_shield
+
+fac_rocktal.meditation_enclave
+fac_rocktal.crystal_farm
+fac_rocktal.rune_technologium
+fac_rocktal.rune_forge
+fac_rocktal.oriktorium
+fac_rocktal.magma_forge
+fac_rocktal.disruption_chamber
+fac_rocktal.megalith
+fac_rocktal.crystal_refinery
+fac_rocktal.deuterium_synthesiser
+fac_rocktal.mineral_research_centre
+fac_rocktal.metal_recycling_plant
+
+fac_mechas.assembly_line
+fac_mechas.fusion_cell_factory
+fac_mechas.robotics_research_centre
+fac_mechas.update_network
+fac_mechas.quantum_computer_centre
+fac_mechas.automatised_assembly_centre
+fac_mechas.high_performance_transformer
+fac_mechas.microchip_assembly_line
+fac_mechas.production_assembly_hall
+fac_mechas.high_performance_synthesiser
+fac_mechas.chip_mass_production
+fac_mechas.nano_repair_bots
+
+fac_kaelesh.sanctuary
+fac_kaelesh.antimatter_condenser
+fac_kaelesh.vortex_chamber
+fac_kaelesh.halls_of_realisation
+fac_kaelesh.forum_of_transcendence
+fac_kaelesh.antimatter_convector
+fac_kaelesh.cloning_laboratory
+fac_kaelesh.chrysalis_accelerator
+fac_kaelesh.bio_modifier
+fac_kaelesh.psionic_modulator
+fac_kaelesh.ship_manufacturing_hall
+fac_kaelesh.supra_refractor
+
 </pre>
 
 ### get traider
