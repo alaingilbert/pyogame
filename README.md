@@ -362,6 +362,99 @@ res.shielding
 res.armor
 </pre>
 
+### get lifeform research
+<pre>
+empire.lf_research_humans(id)                    returns class(object) 
+empire.lf_research_rocktal(id)                   returns class(object) 
+empire.lf_research_mechas(id)                    returns class(object) 
+empire.lf_research_kaelesh(id)                   returns class(object) 
+
+res_humans = empire.lf_research_humans(id)
+res_rocktal = empire.lf_research_rocktal(id)
+res_mechas = empire.lf_research_mechas(id)
+res_kaelesh = empire.lf_research_kaelesh(id)
+
+res_humans.intergalactic_envoys.level             returns int
+res_humans.intergalactic_envoys.is_possible       returns bool (possible to start)
+res_humans.intergalactic_envoys.in_construction   returns bool
+
+res_humans.intergalactic_envoys
+res_humans.high_performance_extractors
+res_humans.fusion_drives
+res_humans.stealth_field_generator
+res_humans.orbital_den
+res_humans.research_ai
+res_humans.high_performance_terraformer
+res_humans.enhanced_production_technologies
+res_humans.light_fighter_mk_II
+res_humans.cruiser_mk_II
+res_humans.improved_lab_technology
+res_humans.plasma_terraformer
+res_humans.low_temperature_drives
+res_humans.bomber_mk_II
+res_humans.destroyer_mk_II
+res_humans.battlecruiser_mk_II
+res_humans.robot_assistants
+res_humans.supercomputer
+
+res_rocktal.magma_refinement
+res_rocktal.acoustic_scanning
+res_rocktal.high_energy_pump_systems
+res_rocktal.cargo_hold_expansion_civilian_ships
+res_rocktal.magma_powered_production
+res_rocktal.geothermal_power_plants
+res_rocktal.depth_sounding
+res_rocktal.ion_crystal_enhancement_heavy_fighter
+res_rocktal.improved_stellarator
+res_rocktal.hardened_diamond_drill_heads
+res_rocktal.seismic_mining_technology
+res_rocktal.magma_powered_pump_systems
+res_rocktal.ion_crystal_modules
+res_rocktal.optimised_silo_construction_method
+res_rocktal.diamond_energy_transmitter
+res_rocktal.obsidian_shield_reinforcement
+res_rocktal.rocktal_collector_enhancement
+res_rocktal.rune_shields
+
+res_mechas.catalyser_technology
+res_mechas.plasma_drive
+res_mechas.efficiency_module
+res_mechas.depot_ai
+res_mechas.general_overhaul_light_fighter
+res_mechas.automated_transport_lines
+res_mechas.improved_drone_ai
+res_mechas.experimental_recycling_technology
+res_mechas.general_overhaul_cruiser
+res_mechas.slingshot_autopilot
+res_mechas.high_temperature_superconductors
+res_mechas.general_overhaul_battleship
+res_mechas.artificial_swarm_intelligence
+res_mechas.general_overhaul_battlecruiser
+res_mechas.general_overhaul_bomber
+res_mechas.general_overhaul_destroyer
+res_mechas.mechan_general_enhancement
+res_mechas.experimental_weapons_technology
+
+res_kaelesh.heat_recovery
+res_kaelesh.sulphide_process
+res_kaelesh.psionic_network
+res_kaelesh.telekinetic_tractor_beam
+res_kaelesh.enhanced_sensor_technology
+res_kaelesh.neuromodal_compressor
+res_kaelesh.neuro_interface
+res_kaelesh.interplanetary_analysis_network
+res_kaelesh.overclocking_heavy_fighter
+res_kaelesh.telekinetic_drive
+res_kaelesh.sixth_sense
+res_kaelesh.psychoharmoniser
+res_kaelesh.efficient_swarm_intelligence
+res_kaelesh.overclocking_large_cargo
+res_kaelesh.gravitation_sensors
+res_kaelesh.overclocking_battleship
+res_kaelesh.kaelesh_discoverer_enhancement
+res_kaelesh.psionic_shield_matrix
+</pre>
+
 ### get ships
 <pre>
 empire.ships(id)                    returns class(object) 
