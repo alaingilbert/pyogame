@@ -610,7 +610,318 @@ class OGame(object):
             armor = Research(15)
 
         return Researches
+    
+        def lf_research_humans(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': 'lfresearch',
+                    'cp': id}
+        ).text
+        bs4 = BeautifulSoup4(response)
 
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+
+        technology_status = []
+        for container_tiers in bs4.select('#technologies div li'):
+            try:
+                technology_status.append(container_tiers['data-status'])
+            except:
+                technology_status.append('not available')
+
+        class LfResearch:
+            def __init__(self, i):
+                if i <= technology_status.count('on') + technology_status.count('disabled') - 1:
+                    self.level = levels[i]
+                    self.is_possible = OGame.isPossible(technology_status[i])
+                    self.in_construction = OGame.inConstruction(technology_status[i])
+                else:
+                    self.level = 0
+                    self.is_possible = False
+                    self.in_construction = False
+
+        class LfResearches(object):
+            intergalactic_envoys = LfResearch(0)
+            high_performance_extractors = LfResearch(1)
+            fusion_drives = LfResearch(2)
+            stealth_field_generator = LfResearch(3)
+            orbital_den = LfResearch(4)
+            research_ai = LfResearch(5)
+            high_performance_terraformer = LfResearch(6)
+            enhanced_production_technologies = LfResearch(7)
+            light_fighter_mk_II = LfResearch(8)
+            cruiser_mk_II = LfResearch(9)
+            improved_lab_technology = LfResearch(10)
+            plasma_terraformer = LfResearch(11)
+            low_temperature_drives = LfResearch(12)
+            bomber_mk_II = LfResearch(13)
+            destroyer_mk_II = LfResearch(14)
+            battlecruiser_mk_II = LfResearch(15)
+            robot_assistants = LfResearch(16)
+            supercomputer = LfResearch(17)
+            list = {
+                'intergalactic_envoys': intergalactic_envoys.level,
+                'high_performance_extractors': high_performance_extractors.level,
+                'fusion_drives': fusion_drives.level,
+                'stealth_field_generator': stealth_field_generator.level,
+                'orbital_den': orbital_den.level,
+                'research_ai': research_ai.level,
+                'high_performance_terraformer': high_performance_terraformer.level,
+                'enhanced_production_technologies': enhanced_production_technologies.level,
+                'light_fighter_mk_II': light_fighter_mk_II.level,
+                'cruiser_mk_II': cruiser_mk_II.level,
+                'improved_lab_technology': improved_lab_technology.level,
+                'plasma_terraformer': plasma_terraformer.level,
+                'low_temperature_drives': low_temperature_drives.level,
+                'bomber_mk_II': bomber_mk_II.level,
+                'destroyer_mk_II': destroyer_mk_II.level,
+                'battlecruiser_mk_II': battlecruiser_mk_II.level,
+                'robot_assistants': robot_assistants.level,
+                'supercomputer': supercomputer.level
+            }
+
+        return LfResearches
+
+    def lf_research_rocktal(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': 'lfresearch',
+                    'cp': id}
+        ).text
+        bs4 = BeautifulSoup4(response)
+
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+
+        technology_status = []
+        for container_tiers in bs4.select('#technologies div li'):
+            try:
+                technology_status.append(container_tiers['data-status'])
+            except:
+                technology_status.append('not available')
+
+        class LfResearch:
+            def __init__(self, i):
+                if i <= technology_status.count('on') + technology_status.count('disabled') - 1:
+                    self.level = levels[i]
+                    self.is_possible = OGame.isPossible(technology_status[i])
+                    self.in_construction = OGame.inConstruction(technology_status[i])
+                else:
+                    self.level = 0
+                    self.is_possible = False
+                    self.in_construction = False
+
+        class LfResearches(object):
+            magma_refinement = LfResearch(0)
+            acoustic_scanning = LfResearch(1)
+            high_energy_pump_systems = LfResearch(2)
+            cargo_hold_expansion_civilian_ships = LfResearch(3)
+            magma_powered_production = LfResearch(4)
+            geothermal_power_plants = LfResearch(5)
+            depth_sounding = LfResearch(6)
+            ion_crystal_enhancement_heavy_fighter = LfResearch(7)
+            improved_stellarator = LfResearch(8)
+            hardened_diamond_drill_heads = LfResearch(9)
+            seismic_mining_technology = LfResearch(10)
+            magma_powered_pump_systems = LfResearch(11)
+            ion_crystal_modules = LfResearch(12)
+            optimised_silo_construction_method = LfResearch(13)
+            diamond_energy_transmitter = LfResearch(14)
+            obsidian_shield_reinforcement = LfResearch(15)
+            rocktal_collector_enhancement = LfResearch(16)
+            rune_shields = LfResearch(17)
+
+            list = {
+                'magma_refinement': magma_refinement.level,
+                'acoustic_scanning': acoustic_scanning.level,
+                'high_energy_pump_systems': high_energy_pump_systems.level,
+                'cargo_hold_expansion_civilian_ships': cargo_hold_expansion_civilian_ships.level,
+                'magma_powered_production': magma_powered_production.level,
+                'geothermal_power_plants': geothermal_power_plants.level,
+                'depth_sounding': depth_sounding.level,
+                'ion_crystal_enhancement_heavy_fighter': ion_crystal_enhancement_heavy_fighter.level,
+                'improved_stellarator': improved_stellarator.level,
+                'hardened_diamond_drill_heads': hardened_diamond_drill_heads.level,
+                'seismic_mining_technology': seismic_mining_technology.level,
+                'magma_powered_pump_systems': magma_powered_pump_systems.level,
+                'ion_crystal_modules': ion_crystal_modules.level,
+                'optimised_silo_construction_method': optimised_silo_construction_method.level,
+                'diamond_energy_transmitter': diamond_energy_transmitter.level,
+                'obsidian_shield_reinforcement': obsidian_shield_reinforcement.level,
+                'rocktal_collector_enhancement': rocktal_collector_enhancement.level,
+                'rune_shields': rune_shields.level
+            }
+
+        return LfResearches
+
+    def lf_research_mechas(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': 'lfresearch',
+                    'cp': id}
+        ).text
+        bs4 = BeautifulSoup4(response)
+
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+
+        technology_status = []
+        for container_tiers in bs4.select('#technologies div li'):
+            try:
+                technology_status.append(container_tiers['data-status'])
+            except:
+                technology_status.append('not available')
+
+        class LfResearch:
+            def __init__(self, i):
+                if i <= technology_status.count('on') + technology_status.count('disabled') - 1:
+                    self.level = levels[i]
+                    self.is_possible = OGame.isPossible(technology_status[i])
+                    self.in_construction = OGame.inConstruction(technology_status[i])
+                else:
+                    self.level = 0
+                    self.is_possible = False
+                    self.in_construction = False
+
+        class LfResearches(object):
+            catalyser_technology = LfResearch(0)
+            plasma_drive = LfResearch(1)
+            efficiency_module = LfResearch(2)
+            depot_ai = LfResearch(3)
+            general_overhaul_light_fighter = LfResearch(4)
+            automated_transport_lines = LfResearch(5)
+            improved_drone_ai = LfResearch(6)
+            experimental_recycling_technology = LfResearch(7)
+            general_overhaul_cruiser = LfResearch(8)
+            slingshot_autopilot = LfResearch(9)
+            high_temperature_superconductors = LfResearch(10)
+            general_overhaul_battleship = LfResearch(11)
+            artificial_swarm_intelligence = LfResearch(12)
+            general_overhaul_battlecruiser = LfResearch(13)
+            general_overhaul_bomber = LfResearch(14)
+            general_overhaul_destroyer = LfResearch(15)
+            mechan_general_enhancement = LfResearch(16)
+            experimental_weapons_technology = LfResearch(17)
+
+            list = {
+                'catalyser_technology': catalyser_technology.level,
+                'plasma_drive': plasma_drive.level,
+                'efficiency_module': efficiency_module.level,
+                'depot_ai': depot_ai.level,
+                'general_overhaul_light_fighter': general_overhaul_light_fighter.level,
+                'automated_transport_lines': automated_transport_lines.level,
+                'improved_drone_ai': improved_drone_ai.level,
+                'experimental_recycling_technology': experimental_recycling_technology.level,
+                'general_overhaul_cruiser': general_overhaul_cruiser.level,
+                'slingshot_autopilot': slingshot_autopilot.level,
+                'high_temperature_superconductors': high_temperature_superconductors.level,
+                'general_overhaul_battleship': general_overhaul_battleship.level,
+                'artificial_swarm_intelligence': artificial_swarm_intelligence.level,
+                'general_overhaul_battlecruiser': general_overhaul_battlecruiser.level,
+                'general_overhaul_bomber': general_overhaul_bomber.level,
+                'general_overhaul_destroyer': general_overhaul_destroyer.level,
+                'mechan_general_enhancement': mechan_general_enhancement.level,
+                'experimental_weapons_technology': experimental_weapons_technology.level
+            }
+
+        return LfResearches
+
+    def lf_research_kaelesh(self, id=None):
+        if id is None:
+            id = self.planet_ids()[0]
+        response = self.session.get(
+            url=self.index_php,
+            params={'page': 'ingame', 'component': 'lfresearch',
+                    'cp': id}
+        ).text
+        bs4 = BeautifulSoup4(response)
+
+        levels = [
+            int(level['data-value'])
+            for level in bs4.find_all(
+                'span', {'class': 'level', 'data-value': True}
+            )
+        ]
+
+        technology_status = []
+        for container_tiers in bs4.select('#technologies div li'):
+            try:
+                technology_status.append(container_tiers['data-status'])
+            except:
+                technology_status.append('not available')
+
+        class LfResearch:
+            def __init__(self, i):
+                if i <= technology_status.count('on') + technology_status.count('disabled') - 1:
+                    self.level = levels[i]
+                    self.is_possible = OGame.isPossible(technology_status[i])
+                    self.in_construction = OGame.inConstruction(technology_status[i])
+                else:
+                    self.level = 0
+                    self.is_possible = False
+                    self.in_construction = False
+
+        class LfResearches(object):
+            heat_recovery = LfResearch(0)
+            sulphide_process = LfResearch(1)
+            psionic_network = LfResearch(2)
+            telekinetic_tractor_beam = LfResearch(3)
+            enhanced_sensor_technology = LfResearch(4)
+            neuromodal_compressor = LfResearch(5)
+            neuro_interface = LfResearch(6)
+            interplanetary_analysis_network = LfResearch(7)
+            overclocking_heavy_fighter = LfResearch(8)
+            telekinetic_drive = LfResearch(9)
+            sixth_sense = LfResearch(10)
+            psychoharmoniser = LfResearch(11)
+            efficient_swarm_intelligence = LfResearch(12)
+            overclocking_large_cargo = LfResearch(13)
+            gravitation_sensors = LfResearch(14)
+            overclocking_battleship = LfResearch(15)
+            kaelesh_discoverer_enhancement = LfResearch(16)
+            psionic_shield_matrix = LfResearch(17)
+
+            list = {
+                'heat_recovery': heat_recovery.level,
+                'sulphide_process': sulphide_process.level,
+                'psionic_network': psionic_network.level,
+                'telekinetic_tractor_beam': telekinetic_tractor_beam.level,
+                'enhanced_sensor_technology': enhanced_sensor_technology.level,
+                'neuromodal_compressor': neuromodal_compressor.level,
+                'neuro_interface': neuro_interface.level,
+                'interplanetary_analysis_network': interplanetary_analysis_network.level,
+                'overclocking_heavy_fighter': overclocking_heavy_fighter.level,
+                'telekinetic_drive': telekinetic_drive.level,
+                'sixth_sense': sixth_sense.level,
+                'psychoharmoniser': psychoharmoniser.level,
+                'efficient_swarm_intelligence': efficient_swarm_intelligence.level,
+                'overclocking_large_cargo': overclocking_large_cargo.level,
+                'gravitation_sensors': gravitation_sensors.level,
+                'overclocking_battleship': overclocking_battleship.level,
+                'kaelesh_discoverer_enhancement': kaelesh_discoverer_enhancement.level,
+                'psionic_shield_matrix': psionic_shield_matrix.level,
+            }
+
+        return LfResearches
+    
     def ships(self, id):
         response = self.session.get(
             self.index_php + 'page=ingame&component=shipyard&cp={}'
