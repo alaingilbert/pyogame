@@ -440,6 +440,41 @@ for planet in empire.galaxy(coordinates(randint(1,6), randint(1,499))):
     print(planet.name, planet.position, planet.player, planet.player_id, planet.rank, planet.status, planet.moon, planet.activity)
     if status.inactive in planet.status and status.vacation not in planet.status:
         #Farm Inactive
+
+sys_scan = empire.galaxy(coordinates(galaxy, system))
+
+sys_scan.coordinates, 
+sys_scan.galaxy, 
+sys_scan.system, 
+sys_scan.position, 
+sys_scan.planet_id, 
+sys_scan.planet_name, 
+sys_scan.player_name, 
+sys_scan.player_id, 
+sys_scan.rank,
+sys_scan.status,
+sys_scan.has_moon, 
+sys_scan.alliance,
+sys_scan.planet_activity,
+sys_scan.moon_activity, 
+sys_scan.planet_df, 
+sys_scan.planet_df_m, 
+sys_scan.planet_df_c, 
+sys_scan.planet_recyclers_needed, 
+sys_scan.moon_size,
+sys_scan.moon_id, 
+sys_scan.inactive, 
+sys_scan.strong_player, 
+sys_scan.newbie, 
+sys_scan.vacation, 
+sys_scan.honorable_target, 
+sys_scan.administrator, 
+sys_scan.banned,
+sys_scan.is_bandit, 
+sys_scan.is_starlord, 
+sys_scan.is_outlaw, 
+sys_scan.expedition_debris, 
+sys_scan.needed_pf
 ```
 
 ### get debris in galaxy
