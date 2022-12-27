@@ -817,6 +817,12 @@ You can't return hostile Fleets :p use the friendly fleet function to avoid conf
 True if the Fleet you want to return is possible to retreat
 </pre>
 
+### send discovery fleet
+<pre>
+empire.send_fleet_discovery(coordinates(1, 2, 3))     returns string
+</pre>
+
+
 ### send message
 <pre>
 empire.send_message(player_id, msg)     returns bool
