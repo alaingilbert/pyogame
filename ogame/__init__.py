@@ -474,7 +474,6 @@ class OGame(object):
                 else:
                     used = int(planet_fields.group(1))
                 free = total - used
-                temperature =
                 temperature = [
                     int(temperatures.group(1)),
                     int(temperatures.group(2))
