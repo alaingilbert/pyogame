@@ -2552,6 +2552,32 @@ class OGame(object):
         else:
             return False
 
+    def send_fleet_discovery(
+            self,
+            where,
+    ):
+        response = self.session.get(
+            url=self.index_php + 'page=ingame&component=galaxy&galaxy={}&system={}&position={}'.format(where[0], where[1], where[2])
+        ).text
+        send_discovery_token = re.search('var token = "(.*)"', response)
+        form_data = {'token': send_discovery_token.group(1)}
+        form_data.update(
+            {
+                'galaxy': where[0],
+                'system': where[1],
+                'position': where[2],
+            }
+        )
+        response = self.session.post(
+            url=self.index_php + 'page=ingame&component=fleetdispatch&action=sendDiscoveryFleet&ajax=1&asJson=1',
+            data=form_data,
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        ).json()
+        if response['response']['success']:
+            return response['response']['success'], response['response']['message']
+        else:
+            return response['response']['success'], response['response']['errors'][0]['message']
+
     def build(self, what, id):
         btype = what[0]
         amount = what[1]
